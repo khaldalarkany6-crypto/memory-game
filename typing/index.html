@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سرعة الكتابة العربية | Speed Typing</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary: #6366f1;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1.5rem 1rem; }
+    .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 1.2rem; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; }
+    .back-link { color: var(--text-muted); text-decoration: none; font-size: 0.95rem; font-weight: 600; }
+    
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      background: rgba(30, 41, 59, 0.7);
+      padding: 0.85rem;
+      border-radius: 1rem;
+      border: 1px solid var(--card-border);
+      text-align: center;
+    }
+
+    .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+    .stat-value { font-size: 1.3rem; font-weight: 800; color: #fff; }
+
+    .typing-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 1.25rem;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      text-align: center;
+    }
+
+    .word-display {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #38bdf8;
+      background: #0f172a;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid var(--card-border);
+    }
+
+    input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: #0b0f19;
+      border: 2px solid var(--card-border);
+      color: #fff;
+      font-size: 1.15rem;
+      border-radius: 0.75rem;
+      text-align: center;
+      outline: none;
+    }
+    input:focus { border-color: var(--primary); }
+
+    .btn { background-color: var(--primary); color: #fff; border: none; padding: 0.8rem; font-size: 1rem; font-weight: 700; border-radius: 0.75rem; cursor: pointer; }
+    .leaderboard-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 1rem; padding: 1rem; }
+    .leaderboard-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; display: flex; justify-content: space-between; }
+    .leaderboard-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .leaderboard-item { display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 0.6rem 0.85rem; border-radius: 0.6rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="top-nav">
+      <a href="../index.html" class="back-link">← العودة للرئيسية</a>
+      <span style="font-weight: 600; color: var(--text-muted);">سرعة الكتابة ⌨️</span>
+    </div>
+
+    <div class="dashboard">
+      <div>
+        <span class="stat-label">الوقت المتبقي</span>
+        <span class="stat-value" id="timer">30s</span>
+      </div>
+      <div>
+        <span class="stat-label">كلمات صحيحة</span>
+        <span class="stat-value" id="score">0</span>
+      </div>
+    </div>
+
+    <div class="typing-card">
+      <div class="word-display" id="word-target">اضغط ابدأ</div>
+      <input type="text" id="type-input" placeholder="اكتب الكلمة هنا واضغط مسافة..." disabled autocomplete="off" />
+      <button class="btn" id="start-btn">ابدأ التحدي (30 ثانية) 🚀</button>
+    </div>
+
+    <div class="leaderboard-section">
+      <div class="leaderboard-title">
+        <span>🏆 الصدارة المباشرة (أسرع كاتب)</span>
+        <span style="font-size: 0.75rem; color: #34d399;">🟢 متصل</span>
+      </div>
+      <ul class="leaderboard-list" id="leaderboard-list">
+        <li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const WORDS = [
+      'سريع', 'برق', 'حاسوب', 'مدينة', 'قهوة', 'شمس', 'قمر', 'تحدي', 'طاقة', 'سماء',
+      'بحر', 'جبل', 'نجاح', 'فكرة', 'إبداع', 'صقر', 'همة', 'قوة', 'ذكاء', 'نصر',
+      'عزيمة', 'طموح', 'أمل', 'فرسان', 'صقر', 'شاهين', 'مجد', 'رياض', 'طيبة'
+    ];
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
+      authDomain: "memory-game-2f2d4.firebaseapp.com",
+      databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
+      projectId: "memory-game-2f2d4",
+      storageBucket: "memory-game-2f2d4.firebasestorage.app",
+      messagingSenderId: "234692589834",
+      appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
+      measurementId: "G-X3V9MP6LS5"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const scoresRef = db.ref('typing_leaderboard');
+
+    const wordTarget = document.getElementById('word-target');
+    const typeInput = document.getElementById('type-input');
+    const startBtn = document.getElementById('start-btn');
+    const timerEl = document.getElementById('timer');
+    const scoreEl = document.getElementById('score');
+    const leaderboardList = document.getElementById('leaderboard-list');
+
+    let currentWord = '';
+    let score = 0;
+    let timeLeft = 30;
+    let timerId = null;
+
+    function newWord() {
+      currentWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+      wordTarget.textContent = currentWord;
+    }
+
+    startBtn.addEventListener('click', () => {
+      score = 0;
+      timeLeft = 30;
+      scoreEl.textContent = '0';
+      timerEl.textContent = '30s';
+      startBtn.style.display = 'none';
+      typeInput.disabled = false;
+      typeInput.value = '';
+      typeInput.focus();
+
+      newWord();
+
+      timerId = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = timeLeft + 's';
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          finishGame();
+        }
+      }, 1000);
+    });
+
+    typeInput.addEventListener('input', () => {
+      const val = typeInput.value.trim();
+      if (val === currentWord) {
+        score++;
+        scoreEl.textContent = score;
+        typeInput.value = '';
+        newWord();
+      }
+    });
+
+    function finishGame() {
+      typeInput.disabled = true;
+      startBtn.style.display = 'block';
+      startBtn.textContent = 'حاول مجدداً 🔄';
+      const wpm = score * 2;
+      wordTarget.textContent = `خلصت! سرعتك: ${wpm} ك/د`;
+
+      const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+      scoresRef.push({ name: playerName, wpm: wpm, words: score, timestamp: Date.now() });
+    }
+
+    scoresRef.on('value', snapshot => {
+      const data = snapshot.val();
+      leaderboardList.innerHTML = '';
+      if (!data) {
+        leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام بعد</li>';
+        return;
+      }
+      const list = Object.values(data);
+      list.sort((a, b) => b.wpm - a.wpm);
+      const top10 = list.slice(0, 10);
+      const medals = ['🥇', '🥈', '🥉'];
+      top10.forEach((item, index) => {
+        const rank = medals[index] || `#${index + 1}`;
+        const li = document.createElement('li');
+        li.className = 'leaderboard-item';
+        li.innerHTML = `
+          <span style="font-weight: bold; width: 30px;">${rank}</span>
+          <span style="flex: 1; font-weight: 600;">${item.name}</span>
+          <span style="color: var(--text-muted); font-weight: bold;">⌨️ ${item.wpm} كلمة/د</span>
+        `;
+        leaderboardList.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>
