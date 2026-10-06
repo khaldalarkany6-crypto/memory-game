@@ -1,1 +1,237 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+  <title>جرس التحدي السريع | Buzzer Studio</title>
 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #070b12;
+      --card-bg: #111827;
+      --border: #1f293d;
+      --gold: #f59e0b;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --btn-idle: #e11d48;
+      --btn-idle-shadow: #9f1239;
+      --btn-win: #10b981;
+      --btn-win-shadow: #047857;
+      --btn-lock: #374151;
+      --btn-lock-shadow: #1f2937;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      transition: background-color 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    body.win-glow {
+      background-color: #062419;
+      box-shadow: inset 0 0 100px rgba(16, 185, 129, 0.4);
+    }
+
+    body.lock-glow {
+      background-color: #260a12;
+      box-shadow: inset 0 0 100px rgba(225, 29, 72, 0.3);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    /* شريط التنقل العلوي */
+    .top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: -0.5rem;
+    }
+
+    .back-home-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.85rem;
+      border-radius: 0.6rem;
+      transition: all 0.2s ease;
+    }
+
+    .back-home-btn:hover {
+      color: #fff;
+      border-color: var(--gold);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .room-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--gold);
+      padding: 0.35rem 0.9rem;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .setup-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .setup-card h2 {
+      font-size: 1.3rem;
+      text-align: center;
+      color: #fff;
+    }
+
+    .input-box {
+      width: 100%;
+      background: #030712;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 0.85rem 1rem;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      outline: none;
+      text-align: center;
+    }
+
+    .input-box:focus {
+      border-color: var(--gold);
+    }
+
+    .btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      padding: 0.85rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #000;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+    }
+
+    .buzzer-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .buzzer-btn {
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      background: radial-gradient(circle at 35% 35%, #fb7185, var(--btn-idle));
+      box-shadow: 0 16px 0 var(--btn-idle-shadow), 0 25px 30px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.8rem;
+      font-weight: 900;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.2s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .buzzer-btn:active:not(:disabled) {
+      transform: translateY(12px);
+      box-shadow: 0 4px 0 var(--btn-idle-shadow), 0 10px 15px rgba(0,0,0,0.4);
+    }
+
+    .buzzer-btn.won {
+      background: radial-gradient(circle at 35% 35%, #34d399, var(--btn-win));
+      box-shadow: 0 16px 0 var(--btn-win-shadow), 0 25px 30px rgba(16, 185, 129, 0.3);
+      animation: pulse-ring 1s infinite alternate;
+    }
+
+    .buzzer-btn.locked {
+      background: radial-gradient(circle at 35% 35%, #4b5563, var(--btn-lock));
+      box-shadow: 0 16px 0 var(--btn-lock-shadow), 0 25px 30px rgba(0,0,0,0.4);
+      cursor: not-allowed;
