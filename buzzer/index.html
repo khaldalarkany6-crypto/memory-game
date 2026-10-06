@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+  <title>جرس التحدي السريع | Buzzer Studio</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #070b12;
+      --card-bg: #111827;
+      --border: #1f293d;
+      --gold: #f59e0b;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --btn-idle: #e11d48;
+      --btn-idle-shadow: #9f1239;
+      --btn-win: #10b981;
+      --btn-win-shadow: #047857;
+      --btn-lock: #374151;
+      --btn-lock-shadow: #1f2937;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      touch-action: manipulation;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      transition: background-color 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    body.win-glow {
+      background-color: #062419;
+      box-shadow: inset 0 0 100px rgba(16, 185, 129, 0.4);
+    }
+
+    body.lock-glow {
+      background-color: #260a12;
+      box-shadow: inset 0 0 100px rgba(225, 29, 72, 0.3);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .room-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--gold);
+      padding: 0.35rem 0.9rem;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* شاشة تسجيل الدخول وإنشاء الغرفة */
+    .setup-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .setup-card h2 {
+      font-size: 1.3rem;
+      text-align: center;
+      color: #fff;
+    }
+
+    .input-box {
+      width: 100%;
+      background: #030712;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 0.85rem 1rem;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      outline: none;
+      text-align: center;
+    }
+
+    .input-box:focus {
+      border-color: var(--gold);
+    }
+
+    .btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      padding: 0.85rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #000;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    /* منطقة الجرس الكلاسيكي الملموس 3D */
+    .buzzer-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+      width: 100%;
+    }
+
+    .buzzer-btn {
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      background: radial-gradient(circle at 35% 35%, #fb7185, var(--btn-idle));
+      box-shadow: 0 16px 0 var(--btn-idle-shadow), 0 25px 30px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.8rem;
+      font-weight: 900;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.2s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .buzzer-btn:active:not(:disabled) {
+      transform: translateY(12px);
+      box-shadow: 0 4px 0 var(--btn-idle-shadow), 0 10px 15px rgba(0,0,0,0.4);
+    }
+
+    /* فائز بالجرس */
+    .buzzer-btn.won {
+      background: radial-gradient(circle at 35% 35%, #34d399, var(--btn-win));
+      box-shadow: 0 16px 0 var(--btn-win-shadow), 0 25px 30px rgba(16, 185, 129, 0.3);
+      animation: pulse-ring 1s infinite alternate;
+    }
+
+    /* مقفل أو سبقك أحد */
+    .buzzer-btn.locked {
+      background: radial-gradient(circle at 35% 35%, #4b5563, var(--btn-lock));
+      box-shadow: 0 16px 0 var(--btn-lock-shadow), 0 25px 30px rgba(0,0,0,0.4);
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+
+    @keyframes pulse-ring {
+      from { transform: scale(1); }
+      to { transform: scale(1.03); }
+    }
+
+    .status-text {
+      font-size: 1.3rem;
+      font-weight: 800;
+      text-align: center;
+      min-height: 2rem;
+    }
+
+    /* لوحة الحاضرين والترتيب */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .player-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #030712;
+      padding: 0.6rem 0.85rem;
+      border-radius: 0.6rem;
+      font-size: 0.95rem;
+    }
+
+    .player-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .score-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .score-btn {
+      background: #1f2937;
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      width: 28px;
+      height: 28px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* أدوات المشرف */
+    .host-bar {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .host-bar .btn {
+      flex: 1;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>🚨 جرس التحدي السريع</h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">أسرع ضغطة تحسم الإجابة بالملي ثانية</p>
+      <div id="room-info" class="room-badge hidden" title="اضغط لنسخ الرابط">
+        <span>غرفة رقم: <strong id="display-room-code">----</strong></span>
+        <span>📋 نسخ</span>
+      </div>
+    </div>
+
+    <!-- شاشة إعداد الغرفة والدخول -->
+    <div id="setup-view" class="setup-card">
+      <h2>اختر طريقة المشاركة</h2>
+      <input type="text" id="player-name-input" class="input-box" placeholder="اكتب اسمك هنا..." maxlength="15">
+      
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="create-room-btn" class="btn btn-gold" style="flex: 1;">👑 إنشاء غرفة جديدة</button>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">— أو ادخل كود غرفة موجودة —</div>
+      
+      <div style="display: flex; gap: 0.5rem;">
+        <input type="text" id="room-code-input" class="input-box" placeholder="كود الغرفة (4 أرقام)" maxlength="4" style="flex: 1;">
+        <button id="join-room-btn" class="btn" style="flex: 1;">🚪 انضمام</button>
+      </div>
+    </div>
+
+    <!-- ساحة اللعب والجرس -->
+    <div id="game-view" class="buzzer-stage hidden">
+      <div id="status-text" class="status-text" style="color: var(--gold);">جاهز! اضغط عند طرح السؤال 🔥</div>
+
+      <button id="buzzer" class="buzzer-btn">
+        <span id="buzzer-label">اضغط!</span>
+        <span id="buzzer-sub" style="font-size: 0.85rem; font-weight: normal; opacity: 0.8;">BUZZ</span>
+      </button>
+
+      <!-- أدوات المشرف تظهر للمضيف فقط -->
+      <div id="host-tools" class="host-bar hidden">
+        <button id="reset-buzzer-btn" class="btn btn-gold">🔄 تصفير الجرس</button>
+        <button id="toggle-lock-btn" class="btn btn-danger">🔒 قفل الجرس</button>
+      </div>
+
+      <!-- قائمة المتسابقين والنقاط وطابور الترتيب -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>👥 المتسابقين في الغرفة (<span id="player-count">0</span>)</span>
+          <span id="host-tag" style="color: var(--gold); font-size: 0.8rem;"></span>
+        </div>
+        <ul id="players-list" class="player-list"></ul>
+      </div>
+
+      <a href="../index.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem; margin-top: 0.5rem;">← العودة لساحة الألعاب الرئيسية</a>
+    </div>
+  </div>
+
+  <script>
+    // تكوين الفايربيس الخاص بمشروعك
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
+      authDomain: "memory-game-2f2d4.firebaseapp.com",
+      databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
+      projectId: "memory-game-2f2d4",
+      storageBucket: "memory-game-2f2d4.firebasestorage.app",
+      messagingSenderId: "234692589834",
+      appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
+      measurementId: "G-X3V9MP6LS5"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // عناصر الواجهة
+    const setupView = document.getElementById('setup-view');
+    const gameView = document.getElementById('game-view');
+    const roomInfo = document.getElementById('room-info');
+    const displayRoomCode = document.getElementById('display-room-code');
+    const playerNameInput = document.getElementById('player-name-input');
+    const roomCodeInput = document.getElementById('room-code-input');
+    const createRoomBtn = document.getElementById('create-room-btn');
+    const joinRoomBtn = document.getElementById('join-room-btn');
+    const buzzer = document.getElementById('buzzer');
+    const buzzerLabel = document.getElementById('buzzer-label');
+    const statusText = document.getElementById('status-text');
+    const hostTools = document.getElementById('host-tools');
+    const resetBuzzerBtn = document.getElementById('reset-buzzer-btn');
+    const toggleLockBtn = document.getElementById('toggle-lock-btn');
+    const playersList = document.getElementById('players-list');
+    const playerCount = document.getElementById('player-count');
+    const hostTag = document.getElementById('host-tag');
+
+    // المتغيرات العامة للغرفة
+    let currentRoom = null;
+    let myPlayerId = 'p_' + Math.random().toString(36).substr(2, 9);
+    let myPlayerName = localStorage.getItem('player_nickname') || '';
+    let isHost = false;
+
+    if (myPlayerName) playerNameInput.value = myPlayerName;
+
+    // فحص الرابط المباشر (مثل: ?room=1234)
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryRoom = urlParams.get('room');
+    if (queryRoom) {
+      roomCodeInput.value = queryRoom;
+    }
+
+    // المؤثرات الصوتية برمجياً عبر Web Audio API
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq, type, duration) {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function soundWin() { playBeep(880, 'sine', 0.4); } // نغمة فوز عالية
+    function soundFail() { playBeep(220, 'triangle', 0.25); } // نغمة قفل منخفضة
+
+    function triggerHaptic(type) {
+      if (navigator.vibrate) {
+        if (type === 'win') navigator.vibrate([100, 50, 150]);
+        else navigator.vibrate(80);
+      }
+    }
+
+    // إنشاء غرفة جديدة
+    createRoomBtn.addEventListener('click', () => {
+      const name = playerNameInput.value.trim();
+      if (!name) return alert('الرجاء كتابة اسمك أولاً!');
+      localStorage.setItem('player_nickname', name);
+      myPlayerName = name;
+
+      const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+      isHost = true;
+
+      const roomRef = db.ref('buzzer_rooms/' + roomCode);
+      roomRef.set({
+        hostId: myPlayerId,
+        hostName: name,
+        createdAt: Date.now(),
+        state: {
+          isLocked: false,
+          winnerId: null,
+          winnerName: null
+        }
+      }).then(() => {
+        enterRoom(roomCode);
+      });
+    });
+
+    // الانضمام لغرفة
+    joinRoomBtn.addEventListener('click', () => {
+      const name = playerNameInput.value.trim();
+      const code = roomCodeInput.value.trim();
+      if (!name) return alert('الرجاء كتابة اسمك أولاً!');
+      if (!code || code.length !== 4) return alert('كود الغرفة غير صحيح (4 أرقام)!');
+      localStorage.setItem('player_nickname', name);
+      myPlayerName = name;
+
+      db.ref('buzzer_rooms/' + code).once('value', snap => {
+        if (!snap.exists()) {
+          alert('الغرفة غير موجودة أو انتهت صلاحيتها!');
+        } else {
+          isHost = (snap.val().hostId === myPlayerId);
+          enterRoom(code);
+        }
+      });
+    });
+
+    // الدخول الفعلي للغرفة
+    function enterRoom(code) {
+      currentRoom = code;
+      setupView.classList.add('hidden');
+      gameView.classList.remove('hidden');
+      roomInfo.classList.remove('hidden');
+      displayRoomCode.textContent = code;
+
+      // تحديث الرابط في المتصفح بدون إعادة تحميل
+      window.history.replaceState(null, '', `?room=${code}`);
+
+      if (isHost) {
+        hostTools.classList.remove('hidden');
+        hostTag.textContent = 'أنت مدير الغرفة 👑';
+      }
+
+      const playerRef = db.ref(`buzzer_rooms/${code}/players/${myPlayerId}`);
+      playerRef.set({
+        name: myPlayerName,
+        score: 0,
+        isHost: isHost
+      });
+
+      // خروج تلقائي عند إغلاق المتصفح
+      playerRef.onDisconnect().remove();
+
+      listenToRoom(code);
+    }
+
+    // نسخ الرابط عند الضغط على الكود
+    roomInfo.addEventListener('click', () => {
+      const shareUrl = window.location.origin + window.location.pathname + `?room=${currentRoom}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('تم نسخ رابط الغرفة المباشر! شاركه في الواتساب مع الشباب 🚀');
+      });
+    });
+
+    // الاستماع لحالة الغرفة واللاعبين
+    function listenToRoom(code) {
+      const roomRef = db.ref('buzzer_rooms/' + code);
+
+      // الاستماع للضغط والجرس
+      roomRef.child('state').on('value', snap => {
+        const state = snap.val();
+        if (!state) return;
+
+        document.body.className = '';
+
+        if (!state.isLocked && !state.winnerId) {
+          // جرس جاهز ومفتوح للجميع
+          buzzer.className = 'buzzer-btn';
+          buzzer.disabled = false;
+          buzzerLabel.textContent = 'اضغط!';
+          statusText.textContent = 'الجرس جاهز! أسرع ضغطة تفوز ⚡';
+          statusText.style.color = 'var(--gold)';
+        } else if (state.winnerId === myPlayerId) {
+          // أنا الفائز الأسرع!
+          buzzer.className = 'buzzer-btn won';
+          buzzer.disabled = true;
+          buzzerLabel.textContent = 'أنت الأول! 🟢';
+          statusText.textContent = 'كفو! أنت أسرع واحد، جاوب الآن! 👑';
+          statusText.style.color = '#34d399';
+          document.body.classList.add('win-glow');
+          soundWin();
+          triggerHaptic('win');
+        } else {
+          // سبقني لاعب آخر
+          buzzer.className = 'buzzer-btn locked';
+          buzzer.disabled = true;
+          buzzerLabel.textContent = 'سبقك أحد 🔴';
+          statusText.textContent = `الأسرع: ${state.winnerName || 'متسابق آخر'}!`;
+          statusText.style.color = '#ef4444';
+          document.body.classList.add('lock-glow');
+          soundFail();
+          triggerHaptic('fail');
+        }
+      });
+
+      // الاستماع لقائمة الحاضرين والنقاط
+      roomRef.child('players').on('value', snap => {
+        playersList.innerHTML = '';
+        const players = snap.val() || {};
+        const entries = Object.entries(players);
+        playerCount.textContent = entries.length;
+
+        entries.forEach(([id, p]) => {
+          const li = document.createElement('li');
+          li.className = 'player-row';
+          li.innerHTML = `
+            <div class="player-meta">
+              <span>${p.isHost ? '👑' : '👤'}</span>
+              <span style="font-weight: 700; ${id === myPlayerId ? 'color: var(--gold);' : ''}">${p.name} ${id === myPlayerId ? '(أنت)' : ''}</span>
+            </div>
+            <div class="score-controls">
+              <span style="font-weight: 800; color: var(--gold); margin-left: 0.5rem;">${p.score || 0} نقطة</span>
+              ${isHost ? `
+                <button class="score-btn" onclick="changeScore('${id}', 1)">+</button>
+                <button class="score-btn" onclick="changeScore('${id}', -1)">-</button>
+                ${id !== myPlayerId ? `<button class="score-btn" style="color: #ef4444;" onclick="kickPlayer('${id}')">✕</button>` : ''}
+              ` : ''}
+            </div>
+          `;
+          playersList.appendChild(li);
+        });
+      });
+    }
+
+    // ضغط زر الجرس (حسم الأسبقية الذري)
+    buzzer.addEventListener('click', () => {
+      if (!currentRoom) return;
+
+      const stateRef = db.ref(`buzzer_rooms/${currentRoom}/state`);
+      stateRef.transaction(current => {
+        if (current && !current.isLocked && !current.winnerId) {
+          current.isLocked = true;
+          current.winnerId = myPlayerId;
+          current.winnerName = myPlayerName;
+          current.buzzTime = Date.now();
+          return current;
+        }
+        return; // محجوز بالفعل
+      });
+    });
+
+    // تحكم المشرف: تصفير الجرس
+    resetBuzzerBtn.addEventListener('click', () => {
+      if (!currentRoom || !isHost) return;
+      db.ref(`buzzer_rooms/${currentRoom}/state`).set({
+        isLocked: false,
+        winnerId: null,
+        winnerName: null
+      });
+    });
+
+    // تحكم المشرف: قفل/فتح الجرس
+    toggleLockBtn.addEventListener('click', () => {
+      if (!currentRoom || !isHost) return;
+      const stateRef = db.ref(`buzzer_rooms/${currentRoom}/state`);
+      stateRef.once('value', snap => {
+        const locked = snap.val()?.isLocked;
+        stateRef.update({
+          isLocked: !locked,
+          winnerId: null,
+          winnerName: !locked ? 'المشرف قفل الجرس' : null
+        });
+      });
+    });
+
+    // دوال تحكم المشرف في النقاط والطرد
+    window.changeScore = function(targetId, delta) {
+      if (!isHost || !currentRoom) return;
+      const sRef = db.ref(`buzzer_rooms/${currentRoom}/players/${targetId}/score`);
+      sRef.transaction(s => (s || 0) + delta);
+    };
+
+    window.kickPlayer = function(targetId) {
+      if (!isHost || !currentRoom) return;
+      if (confirm('هل أنت متأكد من طرد المتسابق؟')) {
+        db.ref(`buzzer_rooms/${currentRoom}/players/${targetId}`).remove();
+      }
+    };
+  </script>
+</body>
+</html>
