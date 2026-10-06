@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>التفادي الفضائي | Space Dodger</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary: #6366f1;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; user-select: none; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1.5rem 1rem; }
+    .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 1rem; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; }
+    .back-link { color: var(--text-muted); text-decoration: none; font-size: 0.95rem; font-weight: 600; }
+    
+    canvas {
+      width: 100%;
+      height: 380px;
+      background: #020617;
+      border: 2px solid var(--card-border);
+      border-radius: 1rem;
+      display: block;
+      touch-action: none;
+    }
+
+    .btn { background-color: var(--primary); color: #fff; border: none; padding: 0.8rem; font-size: 1rem; font-weight: 700; border-radius: 0.75rem; cursor: pointer; }
+    .leaderboard-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 1rem; padding: 1rem; }
+    .leaderboard-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; display: flex; justify-content: space-between; }
+    .leaderboard-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .leaderboard-item { display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 0.6rem 0.85rem; border-radius: 0.6rem; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="top-nav">
+      <a href="../index.html" class="back-link">← العودة للرئيسية</a>
+      <span style="font-weight: 600; color: var(--text-muted);">التفادي الفضائي 🚀</span>
+    </div>
+
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <button class="btn" id="start-btn">ابدأ اللعبة 🎮 (اسحب أو استخدم الأسهم)</button>
+
+    <div class="leaderboard-section">
+      <div class="leaderboard-title">
+        <span>🏆 الصدارة المباشرة (أعلى مسافة ونقاط)</span>
+        <span style="font-size: 0.75rem; color: #34d399;">🟢 متصل</span>
+      </div>
+      <ul class="leaderboard-list" id="leaderboard-list">
+        <li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
+      authDomain: "memory-game-2f2d4.firebaseapp.com",
+      databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
+      projectId: "memory-game-2f2d4",
+      storageBucket: "memory-game-2f2d4.firebasestorage.app",
+      messagingSenderId: "234692589834",
+      appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
+      measurementId: "G-X3V9MP6LS5"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const scoresRef = db.ref('runner_leaderboard');
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('start-btn');
+    const leaderboardList = document.getElementById('leaderboard-list');
+
+    let player = { x: 185, y: 340, size: 30, speed: 7 };
+    let obstacles = [];
+    let score = 0;
+    let gameInterval = null;
+    let isPlaying = false;
+
+    function resetGame() {
+      player.x = 185;
+      obstacles = [];
+      score = 0;
+    }
+
+    function spawnObstacle() {
+      const size = Math.random() * 25 + 20;
+      obstacles.push({
+        x: Math.random() * (canvas.width - size),
+        y: -size,
+        size: size,
+        speed: Math.random() * 3 + 3 + (score / 150)
+      });
+    }
+
+    function update() {
+      score++;
+      if (Math.random() < 0.05) spawnObstacle();
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // رسم اللاعب (مركبة)
+      ctx.font = '28px system-ui';
+      ctx.fillText('🚀', player.x, player.y);
+
+      // رسم وتحريك العقبات
+      for (let i = 0; i < obstacles.length; i++) {
+        let obs = obstacles[i];
+        obs.y += obs.speed;
+        ctx.fillText('☄️', obs.x, obs.y);
+
+        // اصطدام
+        if (
+          player.x < obs.x + obs.size &&
+          player.x + 25 > obs.x &&
+          player.y - 25 < obs.y &&
+          player.y > obs.y - obs.size
+        ) {
+          gameOver();
+          return;
+        }
+      }
+
+      // تصفية العقبات اللي طلعت
+      obstacles = obstacles.filter(o => o.y < canvas.height + 50);
+
+      // عرض النقاط
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 16px system-ui';
+      ctx.fillText(`النقاط: ${score}`, 15, 30);
+
+      if (isPlaying) requestAnimationFrame(update);
+    }
+
+    function gameOver() {
+      isPlaying = false;
+      startBtn.style.display = 'block';
+      startBtn.textContent = 'إعادة اللعب 🔄';
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ef4444';
+      ctx.font = 'bold 30px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('تحطمت المركبة! 💥', canvas.width / 2, canvas.height / 2);
+      ctx.fillStyle = '#fff';
+      ctx.font = '18px system-ui';
+      ctx.fillText(`مجموع نقاطك: ${score}`, canvas.width / 2, canvas.height / 2 + 40);
+      ctx.textAlign = 'start';
+
+      const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+      scoresRef.push({ name: playerName, score: score, timestamp: Date.now() });
+    }
+
+    startBtn.addEventListener('click', () => {
+      resetGame();
+      isPlaying = true;
+      startBtn.style.display = 'none';
+      update();
+    });
+
+    // تحكم الكيبورد واللمس
+    window.addEventListener('keydown', e => {
+      if (!isPlaying) return;
+      if (e.key === 'ArrowRight' || e.key === 'd') player.x = Math.min(canvas.width - 30, player.x + 25);
+      if (e.key === 'ArrowLeft' || e.key === 'a') player.x = Math.max(0, player.x - 25);
+    });
+
+    canvas.addEventListener('touchmove', e => {
+      if (!isPlaying) return;
+      const rect = canvas.getBoundingClientRect();
+      const touchX = e.touches[0].clientX - rect.left;
+      player.x = Math.max(0, Math.min(canvas.width - 30, (touchX / rect.width) * canvas.width - 15));
+    });
+
+    scoresRef.on('value', snapshot => {
+      const data = snapshot.val();
+      leaderboardList.innerHTML = '';
+      if (!data) {
+        leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام بعد</li>';
+        return;
+      }
+      const list = Object.values(data);
+      list.sort((a, b) => b.score - a.score);
+      const top10 = list.slice(0, 10);
+      const medals = ['🥇', '🥈', '🥉'];
+      top10.forEach((item, index) => {
+        const rank = medals[index] || `#${index + 1}`;
+        const li = document.createElement('li');
+        li.className = 'leaderboard-item';
+        li.innerHTML = `
+          <span style="font-weight: bold; width: 30px;">${rank}</span>
+          <span style="flex: 1; font-weight: 600;">${item.name}</span>
+          <span style="color: var(--text-muted); font-weight: bold;">🚀 ${item.score} م</span>
+        `;
+        leaderboardList.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>
