@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
   <title>جرس التحدي السريع | Buzzer Studio</title>
 
+  <!-- Firebase Compat Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -122,11 +123,8 @@
       font-size: 0.9rem;
       font-weight: 700;
       cursor: pointer;
-      transition: transform 0.15s ease, background 0.15s ease;
-    }
-
-    .room-badge:active {
-      transform: scale(0.96);
+      border: none;
+      outline: none;
     }
 
     .setup-card {
@@ -441,7 +439,7 @@
     <div class="top-bar">
       <a href="../index.html" class="back-home-btn">← الرئيسية</a>
       <button id="share-room-btn" class="room-badge hidden" title="مشاركة أو نسخ رابط الغرفة">
-        <span>غرفة رقم: <strong id="display-room-code">----</strong></span>
+        <span>غرفة: <strong id="display-room-code">----</strong></span>
         <span>🔗 مشاركة</span>
       </button>
     </div>
@@ -451,7 +449,7 @@
       <p style="color: var(--text-muted); font-size: 0.9rem;">أسرع ضغطة تحسم الإجابة بالملي ثانية</p>
     </div>
 
-    <!-- شاشة الإعداد الأولية ظاهرة دائماً ولا تختفي بالخطأ -->
+    <!-- شاشة إعداد الغرفة والدخول -->
     <div id="setup-view" class="setup-card">
       <h2>اختر طريقة المشاركة</h2>
       <input type="text" id="player-name-input" class="input-box" placeholder="اكتب اسمك هنا..." maxlength="15">
@@ -480,69 +478,4 @@
 
     <!-- ساحة الجرس -->
     <div id="game-view" class="buzzer-stage hidden">
-      <div id="status-text" class="status-text" style="color: var(--gold);">جاهز! اضغط عند طرح السؤال 🔥</div>
-
-      <button id="buzzer" class="buzzer-btn">
-        <span id="buzzer-label">اضغط!</span>
-        <span id="buzzer-sub" style="font-size: 0.85rem; font-weight: normal; opacity: 0.8;">BUZZ</span>
-      </button>
-
-      <div id="host-tools" class="host-bar hidden">
-        <button id="reset-buzzer-btn" class="btn btn-gold">🔄 تصفير الجرس</button>
-        <button id="toggle-lock-btn" class="btn btn-danger">🔒 قفل الجرس</button>
-        <button id="open-ban-modal-btn" class="btn btn-purple" style="flex: 1 1 100%;">🚫 إدارة الحظر (قائمة المحظورين)</button>
-      </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <span>👥 المتسابقين في الغرفة (<span id="player-count">0</span>)</span>
-          <span id="host-tag" style="color: var(--gold); font-size: 0.8rem;"></span>
-        </div>
-        <ul id="players-list" class="player-list"></ul>
-      </div>
-    </div>
-  </div>
-
-  <div id="ban-modal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>🚫 إدارة الحظر</h3>
-        <button id="close-ban-modal-btn" class="close-btn">&times;</button>
-      </div>
-
-      <div class="modal-section-title">حظر لاعب متواجد الآن:</div>
-      <ul id="active-players-ban-list" class="player-list" style="max-height: 140px;"></ul>
-
-      <div class="modal-section-title">المحظورون حالياً (يمكنك فك الحظر):</div>
-      <ul id="banned-players-list" class="player-list" style="max-height: 140px;"></ul>
-    </div>
-  </div>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
-      authDomain: "memory-game-2f2d4.firebaseapp.com",
-      databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
-      projectId: "memory-game-2f2d4",
-      storageBucket: "memory-game-2f2d4.firebasestorage.app",
-      messagingSenderId: "234692589834",
-      appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
-      measurementId: "G-X3V9MP6LS5"
-    };
-
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    const setupView = document.getElementById('setup-view');
-    const gameView = document.getElementById('game-view');
-    const blockedView = document.getElementById('blocked-view');
-    const blockedTitle = document.getElementById('blocked-title');
-    const blockedDesc = document.getElementById('blocked-desc');
-    const rejoinBtn = document.getElementById('rejoin-btn');
-    const shareRoomBtn = document.getElementById('share-room-btn');
-    const displayRoomCode = document.getElementById('display-room-code');
-    const playerNameInput = document.getElementById('player-name-input');
-    const roomCodeInput = document.getElementById('room-code-input');
-    const createRoomBtn = document.getElementById('create-room-btn');
-    const joinRoomBtn = document.getElementById('join-room-btn');
-    const
+      <div id="status
