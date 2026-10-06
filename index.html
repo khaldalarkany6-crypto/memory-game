@@ -29,12 +29,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
+      padding: 2.5rem 1rem;
     }
 
     .container {
       width: 100%;
-      max-width: 720px;
+      max-width: 680px;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -55,12 +55,11 @@
       font-size: 1rem;
     }
 
-    /* قسم تسجيل اسم اللاعب */
     .profile-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 1rem;
-      padding: 1.2rem;
+      padding: 1.25rem;
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
@@ -107,7 +106,6 @@
       background-color: var(--primary-hover);
     }
 
-    /* شبكة الألعاب */
     .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -122,7 +120,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 1.2rem;
       text-decoration: none;
       color: inherit;
       transition: transform 0.2s, border-color 0.2s;
@@ -141,13 +139,13 @@
 
     .game-icon {
       font-size: 2.2rem;
-      background: rgba(99, 102, 241, 0.1);
+      background: rgba(99, 102, 241, 0.15);
       padding: 0.6rem;
       border-radius: 0.75rem;
     }
 
     .game-info h2 {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       margin-bottom: 0.25rem;
     }
 
@@ -172,40 +170,40 @@
   <div class="container">
     <header>
       <h1>🎮 ساحة التحديات</h1>
-      <p>اختر اللعبة ونافس على المركز الأول في الصدارة</p>
+      <p>سجل اسمك واختر اللعبة للمنافسة في الصدارة</p>
     </header>
 
-    <!-- شريط تعيين الاسم الموحد -->
     <div class="profile-card">
-      <label for="username">اسمك في التحدي (يُستخدم تلقائياً في جميع الألعاب):</label>
+      <label for="username">اسمك في التحدي (يُحفظ تلقائياً في كل الألعاب):</label>
       <div class="profile-input-group">
         <input type="text" id="username" placeholder="اكتب اسمك هنا..." maxlength="15">
         <button class="btn" id="save-user-btn">حفظ</button>
       </div>
     </div>
 
-    <!-- كروت الألعاب -->
     <div class="games-grid">
+      <!-- كرت لعبة الذاكرة -->
       <a href="memory/index.html" class="game-card">
         <div class="game-header">
           <div class="game-icon">🧠</div>
           <div class="game-info">
             <h2>تحدي الذاكرة</h2>
-            <p>اقلب الكروت واجمع الرموز المتطابقة بأقل وقت ومحاولات.</p>
+            <p>اقلب الكروت واجمع الرموز المتطابقة بأسرع وقت وأقل محاولات.</p>
           </div>
         </div>
-        <span class="game-badge">أونلاين ليدربورد</span>
+        <span class="game-badge">أونلاين ليدربورد 🟢</span>
       </a>
 
+      <!-- كرت لعبة سرعة رد الفعل -->
       <a href="reaction/index.html" class="game-card">
         <div class="game-header">
           <div class="game-icon">⚡</div>
           <div class="game-info">
             <h2>سرعة رد الفعل</h2>
-            <p>اختبر سرعة استجابتك بالملي ثانية بمجرد تغير لون الشاشة.</p>
+            <p>اختبر سرعة استجابتك بالملي ثانية بمجرد تحول الشاشة للأخضر.</p>
           </div>
         </div>
-        <span class="game-badge">أونلاين ليدربورد</span>
+        <span class="game-badge">أونلاين ليدربورد 🟢</span>
       </a>
     </div>
   </div>
@@ -214,7 +212,6 @@
     const usernameInput = document.getElementById('username');
     const saveBtn = document.getElementById('save-user-btn');
 
-    // استرجاع الاسم المحفوظ مسبقاً
     const savedName = localStorage.getItem('player_nickname') || '';
     usernameInput.value = savedName;
 
@@ -222,7 +219,7 @@
       const name = usernameInput.value.trim();
       if (name) {
         localStorage.setItem('player_nickname', name);
-        alert('تم حفظ الاسم بنجاح!');
+        alert('تم حفظ اسمك بنجاح! الآن ادخل أي لعبة وتنافس.');
       }
     });
   </script>
