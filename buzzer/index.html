@@ -46,12 +46,12 @@
     }
 
     body.win-glow {
-      background-color: #062419;
+      background-color: #062419 !important;
       box-shadow: inset 0 0 100px rgba(16, 185, 129, 0.4);
     }
 
     body.lock-glow {
-      background-color: #260a12;
+      background-color: #260a12 !important;
       box-shadow: inset 0 0 100px rgba(225, 29, 72, 0.3);
     }
 
@@ -123,10 +123,6 @@
       font-weight: 700;
       cursor: pointer;
       transition: transform 0.15s ease, background 0.15s ease;
-    }
-
-    .room-badge:hover {
-      background: rgba(245, 158, 11, 0.25);
     }
 
     .room-badge:active {
@@ -240,4 +236,313 @@
 
     .buzzer-btn.won {
       background: radial-gradient(circle at 35% 35%, #34d399, var(--btn-win));
-      box-shadow: 0 16px 0 var(--btn-win-shadow), 0 25px 30px rgba(16, 185, 129
+      box-shadow: 0 16px 0 var(--btn-win-shadow), 0 25px 30px rgba(16, 185, 129, 0.3);
+      animation: pulse-ring 1s infinite alternate;
+    }
+
+    .buzzer-btn.locked {
+      background: radial-gradient(circle at 35% 35%, #4b5563, var(--btn-lock));
+      box-shadow: 0 16px 0 var(--btn-lock-shadow), 0 25px 30px rgba(0,0,0,0.4);
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+
+    @keyframes pulse-ring {
+      from { transform: scale(1); }
+      to { transform: scale(1.03); }
+    }
+
+    .status-text {
+      font-size: 1.3rem;
+      font-weight: 800;
+      text-align: center;
+      min-height: 2rem;
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .player-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .player-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #030712;
+      padding: 0.6rem 0.85rem;
+      border-radius: 0.6rem;
+      font-size: 0.95rem;
+    }
+
+    .player-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .score-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .score-btn {
+      background: #1f2937;
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      width: 28px;
+      height: 28px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kick-btn {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 0.4rem;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      transition: all 0.2s;
+    }
+
+    .kick-btn:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .host-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .host-bar .btn {
+      flex: 1 1 45%;
+      font-size: 0.9rem;
+      padding: 0.65rem 0.8rem;
+    }
+
+    .blocked-card {
+      background: #450a0a;
+      border: 2px solid #ef4444;
+      border-radius: 1.25rem;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      width: 100%;
+      max-width: 440px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      font-size: 1.2rem;
+      color: #ef4444;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .modal-section-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--gold);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.3rem;
+      margin-top: 0.5rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="top-bar">
+      <a href="../index.html" class="back-home-btn">← الرئيسية</a>
+      <button id="share-room-btn" class="room-badge hidden" title="مشاركة أو نسخ رابط الغرفة">
+        <span>غرفة رقم: <strong id="display-room-code">----</strong></span>
+        <span>🔗 مشاركة</span>
+      </button>
+    </div>
+
+    <div class="header">
+      <h1>🚨 جرس التحدي السريع</h1>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">أسرع ضغطة تحسم الإجابة بالملي ثانية</p>
+    </div>
+
+    <!-- شاشة الإعداد الأولية ظاهرة دائماً ولا تختفي بالخطأ -->
+    <div id="setup-view" class="setup-card">
+      <h2>اختر طريقة المشاركة</h2>
+      <input type="text" id="player-name-input" class="input-box" placeholder="اكتب اسمك هنا..." maxlength="15">
+      
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="create-room-btn" class="btn btn-gold" style="flex: 1;">👑 إنشاء غرفة جديدة</button>
+      </div>
+
+      <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">— أو ادخل كود غرفة موجودة —</div>
+      
+      <div style="display: flex; gap: 0.5rem;">
+        <input type="text" id="room-code-input" class="input-box" placeholder="كود الغرفة (4 أرقام)" maxlength="4" style="flex: 1;">
+        <button id="join-room-btn" class="btn" style="flex: 1;">🚪 انضمام</button>
+      </div>
+    </div>
+
+    <!-- شاشة الاستبعاد -->
+    <div id="blocked-view" class="blocked-card hidden">
+      <h2 id="blocked-title" style="color: #f87171; font-size: 1.4rem;">تم استبعادك من الغرفة</h2>
+      <p id="blocked-desc" style="color: #fca5a5; font-size: 0.9rem;">قام المشرف باستبعادك من هذه الجولة.</p>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="rejoin-btn" class="btn" style="flex: 1;">إعادة المحاولة 🔄</button>
+        <a href="../index.html" class="btn btn-danger" style="flex: 1; text-decoration: none;">الرئيسية</a>
+      </div>
+    </div>
+
+    <!-- ساحة الجرس -->
+    <div id="game-view" class="buzzer-stage hidden">
+      <div id="status-text" class="status-text" style="color: var(--gold);">جاهز! اضغط عند طرح السؤال 🔥</div>
+
+      <button id="buzzer" class="buzzer-btn">
+        <span id="buzzer-label">اضغط!</span>
+        <span id="buzzer-sub" style="font-size: 0.85rem; font-weight: normal; opacity: 0.8;">BUZZ</span>
+      </button>
+
+      <div id="host-tools" class="host-bar hidden">
+        <button id="reset-buzzer-btn" class="btn btn-gold">🔄 تصفير الجرس</button>
+        <button id="toggle-lock-btn" class="btn btn-danger">🔒 قفل الجرس</button>
+        <button id="open-ban-modal-btn" class="btn btn-purple" style="flex: 1 1 100%;">🚫 إدارة الحظر (قائمة المحظورين)</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span>👥 المتسابقين في الغرفة (<span id="player-count">0</span>)</span>
+          <span id="host-tag" style="color: var(--gold); font-size: 0.8rem;"></span>
+        </div>
+        <ul id="players-list" class="player-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="ban-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🚫 إدارة الحظر</h3>
+        <button id="close-ban-modal-btn" class="close-btn">&times;</button>
+      </div>
+
+      <div class="modal-section-title">حظر لاعب متواجد الآن:</div>
+      <ul id="active-players-ban-list" class="player-list" style="max-height: 140px;"></ul>
+
+      <div class="modal-section-title">المحظورون حالياً (يمكنك فك الحظر):</div>
+      <ul id="banned-players-list" class="player-list" style="max-height: 140px;"></ul>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
+      authDomain: "memory-game-2f2d4.firebaseapp.com",
+      databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
+      projectId: "memory-game-2f2d4",
+      storageBucket: "memory-game-2f2d4.firebasestorage.app",
+      messagingSenderId: "234692589834",
+      appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
+      measurementId: "G-X3V9MP6LS5"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const setupView = document.getElementById('setup-view');
+    const gameView = document.getElementById('game-view');
+    const blockedView = document.getElementById('blocked-view');
+    const blockedTitle = document.getElementById('blocked-title');
+    const blockedDesc = document.getElementById('blocked-desc');
+    const rejoinBtn = document.getElementById('rejoin-btn');
+    const shareRoomBtn = document.getElementById('share-room-btn');
+    const displayRoomCode = document.getElementById('display-room-code');
+    const playerNameInput = document.getElementById('player-name-input');
+    const roomCodeInput = document.getElementById('room-code-input');
+    const createRoomBtn = document.getElementById('create-room-btn');
+    const joinRoomBtn = document.getElementById('join-room-btn');
+    const
