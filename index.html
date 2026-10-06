@@ -58,7 +58,6 @@
       font-size: 2.4rem;
       font-weight: 900;
       color: #fff;
-      margin-bottom: 0.1rem;
     }
 
     header p {
@@ -89,7 +88,6 @@
       display: flex;
       flex-direction: column;
       gap: 0.85rem;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     }
 
     .profile-header {
@@ -114,10 +112,6 @@
       font-size: 1rem;
     }
 
-    .profile-input-group input:focus {
-      border-color: var(--primary);
-    }
-
     .btn {
       background-color: var(--primary);
       color: #fff;
@@ -127,12 +121,9 @@
       font-weight: 600;
       border-radius: 0.75rem;
       cursor: pointer;
-      transition: all 0.2s;
     }
 
-    .btn:hover { 
-      background-color: var(--primary-hover); 
-    }
+    .btn:hover { background-color: var(--primary-hover); }
 
     /* قاعة المشاهير */
     .hall-of-fame {
@@ -171,7 +162,7 @@
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    /* شبكة كروت الألعاب */
+    /* شبكة كروت الألعاب الـ 7 كاملة */
     .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -243,7 +234,6 @@
     .admin-link {
       cursor: pointer;
       opacity: 0.4;
-      transition: opacity 0.2s;
     }
     .admin-link:hover { 
       opacity: 1; 
@@ -285,16 +275,135 @@
       </ul>
     </div>
 
-    <!-- شبكة كروت الألعاب -->
+    <!-- شبكة كروت الألعاب الـ 7 -->
     <div class="games-grid">
-      <!-- جرس المسابقات المباشر -->
+      <!-- 1. جرس المسابقات المباشر -->
       <a href="buzzer/index.html" class="game-card" style="border-color: rgba(245, 158, 11, 0.4); background: linear-gradient(145deg, #151f32, #1a233a);">
         <div class="game-icon" style="background: rgba(245, 158, 11, 0.15);">🚨</div>
         <div class="game-info">
           <h2 style="color: var(--gold);">جرس التحدي السريع</h2>
-          <p>غرف مسابقات حية مباشرة وأسرع ضغطة تحسم الدور بالملي ثانية.</p>
+          <p>غرف مسابقات حية ومباشرة وأسرع ضغطة تحسم الدور بالملي ثانية.</p>
         </div>
         <span class="game-badge" style="background: rgba(245, 158, 11, 0.2); color: var(--gold);">متعدد الغرف 👑</span>
       </a>
 
-      <a href="memory/index.html" class
+      <!-- 2. تحدي الذاكرة -->
+      <a href="memory/index.html" class="game-card">
+        <div class="game-icon">🧠</div>
+        <div class="game-info">
+          <h2>تحدي الذاكرة</h2>
+          <p>تطابق الكروت الذكية بأقل وقت وأقل حركات.</p>
+        </div>
+        <span class="game-badge">ليدربورد 🟢</span>
+      </a>
+
+      <!-- 3. سرعة رد الفعل -->
+      <a href="reaction/index.html" class="game-card">
+        <div class="game-icon">⚡</div>
+        <div class="game-info">
+          <h2>سرعة رد الفعل</h2>
+          <p>قياس سرعة استجابتك بالملي ثانية بدقة.</p>
+        </div>
+        <span class="game-badge">ليدربورد 🟢</span>
+      </a>
+
+      <!-- 4. سرعة النقر -->
+      <a href="clicker/index.html" class="game-card">
+        <div class="game-icon">👆</div>
+        <div class="game-info">
+          <h2>سرعة النقر (10s)</h2>
+          <p>كم نقرة تقدر تجيب خلال 10 ثوانٍ؟</p>
+        </div>
+        <span class="game-badge">ليدربورد 🟢</span>
+      </a>
+
+      <!-- 5. الرياضيات الخاطفة -->
+      <a href="math/index.html" class="game-card">
+        <div class="game-icon">📐</div>
+        <div class="game-info">
+          <h2>الرياضيات الخاطفة</h2>
+          <p>معادلات حسابية صح أو خطأ في 30 ثانية.</p>
+        </div>
+        <span class="game-badge">ليدربورد 🟢</span>
+      </a>
+
+      <!-- 6. التفادي الفضائي -->
+      <a href="runner/index.html" class="game-card">
+        <div class="game-icon">🚀</div>
+        <div class="game-info">
+          <h2>التفادي الفضائي</h2>
+          <p>تحكم بالمركبة وتفادَ النيازك المتساقطة.</p>
+        </div>
+        <span class="game-badge">ليدربورد 🟢</span>
+      </a>
+
+      <!-- 7. سرعة الكتابة -->
+      <a href="typing/index.html" class="game-card">
+        <div class="game-icon">⌨️</div>
+        <div class="game-info">
+          <h2>سرعة الكتابة</h2>
+          <p>تحدي سرعة طباعة الكلمات بالدقيقة (WPM).</p>
+        </div>
+        <span class="game-badge">ليدربورد 🟢</span>
+      </a>
+    </div>
+
+    <footer>
+      <p>جميع الحقوق محفوظة © 2026 • تم التطوير بواسطة <strong>خلدون</strong> 🚀</p>
+      <p style="font-size: 0.75rem; opacity: 0.7;">
+        منصة التحديات التفاعلية • <span class="admin-link" id="admin-btn">لوحة المشرف</span>
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
+      authDomain: "memory-game-2f2d4.firebaseapp.com",
+      databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
+      projectId: "memory-game-2f2d4",
+      storageBucket: "memory-game-2f2d4.firebasestorage.app",
+      messagingSenderId: "234692589834",
+      appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
+      measurementId: "G-X3V9MP6LS5"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const usernameInput = document.getElementById('username');
+    const saveBtn = document.getElementById('save-user-btn');
+    const hofList = document.getElementById('hof-list');
+    const adminBtn = document.getElementById('admin-btn');
+
+    const savedName = localStorage.getItem('player_nickname') || '';
+    usernameInput.value = savedName;
+
+    saveBtn.addEventListener('click', () => {
+      const name = usernameInput.value.trim();
+      if (!name) {
+        alert('الرجاء كتابة اسمك أولاً!');
+        return;
+      }
+      localStorage.setItem('player_nickname', name);
+      alert(`أهلاً بك يا ${name}! تم حفظ اسمك وسينافس رسمياً في كل التحديات.`);
+    });
+
+    const gamesConfig = [
+      { key: 'reaction_leaderboard', sortAsc: true, valKey: 'reactionTime' },
+      { key: 'memory_leaderboard', sortAsc: true, valKey: 'time' },
+      { key: 'clicker_leaderboard', sortAsc: false, valKey: 'clicks' },
+      { key: 'math_leaderboard', sortAsc: false, valKey: 'score' },
+      { key: 'runner_leaderboard', sortAsc: false, valKey: 'score' },
+      { key: 'typing_leaderboard', sortAsc: false, valKey: 'wpm' }
+    ];
+
+    const currentGamesData = {};
+
+    function updateLiveHallOfFame() {
+      const points = [100, 70, 50, 30, 20, 10];
+      const playerTotalPoints = {};
+
+      gamesConfig.forEach(g => {
+        const rawData = currentGamesData[g.key];
+        if (!rawData) return;
