@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تحدي سرعة رد الفعل | Reaction Time</title>
+  
+  <!-- استدعاء Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --primary: #6366f1;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .top-nav {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .back-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: #fff;
+    }
+
+    /* منطقة اللعبة التفاعلية */
+    .game-area {
+      width: 100%;
+      height: 280px;
+      border-radius: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      background-color: #1e293b;
+      border: 2px dashed var(--card-border);
+    }
+
+    .game-area.waiting {
+      background-color: #dc2626;
+      border: none;
+    }
+
+    .game-area.ready {
+      background-color: #16a34a;
+      border: none;
+    }
+
+    .game-area h2 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .game-area p {
+      font-size: 1rem;
+      opacity: 0.9;
+    }
+
+    /* لوحة الصدارة */
+    .leaderboard-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 1rem;
+      padding: 1rem;
+    }
+
+    .leaderboard-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .live-badge {
+      font-size: 0.75rem;
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .leaderboard-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.6rem 0.85rem;
+      border-radius: 0.6rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="top-nav">
+      <a href="../index.html" class="back-link">← العودة للرئيسية</a>
+      <span style="font-weight: 600; color: var(--text-muted);">تحدي رد الفعل ⚡</span>
+    </div>
+
+    <!-- شاشة الاختبار -->
+    <div class="game-area" id="box">
+      <h2 id="box-title">اضغط هنا للبدء</h2>
+      <p id="box-desc">عندما تتحول الشاشة للأخضر، انقر بأسرع ما يمكن!</p>
+    </div>
+
+    <!-- الصدارة المباشرة -->
+    <div class="leaderboard-section">
+      <div class="leaderboard-title">
+        <span>🏆 الصدارة المباشرة (الأسرع بالملي ثانية)</span>
+        <span class="live-badge">🟢 متصل ومباشر</span>
+      </div>
+      <ul class="leaderboard-list" id="leaderboard-list">
+        <li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // إعدادات Firebase الخاصة بمشروعك
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
+      authDomain: "memory-game-2f2d4.firebaseapp.com",
+      databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
+      projectId: "memory-game-2f2d4",
+      storageBucket: "memory-game-2f2d4.firebasestorage.app",
+      messagingSenderId: "234692589834",
+      appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
+      measurementId: "G-X3V9MP6LS5"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const scoresRef = db.ref('reaction_leaderboard');
+
+    const box = document.getElementById('box');
+    const boxTitle = document.getElementById('box-title');
+    const boxDesc = document.getElementById('box-desc');
+    const leaderboardList = document.getElementById('leaderboard-list');
+
+    let state = 'idle'; // idle | waiting | ready
+    let startTime = 0;
+    let timeoutId = null;
+
+    box.addEventListener('click', () => {
+      if (state === 'idle') {
+        state = 'waiting';
+        box.className = 'game-area waiting';
+        boxTitle.textContent = 'انتظر اللون الأخضر...';
+        boxDesc.textContent = 'لا تنقر الآن أبداً!';
+
+        // وقت عشوائي بين ثانية ونصف إلى أربع ثوانٍ
+        const randomDelay = Math.floor(Math.random() * 2500) + 1500;
+        timeoutId = setTimeout(() => {
+          state = 'ready';
+          box.className = 'game-area ready';
+          boxTitle.textContent = 'اضغط الآن! ⚡';
+          boxDesc.textContent = '';
+          startTime = performance.now();
+        }, randomDelay);
+
+      } else if (state === 'waiting') {
+        clearTimeout(timeoutId);
+        state = 'idle';
+        box.className = 'game-area';
+        boxTitle.textContent = 'استعجلت! ❌';
+        boxDesc.textContent = 'نقرت قبل ظهور اللون الأخضر. اضغط للمحاولة من جديد.';
+
+      } else if (state === 'ready') {
+        const score = Math.round(performance.now() - startTime);
+        state = 'idle';
+        box.className = 'game-area';
+        boxTitle.textContent = `${score} ملي ثانية (ms)`;
+        boxDesc.textContent = 'اضغط لتجربة حظك مرة أخرى.';
+
+        const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+        scoresRef.push({
+          name: playerName,
+          reactionTime: score,
+          timestamp: Date.now()
+        });
+      }
+    });
+
+    // استماع مباشر لتحديثات الليدربورد
+    scoresRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      leaderboardList.innerHTML = '';
+
+      if (!data) {
+        leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام مسجلة بعد، جرب سرعتك الآن!</li>';
+        return;
+      }
+
+      // تحويل لنتائج وترتيب من الأقل زمناً للأكبر
+      const list = Object.values(data);
+      list.sort((a, b) => a.reactionTime - b.reactionTime);
+      const top10 = list.slice(0, 10);
+
+      const medals = ['🥇', '🥈', '🥉'];
+      top10.forEach((item, index) => {
+        const rank = medals[index] || `#${index + 1}`;
+        const li = document.createElement('li');
+        li.className = 'leaderboard-item';
+        li.innerHTML = `
+          <span style="font-weight: bold; width: 30px;">${rank}</span>
+          <span style="flex: 1; font-weight: 600;">${item.name}</span>
+          <span style="color: var(--text-muted); font-weight: bold;">⚡ ${item.reactionTime} ms</span>
+        `;
+        leaderboardList.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>
