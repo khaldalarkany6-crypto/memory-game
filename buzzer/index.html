@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
   <title>جرس التحدي السريع | Buzzer Studio</title>
 
-  <!-- Firebase Compat Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -123,8 +122,6 @@
       font-size: 0.9rem;
       font-weight: 700;
       cursor: pointer;
-      border: none;
-      outline: none;
     }
 
     .setup-card {
@@ -188,11 +185,6 @@
 
     .btn-danger {
       background: #ef4444;
-    }
-
-    .btn-purple {
-      background: #8b5cf6;
-      color: #fff;
     }
 
     .buzzer-stage {
@@ -345,87 +337,12 @@
 
     .host-bar {
       display: flex;
-      flex-wrap: wrap;
       gap: 0.5rem;
       width: 100%;
     }
 
     .host-bar .btn {
-      flex: 1 1 45%;
-      font-size: 0.9rem;
-      padding: 0.65rem 0.8rem;
-    }
-
-    .blocked-card {
-      background: #450a0a;
-      border: 2px solid #ef4444;
-      border-radius: 1.25rem;
-      padding: 2rem 1.5rem;
-      text-align: center;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.75);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      z-index: 1000;
-    }
-
-    .modal-content {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 1.25rem;
-      width: 100%;
-      max-width: 440px;
-      max-height: 80vh;
-      overflow-y: auto;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modal-header h3 {
-      font-size: 1.2rem;
-      color: #ef4444;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .close-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-
-    .modal-section-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--gold);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.3rem;
-      margin-top: 0.5rem;
+      flex: 1;
     }
 
     .hidden {
@@ -434,48 +351,3 @@
   </style>
 </head>
 <body>
-
-  <div class="container">
-    <div class="top-bar">
-      <a href="../index.html" class="back-home-btn">← الرئيسية</a>
-      <button id="share-room-btn" class="room-badge hidden" title="مشاركة أو نسخ رابط الغرفة">
-        <span>غرفة: <strong id="display-room-code">----</strong></span>
-        <span>🔗 مشاركة</span>
-      </button>
-    </div>
-
-    <div class="header">
-      <h1>🚨 جرس التحدي السريع</h1>
-      <p style="color: var(--text-muted); font-size: 0.9rem;">أسرع ضغطة تحسم الإجابة بالملي ثانية</p>
-    </div>
-
-    <!-- شاشة إعداد الغرفة والدخول -->
-    <div id="setup-view" class="setup-card">
-      <h2>اختر طريقة المشاركة</h2>
-      <input type="text" id="player-name-input" class="input-box" placeholder="اكتب اسمك هنا..." maxlength="15">
-      
-      <div style="display: flex; gap: 0.5rem;">
-        <button id="create-room-btn" class="btn btn-gold" style="flex: 1;">👑 إنشاء غرفة جديدة</button>
-      </div>
-
-      <div style="text-align: center; color: var(--text-muted); font-size: 0.85rem;">— أو ادخل كود غرفة موجودة —</div>
-      
-      <div style="display: flex; gap: 0.5rem;">
-        <input type="text" id="room-code-input" class="input-box" placeholder="كود الغرفة (4 أرقام)" maxlength="4" style="flex: 1;">
-        <button id="join-room-btn" class="btn" style="flex: 1;">🚪 انضمام</button>
-      </div>
-    </div>
-
-    <!-- شاشة الاستبعاد -->
-    <div id="blocked-view" class="blocked-card hidden">
-      <h2 id="blocked-title" style="color: #f87171; font-size: 1.4rem;">تم استبعادك من الغرفة</h2>
-      <p id="blocked-desc" style="color: #fca5a5; font-size: 0.9rem;">قام المشرف باستبعادك من هذه الجولة.</p>
-      <div style="display: flex; gap: 0.5rem;">
-        <button id="rejoin-btn" class="btn" style="flex: 1;">إعادة المحاولة 🔄</button>
-        <a href="../index.html" class="btn btn-danger" style="flex: 1; text-decoration: none;">الرئيسية</a>
-      </div>
-    </div>
-
-    <!-- ساحة الجرس -->
-    <div id="game-view" class="buzzer-stage hidden">
-      <div id="status
