@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تحدي الذاكرة أونلاين | لوحة الصدارة</title>
   
-  <!-- استدعاء Firebase -->
+  <!-- استدعاء مكتبات Firebase الرسمية -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -110,11 +110,13 @@
       color: #fff;
     }
 
+    /* شبكة الكروت */
     .grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 0.65rem;
       width: 100%;
+      min-height: 300px;
       perspective: 1000px;
     }
 
@@ -199,15 +201,6 @@
       background-color: var(--primary-hover);
     }
 
-    .btn-secondary {
-      background-color: #334155;
-    }
-
-    .btn-secondary:hover {
-      background-color: #475569;
-    }
-
-    /* ليدربورد الأونلاين */
     .leaderboard-section {
       width: 100%;
       background: #1e293b;
@@ -251,24 +244,6 @@
       font-size: 0.9rem;
     }
 
-    .leaderboard-rank {
-      font-weight: bold;
-      width: 30px;
-    }
-
-    .leaderboard-name {
-      flex: 1;
-      font-weight: 600;
-      margin-right: 0.5rem;
-      word-break: break-word;
-    }
-
-    .leaderboard-score {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
-
-    /* نافذة الفوز */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -367,26 +342,11 @@
       <input type="text" id="player-name" placeholder="اكتب اسمك هنا..." maxlength="15" />
       
       <button class="btn" id="save-score-btn" style="width: 100%; margin-bottom: 0.5rem;">سجل نتيجتك أونلاين 🌐</button>
-      <button class="btn btn-secondary" id="skip-btn" style="width: 100%;">تخطي والعب من جديد</button>
+      <button class="btn" id="skip-btn" style="width: 100%; background-color: #334155;">تخطي والعب من جديد</button>
     </div>
   </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
-      authDomain: "memory-game-2f2d4.firebaseapp.com",
-      databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
-      projectId: "memory-game-2f2d4",
-      storageBucket: "memory-game-2f2d4.firebasestorage.app",
-      messagingSenderId: "234692589834",
-      appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
-      measurementId: "G-X3V9MP6LS5"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const scoresRef = db.ref('leaderboard');
-
     const EMOJIS = ['🚀', '🎮', '💎', '🔥', '⚡', '🍕', '👑', '🌟'];
     const grid = document.getElementById('grid');
     const movesEl = document.getElementById('moves');
@@ -442,16 +402,13 @@
       winModal.classList.remove('active');
       saveScoreBtn.disabled = false;
       saveScoreBtn.textContent = 'سجل نتيجتك أونلاين 🌐';
-      
-      // جلب الاسم المحفوظ من الصفحة الرئيسية
       playerNameInput.value = localStorage.getItem('player_nickname') || '';
-      
       grid.innerHTML = '';
 
       const deck = shuffle([...EMOJIS, ...EMOJIS]);
       deck.forEach(emoji => {
         const card = document.createElement('div');
-        card.classList.add('card');
+        card.className = 'card';
         card.dataset.emoji = emoji;
         card.innerHTML = `
           <div class="card-face card-front">❓</div>
@@ -486,4 +443,113 @@
 
       if (c1.dataset.emoji === c2.dataset.emoji) {
         setTimeout(() => {
-          c1.classList.add
+          c1.classList.add('matched');
+          c2.classList.add('matched');
+          matches++;
+          matchesEl.textContent = `${matches} / ${EMOJIS.length}`;
+          flippedCards = [];
+          isLocked = false;
+
+          if (matches === EMOJIS.length) {
+            handleWin();
+          }
+        }, 300);
+      } else {
+        setTimeout(() => {
+          c1.classList.add('mismatch');
+          c2.classList.add('mismatch');
+          setTimeout(() => {
+            c1.classList.remove('flipped', 'mismatch');
+            c2.classList.remove('flipped', 'mismatch');
+            flippedCards = [];
+            isLocked = false;
+          }, 350);
+        }, 400);
+      }
+    }
+
+    function handleWin() {
+      clearInterval(timer);
+      winSummary.textContent = `أنهيت اللعبة بـ ${moves} محاولة وخلال ${secondsElapsed} ثانية!`;
+      winModal.classList.add('active');
+      playerNameInput.focus();
+    }
+
+    restartBtn.addEventListener('click', initGame);
+    skipBtn.addEventListener('click', initGame);
+
+    // تشغيل اللعبة مباشرة دون انتظار الشبكة
+    initGame();
+
+    // تهيئة Firebase
+    try {
+      const firebaseConfig = {
+        apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
+        authDomain: "memory-game-2f2d4.firebaseapp.com",
+        databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
+        projectId: "memory-game-2f2d4",
+        storageBucket: "memory-game-2f2d4.firebasestorage.app",
+        messagingSenderId: "234692589834",
+        appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
+        measurementId: "G-X3V9MP6LS5"
+      };
+
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      const db = firebase.database();
+      const scoresRef = db.ref('memory_leaderboard');
+
+      saveScoreBtn.addEventListener('click', () => {
+        const name = playerNameInput.value.trim() || 'لاعب مجهول';
+        localStorage.setItem('player_nickname', name);
+        saveScoreBtn.disabled = true;
+        saveScoreBtn.textContent = 'جاري الحفظ...';
+
+        scoresRef.push({
+          name: name,
+          time: secondsElapsed,
+          moves: moves,
+          timestamp: Date.now()
+        }).then(() => {
+          initGame();
+        }).catch(err => {
+          alert('تعذر الحفظ في قاعدة البيانات!');
+          saveScoreBtn.disabled = false;
+          saveScoreBtn.textContent = 'حاول مجدداً';
+        });
+      });
+
+      scoresRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        leaderboardList.innerHTML = '';
+
+        if (!data) {
+          leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام مسجلة بعد، كن أول فائز!</li>';
+          return;
+        }
+
+        const list = Object.values(data);
+        list.sort((a, b) => a.time - b.time || a.moves - b.moves);
+        const top10 = list.slice(0, 10);
+
+        const medals = ['🥇', '🥈', '🥉'];
+        top10.forEach((item, index) => {
+          const rank = medals[index] || `#${index + 1}`;
+          const li = document.createElement('li');
+          li.className = 'leaderboard-item';
+          li.innerHTML = `
+            <span style="font-weight: bold; width: 30px;">${rank}</span>
+            <span style="flex: 1; font-weight: 600;">${item.name}</span>
+            <span style="color: var(--text-muted); font-weight: bold;">⏱️ ${item.time} ث | 🎯 ${item.moves}</span>
+          `;
+          leaderboardList.appendChild(li);
+        });
+      });
+    } catch (e) {
+      console.error(e);
+      leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">تعذر الاتصال بالصدارة المباشرة</li>';
+    }
+  </script>
+</body>
+</html>
