@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تحدي سرعة رد الفعل | Reaction Time</title>
   
-  <!-- استدعاء Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -64,7 +63,6 @@
       color: #fff;
     }
 
-    /* منطقة اللعبة التفاعلية */
     .game-area {
       width: 100%;
       height: 280px;
@@ -101,7 +99,6 @@
       opacity: 0.9;
     }
 
-    /* لوحة الصدارة */
     .leaderboard-section {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -153,16 +150,14 @@
       <span style="font-weight: 600; color: var(--text-muted);">تحدي رد الفعل ⚡</span>
     </div>
 
-    <!-- شاشة الاختبار -->
     <div class="game-area" id="box">
       <h2 id="box-title">اضغط هنا للبدء</h2>
       <p id="box-desc">عندما تتحول الشاشة للأخضر، انقر بأسرع ما يمكن!</p>
     </div>
 
-    <!-- الصدارة المباشرة -->
     <div class="leaderboard-section">
       <div class="leaderboard-title">
-        <span>🏆 الصدارة المباشرة (الأسرع بالملي ثانية)</span>
+        <span>🏆 الصدارة المباشرة (أفضل رقم لكل لاعب)</span>
         <span class="live-badge">🟢 متصل ومباشر</span>
       </div>
       <ul class="leaderboard-list" id="leaderboard-list">
@@ -172,7 +167,6 @@
   </div>
 
   <script>
-    // إعدادات Firebase الخاصة بمشروعك
     const firebaseConfig = {
       apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
       authDomain: "memory-game-2f2d4.firebaseapp.com",
@@ -184,7 +178,7 @@
       measurementId: "G-X3V9MP6LS5"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const scoresRef = db.ref('reaction_leaderboard');
 
@@ -197,14 +191,29 @@
     let startTime = 0;
     let timeoutId = null;
 
+    // دالة لتنظيف مفتاح الاسم في Firebase
+    function cleanKey(name) {
+      return encodeURIComponent(name.trim().toLowerCase()).replace(/\./g, '%2E');
+    }
+
     box.addEventListener('click', () => {
+      let playerName = localStorage.getItem('player_nickname');
+      if (!playerName) {
+        playerName = prompt('اكتب اسمك للمشاركة في التحدي:');
+        if (playerName && playerName.trim()) {
+          localStorage.setItem('player_nickname', playerName.trim());
+        } else {
+          alert('يجب كتابة اسمك لتسجيل رقمك في الصدارة!');
+          return;
+        }
+      }
+
       if (state === 'idle') {
         state = 'waiting';
         box.className = 'game-area waiting';
         boxTitle.textContent = 'انتظر اللون الأخضر...';
         boxDesc.textContent = 'لا تنقر الآن أبداً!';
 
-        // وقت عشوائي بين ثانية ونصف إلى أربع ثوانٍ
         const randomDelay = Math.floor(Math.random() * 2500) + 1500;
         timeoutId = setTimeout(() => {
           state = 'ready';
@@ -228,26 +237,31 @@
         boxTitle.textContent = `${score} ملي ثانية (ms)`;
         boxDesc.textContent = 'اضغط لتجربة حظك مرة أخرى.';
 
-        const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
-        scoresRef.push({
-          name: playerName,
-          reactionTime: score,
-          timestamp: Date.now()
+        // التحقق من أفضل نتيجة للاعب وتحديثها فقط إن كانت أفضل
+        const userKey = cleanKey(playerName);
+        scoresRef.child(userKey).once('value', snapshot => {
+          const current = snapshot.val();
+          if (!current || score < current.reactionTime) {
+            scoresRef.child(userKey).set({
+              name: playerName,
+              reactionTime: score,
+              timestamp: Date.now()
+            });
+          }
         });
       }
     });
 
-    // استماع مباشر لتحديثات الليدربورد
+    // استماع مباشر يعرض لاعباً واحداً فقط لكل رقم
     scoresRef.on('value', (snapshot) => {
       const data = snapshot.val();
       leaderboardList.innerHTML = '';
 
       if (!data) {
-        leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام مسجلة بعد، جرب سرعتك الآن!</li>';
+        leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام مسجلة بعد</li>';
         return;
       }
 
-      // تحويل لنتائج وترتيب من الأقل زمناً للأكبر
       const list = Object.values(data);
       list.sort((a, b) => a.reactionTime - b.reactionTime);
       const top10 = list.slice(0, 10);
