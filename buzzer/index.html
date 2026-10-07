@@ -808,7 +808,6 @@
       });
     });
 
-    // دالة عرض اللاعبين الصريحة والخالية من أي كتابة عشوائية بالفايربيس
     function renderPlayers() {
       playersList.innerHTML = '';
       const entries = Object.entries(currentPlayersCache);
@@ -829,7 +828,6 @@
             controlsHTML += `<button class="switch-team-btn" onclick="switchPlayerTeam('${id}', '${pTeam}')">تبديل 🔄</button>`;
           }
         } else {
-          // نمط فردي: عرض النقاط الفردية
           controlsHTML += `<span style="font-weight: 800; color: var(--gold); margin-left: 0.5rem;">${p.score || 0} نقطة</span>`;
           if (isHost) {
             controlsHTML += `
@@ -943,9 +941,16 @@
           buzzer.className = 'buzzer-btn won';
           buzzer.disabled = true;
           buzzerLabel.textContent = 'أنت الأول! 🟢';
-          statusText.textContent = roomMode === 'teams' ? `كفو! نقطة لـ (${state.winnerTeam === 'blue' ? '🔵 الفريق الأزرق' : '🔴 الفريق الأحمر'}) 👑` : 'كفو! أنت أسرع واحد، جاوب الآن! 👑';
+          
+          if (roomMode === 'teams') {
+            statusText.textContent = `كفو! نقطة لـ (${state.winnerTeam === 'blue' ? '🔵 الفريق الأزرق' : '🔴 الفريق الأحمر'}) 👑`;
+            document.body.classList.add(state.winnerTeam === 'blue' ? 'blue-glow' : 'red-glow');
+          } else {
+            statusText.textContent = 'كفو! أنت أسرع واحد، جاوب الآن! 👑';
+            document.body.classList.add('win-glow');
+          }
+          
           statusText.style.color = '#34d399';
-          document.body.classList.add(state.winnerTeam === 'blue' ? 'blue-glow' : (state.winnerTeam === 'red' ? 'red-glow' : 'win-glow'));
           soundWin();
           triggerHaptic('win');
         } else {
@@ -971,7 +976,13 @@
         currentPlayersCache = snap.val() || {};
         if (currentPlayersCache[myPlayerId]) {
           myTeam = currentPlayersCache[myPlayerId].team || 'blue';
-          updateTeamSelectorUI(myTeam);
+          if (myTeam === 'blue') {
+            pickBlueBtn.classList.add('active');
+            pickRedBtn.classList.remove('active');
+          } else {
+            pickRedBtn.classList.add('active');
+            pickBlueBtn.classList.remove('active');
+          }
         }
         renderPlayers();
 
@@ -981,23 +992,12 @@
       });
     }
 
-    function updateTeamSelectorUI(team) {
-      if (team === 'blue') {
-        pickBlueBtn.classList.add('active');
-        pickRedBtn.classList.remove('active');
-      } else {
-        pickRedBtn.classList.add('active');
-        pickBlueBtn.classList.remove('active');
-      }
-    }
-
     pickBlueBtn.addEventListener('click', () => { setMyTeam('blue'); });
     pickRedBtn.addEventListener('click', () => { setMyTeam('red'); });
 
     function setMyTeam(team) {
       if (!currentRoom) return;
       myTeam = team;
-      updateTeamSelectorUI(team);
       db.ref(`buzzer_rooms/${currentRoom}/players/${myPlayerId}/team`).set(team);
     }
 
@@ -1012,7 +1012,7 @@
           current.isManualLock = false;
           current.winnerId = myPlayerId;
           current.winnerName = myPlayerName;
-          current.winnerTeam = myTeam;
+          current.winnerTeam = (roomMode === 'teams') ? myTeam : null;
           current.buzzTime = Date.now();
           return current;
         }
