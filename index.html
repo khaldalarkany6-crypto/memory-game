@@ -162,7 +162,7 @@
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    /* شبكة كروت الألعاب الـ 7 كاملة */
+    /* شبكة كروت الألعاب الـ 8 كاملة */
     .games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -275,7 +275,7 @@
       </ul>
     </div>
 
-    <!-- شبكة كروت الألعاب الـ 7 كاملة -->
+    <!-- شبكة كروت الألعاب الـ 8 كاملة -->
     <div class="games-grid">
       <!-- 1. جرس المسابقات المباشر -->
       <a href="buzzer/index.html" class="game-card" style="border-color: rgba(245, 158, 11, 0.4); background: linear-gradient(145deg, #151f32, #1a233a);">
@@ -287,7 +287,17 @@
         <span class="game-badge" style="background: rgba(245, 158, 11, 0.2); color: var(--gold);">متعدد الغرف 👑</span>
       </a>
 
-      <!-- 2. تحدي الذاكرة -->
+      <!-- 2. تكسير الطوب الخارق -->
+      <a href="breaker/index.html" class="game-card" style="border-color: rgba(59, 130, 246, 0.4); background: linear-gradient(145deg, #151f32, #16243d);">
+        <div class="game-icon" style="background: rgba(59, 130, 246, 0.15);">🧱</div>
+        <div class="game-info">
+          <h2 style="color: #60a5fa;">تكسير الطوب الخارق</h2>
+          <p>10 مراحل ملحمية، بلوكات مفتاحية، وقت الذروة، وقتال الزعيم النهائي.</p>
+        </div>
+        <span class="game-badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">جديد ⚡</span>
+      </a>
+
+      <!-- 3. تحدي الذاكرة -->
       <a href="memory/index.html" class="game-card">
         <div class="game-icon">🧠</div>
         <div class="game-info">
@@ -297,7 +307,7 @@
         <span class="game-badge">ليدربورد 🟢</span>
       </a>
 
-      <!-- 3. سرعة رد الفعل -->
+      <!-- 4. سرعة رد الفعل -->
       <a href="reaction/index.html" class="game-card">
         <div class="game-icon">⚡</div>
         <div class="game-info">
@@ -307,7 +317,7 @@
         <span class="game-badge">ليدربورد 🟢</span>
       </a>
 
-      <!-- 4. سرعة النقر -->
+      <!-- 5. سرعة النقر -->
       <a href="clicker/index.html" class="game-card">
         <div class="game-icon">👆</div>
         <div class="game-info">
@@ -317,7 +327,7 @@
         <span class="game-badge">ليدربورد 🟢</span>
       </a>
 
-      <!-- 5. الرياضيات الخاطفة -->
+      <!-- 6. الرياضيات الخاطفة -->
       <a href="math/index.html" class="game-card">
         <div class="game-icon">📐</div>
         <div class="game-info">
@@ -327,7 +337,7 @@
         <span class="game-badge">ليدربورد 🟢</span>
       </a>
 
-      <!-- 6. التفادي الفضائي -->
+      <!-- 7. التفادي الفضائي -->
       <a href="runner/index.html" class="game-card">
         <div class="game-icon">🚀</div>
         <div class="game-info">
@@ -337,7 +347,7 @@
         <span class="game-badge">ليدربورد 🟢</span>
       </a>
 
-      <!-- 7. سرعة الكتابة -->
+      <!-- 8. سرعة الكتابة -->
       <a href="typing/index.html" class="game-card">
         <div class="game-icon">⌨️</div>
         <div class="game-info">
@@ -395,7 +405,8 @@
       { key: 'clicker_leaderboard', sortAsc: false, valKey: 'clicks' },
       { key: 'math_leaderboard', sortAsc: false, valKey: 'score' },
       { key: 'runner_leaderboard', sortAsc: false, valKey: 'score' },
-      { key: 'typing_leaderboard', sortAsc: false, valKey: 'wpm' }
+      { key: 'typing_leaderboard', sortAsc: false, valKey: 'wpm' },
+      { key: 'breaker_leaderboard', sortAsc: false, valKey: 'score' }
     ];
 
     const currentGamesData = {};
@@ -412,7 +423,6 @@
         Object.values(rawData).forEach(entry => {
           if (!entry || !entry.name) return;
           const name = entry.name.trim();
-          // قراءة القيمة مع فحص بديل في حال اختلفت تسمية المفتاح
           const val = entry[g.valKey] !== undefined ? entry[g.valKey] : entry.reactionTime;
           if (val === undefined || val === null) return;
 
@@ -467,7 +477,7 @@
       });
     }
 
-    // استماع لبيانات الجداول الستة وتحديث القائمة تلقائياً
+    // استماع لبيانات الجداول السبعة وتحديث القائمة تلقائياً
     gamesConfig.forEach(g => {
       db.ref(g.key).on('value', snapshot => {
         currentGamesData[g.key] = snapshot.val() || {};
@@ -478,7 +488,7 @@
     adminBtn.addEventListener('click', () => {
       const pass = prompt('أدخل كلمة سر المشرف:');
       if (pass === 'admin123') {
-        const target = prompt('وش اللعبة اللي تبغى تصفرها؟ (memory / reaction / clicker / math / runner / typing / all)');
+        const target = prompt('وش اللعبة اللي تبغى تصفرها؟ (memory / reaction / clicker / math / runner / typing / breaker / all)');
         if (target === 'all') {
           gamesConfig.forEach(g => db.ref(g.key).remove());
           alert('تم تصفير كل الألعاب بنجاح!');
