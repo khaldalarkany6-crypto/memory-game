@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+  <title>تكسير الطوب الخارق | Brick Breaker</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg: #070b12;
+      --card-bg: #111827;
+      --border: #1f293d;
+      --gold: #f59e0b;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --blue: #3b82f6;
+      --red: #ef4444;
+      --green: #10b981;
+      --purple: #8b5cf6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      overflow: hidden;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      position: relative;
+    }
+
+    /* شريط المعلومات العلوي */
+    .top-stats-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 0.45rem 0.85rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .stats-group {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .top-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.25rem 0.55rem;
+      border-radius: 0.4rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+    .top-btn:hover { color: #fff; border-color: var(--gold); }
+
+    /* شريط وقت الذروة */
+    .frenzy-bar-container {
+      width: 100%;
+      height: 6px;
+      background: #1f2937;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .frenzy-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+      transition: width 0.15s ease;
+    }
+
+    /* ساحة اللعب */
+    canvas {
+      background: #030712;
+      border: 2px solid var(--border);
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 480 / 640;
+    }
+
+    /* النوافذ المنبثقة والقوائم */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(7, 11, 18, 0.88);
+      backdrop-filter: blur(4px);
+      border-radius: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      z-index: 50;
+      gap: 0.85rem;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      width: 100%;
+      max-height: 85%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .btn {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 0.6rem;
+      font-weight: 800;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-gold { background: var(--gold); color: #000; }
+    .btn-purple { background: var(--purple); color: #fff; }
+    .btn-danger { background: var(--red); color: #fff; }
+
+    .input-box {
+      width: 100%;
+      background: #030712;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 0.65rem 0.85rem;
+      border-radius: 0.5rem;
+      font-size: 0.95rem;
+      text-align: center;
+      outline: none;
+    }
+    .input-box:focus { border-color: var(--gold); }
+
+    /* أقسام المتجر */
+    .shop-section-title {
+      font-size: 0.85rem;
+      color: var(--gold);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.25rem;
+      text-align: right;
+    }
+
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+
+    .shop-item {
+      background: #030712;
+      border: 1px solid var(--border);
+      border-radius: 0.6rem;
+      padding: 0.6rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .shop-item.active { border-color: var(--gold); background: rgba(245, 158, 11, 0.1); }
+
+    /* قائمة الليدربورد */
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    .leaderboard-table th, .leaderboard-table td {
+      padding: 0.45rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .leaderboard-table th { color: var(--gold); font-weight: 800; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <!-- الشريط العلوي -->
+    <div class="top-stats-bar">
+      <div class="stats-group">
+        <a href="../index.html" class="top-btn">← الرئيسية</a>
+        <button id="open-shop-btn" class="top-btn">🛍️ المتجر</button>
+        <button id="open-leaderboard-btn" class="top-btn">🏆 الترتيب</button>
+      </div>
+      <div class="stats-group">
+        <span>🪙 <span id="coins-display">0</span></span>
+        <span>المرحلة: <strong id="level-display" style="color:var(--gold);">1</strong></span>
+      </div>
+    </div>
+
+    <!-- شريط معلومات المحاولة -->
+    <div class="top-stats-bar" style="background: transparent; border: none; padding: 0 0.2rem;">
+      <div>النقاط: <strong id="score-display" style="color:#60a5fa; font-size:1.1rem;">0</strong></div>
+      <div id="lives-display">❤️❤️❤️</div>
+    </div>
+
+    <!-- شريط وقت الذروة -->
+    <div class="frenzy-bar-container" title="شريط وضع الذروة">
+      <div id="frenzy-bar" class="frenzy-bar-fill"></div>
+    </div>
+
+    <!-- كانفاس اللعبة الرئيسي -->
+    <canvas id="gameCanvas" width="480" height="640"></canvas>
+
+    <!-- شاشة البداية -->
+    <div id="start-modal" class="modal-overlay">
+      <h1 style="color: #fff; font-size: 1.8rem; font-weight: 900;">🧱 تكسير الطوب الخارق</h1>
+      <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.5; max-width: 340px;">
+        اسحب إصبعك في أي مكان بالشاشة لتوجيه المضرب.<br>
+        10 مراحل ملحمية: دمر البلوكات، اخترق المتاهة، واضرب البلوكة الذهبية لتصفية المرحلة فوراً قبل مواجهة الزعيم!
+      </p>
+      <button id="start-game-btn" class="btn btn-gold" style="padding: 0.8rem 2rem; font-size: 1.1rem;">انطلق الآن 🚀</button>
+    </div>
+
+    <!-- شاشة اجتياز المرحلة -->
+    <div id="level-clear-modal" class="modal-overlay hidden">
+      <h2 style="color: var(--gold); font-size: 1.6rem;">كفو! اكتملت المرحلة 🎉</h2>
+      <div id="stars-display" style="font-size: 1.8rem;">⭐⭐⭐</div>
+      <p id="level-clear-desc" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+      <button id="next-level-btn" class="btn btn-gold" style="width: 200px;">المرحلة التالية ⏩</button>
+    </div>
+
+    <!-- شاشة نهاية اللعبة وحفظ النتيجة -->
+    <div id="game-over-modal" class="modal-overlay hidden">
+      <h2 id="game-over-title" style="color: var(--red); font-size: 1.6rem;">انتهت المحاولات 💥</h2>
+      <p style="font-size: 1.1rem;">مجموع نقاطك: <strong id="final-score" style="color: var(--gold);">0</strong></p>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">أعلى مرحلة وصلت إليها: <span id="final-level">1</span></p>
+
+      <div style="width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 0.5rem;">
+        <input type="text" id="player-name-input" class="input-box" placeholder="اكتب اسمك لتسجيل النتيجة..." maxlength="15">
+        <button id="save-score-btn" class="btn btn-gold">حفظ في قائمة المتصدرين 📋</button>
+        <button id="restart-game-btn" class="btn" style="background:#374151;">إعادة المحاولة 🔄</button>
+      </div>
+    </div>
+
+    <!-- نافذة المتجر -->
+    <div id="shop-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="color:#fff;">🛍️ متجر المظاهر</h3>
+          <button id="close-shop-btn" class="top-btn" style="font-size:1.1rem;">✕</button>
+        </div>
+        <div style="color:var(--gold); font-size:0.9rem;">رصيدك: <strong id="shop-coins">0</strong> 🪙</div>
+
+        <div class="shop-section-title">مظاهر المضرب (Paddle Skins):</div>
+        <div class="shop-grid">
+          <div class="shop-item" id="skin-pad-neon" onclick="selectPaddleSkin('neon')">
+            <span style="font-weight:700;">نيون كلاسيكي</span>
+            <span style="color:#10b981;">مجاني</span>
+          </div>
+          <div class="shop-item" id="skin-pad-gold" onclick="selectPaddleSkin('gold')">
+            <span style="font-weight:700;">المضرب الذهبي 👑</span>
+            <span id="price-pad-gold">150 🪙</span>
+          </div>
+          <div class="shop-item" id="skin-pad-cyber" onclick="selectPaddleSkin('cyber')">
+            <span style="font-weight:700;">سايبربانك ⚡</span>
+            <span id="price-pad-cyber">300 🪙</span>
+          </div>
+        </div>
+
+        <div class="shop-section-title">مسارات الكرة (Ball Trails):</div>
+        <div class="shop-grid">
+          <div class="shop-item" id="skin-trail-classic" onclick="selectTrailSkin('classic')">
+            <span style="font-weight:700;">أبيض كلاسيكي</span>
+            <span style="color:#10b981;">مجاني</span>
+          </div>
+          <div class="shop-item" id="skin-trail-fire" onclick="selectTrailSkin('fire')">
+            <span style="font-weight:700;">لهب ناري 🔥</span>
+            <span id="price-trail-fire">120 🪙</span>
+          </div>
+          <div class="shop-item" id="skin-trail-rainbow" onclick="selectTrailSkin('rainbow')">
+            <span style="font-weight:700;">قوس قزح 🌈</span>
+            <span id="price-trail-rainbow">250 🪙</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- نافذة الليدربورد -->
+    <div id="leaderboard-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="color:var(--gold);">🏆 قائمة الشرف (Top 10)</h3>
+          <button id="close-leaderboard-btn" class="top-btn" style="font-size:1.1rem;">✕</button>
+        </div>
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الاسم</th>
+              <th>المرحلة</th>
+              <th>النقاط</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+            <tr><td colspan="4" style="color:var(--text-muted);">جاري تحميل النتائج...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // إعداد الفايربيس المشترك
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
+      authDomain: "memory-game-2f2d4.firebaseapp.com",
+      databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
+      projectId: "memory-game-2f2d4",
+      storageBucket: "memory-game-2f2d4.firebasestorage.app",
+      messagingSenderId: "234692589834",
+      appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
+      measurementId: "G-X3V9MP6LS5"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // عناصر الكانفاس والواجهة
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.getElementById('score-display');
+    const livesDisplay = document.getElementById('lives-display');
+    const levelDisplay = document.getElementById('level-display');
+    const coinsDisplay = document.getElementById('coins-display');
+    const frenzyBar = document.getElementById('frenzy-bar');
+    const startModal = document.getElementById('start-modal');
+    const levelClearModal = document.getElementById('level-clear-modal');
+    const starsDisplay = document.getElementById('stars-display');
+    const levelClearDesc = document.getElementById('level-clear-desc');
+    const gameOverModal = document.getElementById('game-over-modal');
+    const gameOverTitle = document.getElementById('game-over-title');
+    const finalScore = document.getElementById('final-score');
+    const finalLevel = document.getElementById('final-level');
+    const playerNameInput = document.getElementById('player-name-input');
+    const shopModal = document.getElementById('shop-modal');
+    const shopCoins = document.getElementById('shop-coins');
+    const leaderboardModal = document.getElementById('leaderboard-modal');
+    const leaderboardBody = document.getElementById('leaderboard-body');
+
+    // الصوت التفاعلي المباشر (AudioContext)
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioClass) audioCtx = new AudioClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+    function playBeep(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
+      try {
+        const ac = getAudioCtx();
+        if (!ac) return;
+        const osc = ac.createOscillator();
+        const g = ac.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(gainVal, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + duration);
+        osc.connect(g);
+        g.connect(ac.destination);
+        osc.start();
+        osc.stop(ac.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // إدارة العملات والمظاهر محلياً
+    let userCoins = parseInt(localStorage.getItem('breaker_coins') || '0');
+    let ownedSkins = JSON.parse(localStorage.getItem('breaker_owned_skins') || '{"pad":["neon"],"trail":["classic"]}');
+    let equippedPaddle = localStorage.getItem('breaker_equipped_paddle') || 'neon';
+    let equippedTrail = localStorage.getItem('breaker_equipped_trail') || 'classic';
+
+    function saveEconomy() {
+      localStorage.setItem('breaker_coins', userCoins);
+      localStorage.setItem('breaker_owned_skins', JSON.stringify(ownedSkins));
+      localStorage.setItem('breaker_equipped_paddle', equippedPaddle);
+      localStorage.setItem('breaker_equipped_trail', equippedTrail);
+      coinsDisplay.textContent = userCoins;
+      shopCoins.textContent = userCoins;
+    }
+    coinsDisplay.textContent = userCoins;
+
+    // حالة اللعبة
+    let isPlaying = false;
+    let score = 0;
+    let lives = 3;
+    let currentLevel = 1;
+    let combo = 1;
+    let frenzyEnergy = 0;
+    let isFrenzyActive = false;
+    let frenzyTimer = 0;
+    let shakeDuration = 0;
+
+    // المضرب (Paddle)
+    const paddle = {
+      x: 190,
+      y: 590,
+      width: 100,
+      baseWidth: 100,
+      height: 14,
+      speed: 0,
+      targetX: 190,
+      laserActive: false,
+      laserTimer: 0,
+      shieldActive: false,
+      shieldTimer: 0,
+      bottomFloorShield: false
+    };
+
+    // الكرات (Balls Array)
+    let balls = [];
+
+    // المقذوفات والجوائز والشظايا
+    let powerUps = [];
+    let lasers = [];
+    let particles = [];
+    let bossProjectiles = [];
+    let bricks = [];
+
+    // الزعيم (Boss) في المرحلة 10
+    const boss = {
+      active: false,
+      x: 180,
+      y: 70,
+      width: 120,
+      height: 60,
+      hp: 60,
+      maxHp: 60,
+      dx: 2,
+      shootCooldown: 0
+    };
+
+    // 10 مراحل مصممة بدقة
+    function buildLevel(lvl) {
+      bricks = [];
+      boss.active = false;
+      const rows = 6;
+      const cols = 7;
+      const bWidth = 58;
+      const bHeight = 22;
+      const offsetX = 35;
+      const offsetY = 70;
+
+      if (lvl === 10) {
+        // قتال الزعيم
+        boss.active = true;
+        boss.hp = 60;
+        boss.maxHp = 60;
+        boss.x = canvas.width / 2 - boss.width / 2;
+        return;
+      }
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const bx = offsetX + c * (bWidth + 6);
+          const by = offsetY + r * (bHeight + 6);
+
+          let type = 'normal'; // normal, armored, tnt, steel, key
+          let hp = 1;
+          let color = '#3b82f6';
+
+          if (lvl <= 4) {
+            // كلاسيكي
+            if (r === 0 && lvl >= 2) { type = 'armored'; hp = 2; color = '#94a3b8'; }
+            else if ((r === 2 && c === 3) || (lvl >= 3 && r === 1 && (c === 1 || c === 5))) {
+              type = 'tnt'; hp = 1; color = '#ef4444';
+            } else {
+              color = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'][r % 4];
+            }
+          } else if (lvl === 5 || lvl === 6) {
+            // مراحل المتاهة: حواجز صلبة غير قابلة للكسر
+            if ((r === 1 && c >= 1 && c <= 5 && c !== 3) || (r === 3 && (c === 1 || c === 5))) {
+              type = 'steel'; hp = Infinity; color = '#475569';
+            } else if (r === 0) {
+              type = 'armored'; hp = 2; color = '#94a3b8';
+            } else if (r === 2 && c === 3) {
+              type = 'tnt'; hp = 1; color = '#ef4444';
+            } else {
+              color = '#10b981';
+            }
+          } else if (lvl === 7 || lvl === 8) {
+            // مرحلة البلوكة المفتاحية في العمق
+            if (r === 0 && c === 3) {
+              type = 'key'; hp = 1; color = '#f59e0b'; // البلوكة الذهبية
+            } else if (r <= 1) {
+              type = 'armored'; hp = 2; color = '#64748b';
+            } else {
+              color = (c % 2 === 0) ? '#3b82f6' : '#8b5cf6';
+            }
+          } else if (lvl === 9) {
+            // مرحلة تحضير الزعيم: مليئة بالـ TNT والدروع
+            if ((r + c) % 3 === 0) { type = 'tnt'; color = '#ef4444'; }
+            else if (r < 2) { type = 'armored'; hp = 2; color = '#94a3b8'; }
+            else { color = '#f59e0b'; }
+          }
+
+          bricks.push({ x: bx, y: by, w: bWidth, h: bHeight, type, hp, maxHp: hp, color });
+        }
+      }
+    }
+
+    // إعادة ضبط الكرة فوق المضرب
+    function resetBall() {
+      balls = [{
+        x: paddle.x + paddle.width / 2,
+        y: paddle.y - 10,
+        radius: 8,
+        dx: 0,
+        dy: 0,
+        speed: 5.5 + currentLevel * 0.25,
+        stuck: true,
+        fireball: false,
+        trailHistory: []
+      }];
+    }
+
+    // إطلاق الكرة العالقة
+    function launchBall() {
+      balls.forEach(b => {
+        if (b.stuck) {
+          b.stuck = false;
+          b.dx = (Math.random() - 0.5) * 4;
+          b.dy = -b.speed;
+        }
+      });
+      getAudioCtx();
+    }
+
+    // نظام التحكم الحر من أي مكان في الشاشة
+    let isTouching = false;
+    let touchStartX = 0;
+    let paddleStartX = 0;
+
+    window.addEventListener('pointerdown', e => {
+      const rect = canvas.getBoundingClientRect();
+      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        isTouching = true;
+        touchStartX = e.clientX;
+        paddleStartX = paddle.x;
+        if (balls.some(b => b.stuck)) launchBall();
+      }
+    });
+
+    window.addEventListener('pointermove', e => {
+      if (isTouching) {
+        const deltaX = (e.clientX - touchStartX) * (canvas.width / canvas.getBoundingClientRect().width);
+        paddle.targetX = Math.max(0, Math.min(canvas.width - paddle.width, paddleStartX + deltaX));
+      }
+    });
+
+    window.addEventListener('pointerup', () => { isTouching = false; });
+    window.addEventListener('pointercancel', () => { isTouching = false; });
+
+    // دعم أسهم الكيبورد للكمبيوتر
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space') launchBall();
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') paddle.targetX = Math.max(0, paddle.x - 30);
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') paddle.targetX = Math.min(canvas.width - paddle.width, paddle.x + 30);
+    });
+
+    // إنشاء جزيئات التفتت
+    function createParticles(x, y, color, count = 12) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x, y,
+          dx: (Math.random() - 0.5) * 6,
+          dy: (Math.random() - 0.5) * 6,
+          radius: Math.random() * 3 + 1.5,
+          color,
+          alpha: 1
+        });
+      }
+    }
+
+    // إسقاط الجوائز والعملات
+    function dropPowerUp(x, y) {
+      // فرصة إسقاط عملة نقدية
+      if (Math.random() < 0.35 || isFrenzyActive) {
+        powerUps.push({ x, y, type: 'coin', dy: 2.5, color: '#f59e0b', text: '🪙' });
+      }
+
+      // فرصة إسقاط باوار-أب
+      const rand = Math.random();
+      if (rand < 0.22) {
+        const types = [
+          { type: 'expand', color: '#10b981', text: '🟢' },
+          { type: 'shrink', color: '#ef4444', text: '🔴' },
+          { type: 'multiball', color: '#3b82f6', text: '🔵' },
+          { type: 'fireball', color: '#f97316', text: '🔥' },
+          { type: 'shield', color: '#38bdf8', text: '🛡️' },
+          { type: 'laser', color: '#a855f7', text: '🔫' },
+          { type: 'life', color: '#ec4899', text: '❤️' }
+        ];
+        const selected = types[Math.floor(Math.random() * types.length)];
+        powerUps.push({ x, y, type: selected.type, dy: 2.2, color: selected.color, text: selected.text });
+      }
+    }
+
+    // تفعيل الجائزة الملتقطة
+    function applyPowerUp(type) {
+      playBeep(660, 'triangle', 0.2, 0.15);
+      if (type === 'coin') {
+        userCoins += 1;
+        saveEconomy();
+        return;
+      }
+      if (type === 'expand') {
+        paddle.width = paddle.baseWidth * 1.35;
+        setTimeout(() => paddle.width = paddle.baseWidth, 12000);
+      } else if (type === 'shrink') {
+        paddle.width = paddle.baseWidth * 0.75;
+        setTimeout(() => paddle.width = paddle.baseWidth, 8000);
+      } else if (type === 'multiball') {
+        const base = balls[0] || { x: paddle.x + paddle.width / 2, y: paddle.y - 10, speed: 6 };
+        for (let i = 0; i < 2; i++) {
+          balls.push({
+            x: base.x, y: base.y, radius: 8,
+            dx: (Math.random() - 0.5) * 6, dy: -base.speed,
+            speed: base.speed, stuck: false, fireball: false, trailHistory: []
+          });
+        }
+      } else if (type === 'fireball') {
+        balls.forEach(b => b.fireball = true);
+        setTimeout(() => balls.forEach(b => b.fireball = false), 8000);
+      } else if (type === 'shield') {
+        paddle.shieldActive = true;
+        paddle.bottomFloorShield = true;
+        paddle.shieldTimer = 10000;
+      } else if (type === 'laser') {
+        paddle.laserActive = true;
+        paddle.laserTimer = 8000;
+      } else if (type === 'life') {
+        lives = Math.min(5, lives + 1);
+        updateLivesUI();
+      }
+    }
+
+    function updateLivesUI() {
+      livesDisplay.textContent = '❤️'.repeat(Math.max(0, lives));
+    }
+
+    // تدمير بلوكة الـ TNT وانفجار المحيط بها
+    function triggerTntExplosion(tntBrick) {
+      shakeDuration = 12;
+      playBeep(120, 'square', 0.35, 0.25);
+      createParticles(tntBrick.x + tntBrick.w / 2, tntBrick.y + tntBrick.h / 2, '#ef4444', 25);
+      tntBrick.hp = 0;
+
+      const blastRadius = 65;
+      bricks.forEach(b => {
+        if (b.hp > 0 && b.type !== 'steel') {
+          const dist = Math.hypot(b.x - tntBrick.x, b.y - tntBrick.y);
+          if (dist <= blastRadius) {
+            b.hp = 0;
+            score += 20 * combo;
+            createParticles(b.x + b.w / 2, b.y + b.h / 2, b.color, 8);
+            dropPowerUp(b.x + b.w / 2, b.y + b.h / 2);
+          }
+        }
+      });
+    }
+
+    // إصابة البلوكة المفتاحية (Key Brick) لإنهاء المرحلة فوراً
+    function triggerKeyWin(keyBrick) {
+      shakeDuration = 20;
+      playBeep(880, 'sine', 0.5, 0.3);
+      createParticles(keyBrick.x + keyBrick.w / 2, keyBrick.y + keyBrick.h / 2, '#f59e0b', 40);
+      bricks.forEach(b => {
+        if (b.type !== 'steel') {
+          b.hp = 0;
+          score += 15;
+          createParticles(b.x + b.w / 2, b.y + b.h / 2, b.color, 4);
+        }
+      });
+      setTimeout(checkLevelClear, 400);
+    }
+
+    // فحص اكتمال المرحلة
+    function checkLevelClear() {
+      if (boss.active) {
+        if (boss.hp <= 0) handleLevelWon();
+        return;
+      }
+
+      const remainingBreakables = bricks.filter(b => b.hp > 0 && b.type !== 'steel');
+      if (remainingBreakables.length === 0) {
+        handleLevelWon();
+      }
+    }
+
+    function handleLevelWon() {
+      isPlaying = false;
+      playBeep(988, 'sine', 0.4, 0.2);
+      const levelBonus = currentLevel * 250 + lives * 100;
+      score += levelBonus;
+      scoreDisplay.textContent = score;
+
+      const stars = (lives >= 3) ? '⭐⭐⭐' : ((lives === 2) ? '⭐⭐' : '⭐');
+      starsDisplay.textContent = stars;
+      levelClearDesc.textContent = `مكافأة اجتياز المرحلة: +${levelBonus} نقطة!`;
+
+      if (currentLevel >= 10) {
+        gameOverTitle.textContent = '👑 أنت البطل! هزمت الزعيم!';
+        gameOverTitle.style.color = 'var(--gold)';
+        showGameOver();
+      } else {
+        levelClearModal.classList.remove('hidden');
+      }
+    }
+
+    function showGameOver() {
+      isPlaying = false;
+      gameOverModal.classList.remove('hidden');
+      finalScore.textContent = score;
+      finalLevel.textContent = currentLevel;
+      playerNameInput.value = localStorage.getItem('player_nickname') || '';
+    }
+
+    // حلقة التحديث والرسم الرئيسية (Game Loop)
+    let lastTime = 0;
+    function update(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      const dt = timestamp - lastTime;
+      lastTime = timestamp;
+
+      if (isPlaying) {
+        // سلاسة حركة المضرب وتأثير الشطفة (Slice)
+        const prevPadX = paddle.x;
+        paddle.x += (paddle.targetX - paddle.x) * 0.25;
+        paddle.speed = paddle.x - prevPadX;
+
+        // إطلاق الليزر التلقائي إذا كان مفعلاً
+        if (paddle.laserActive) {
+          paddle.laserTimer -= dt;
+          if (paddle.laserTimer <= 0) paddle.laserActive = false;
+          if (Math.random() < 0.08) {
+            lasers.push({ x: paddle.x + 10, y: paddle.y, dy: -8 });
+            lasers.push({ x: paddle.x + paddle.width - 10, y: paddle.y, dy: -8 });
+            playBeep(520, 'square', 0.08, 0.05);
+          }
+        }
+
+        // مؤقت الدرع
+        if (paddle.shieldActive) {
+          paddle.shieldTimer -= dt;
+          if (paddle.shieldTimer <= 0) {
+            paddle.shieldActive = false;
+            paddle.bottomFloorShield = false;
+          }
+        }
+
+        // مؤقت وقت الذروة
+        if (isFrenzyActive) {
+          frenzyTimer -= dt;
+          frenzyBar.style.width = `${(frenzyTimer / 8000) * 100}%`;
+          if (frenzyTimer <= 0) {
+            isFrenzyActive = false;
+            frenzyEnergy = 0;
+          }
+        } else {
+          frenzyBar.style.width = `${frenzyEnergy}%`;
+        }
+
+        // تحديث الليزر
+        for (let i = lasers.length - 1; i >= 0; i--) {
+          const l = lasers[i];
+          l.y += l.dy;
+          if (l.y < 0) { lasers.splice(i, 1); continue; }
+
+          // تصادم الليزر مع البلوكات
+          for (let b of bricks) {
+            if (b.hp > 0 && b.type !== 'steel' && l.x >= b.x && l.x <= b.x + b.w && l.y >= b.y && l.y <= b.y + b.h) {
+              b.hp--;
+              score += 15;
+              createParticles(b.x + b.w / 2, b.y + b.h / 2, b.color, 6);
+              lasers.splice(i, 1);
+              checkLevelClear();
+              break;
+            }
+          }
+
+          // تصادم الليزر مع الزعيم
+          if (boss.active && l.x >= boss.x && l.x <= boss.x + boss.width && l.y >= boss.y && l.y <= boss.y + boss.height) {
+            boss.hp -= 1;
+            lasers.splice(i, 1);
+            createParticles(l.x, l.y, '#ef4444', 4);
+            checkLevelClear();
+          }
+        }
+
+        // حركة الزعيم وهجماته في المرحلة 10
+        if (boss.active) {
+          boss.x += boss.dx;
+          if (boss.x <= 20 || boss.x + boss.width >= canvas.width - 20) boss.dx *= -1;
+
+          boss.shootCooldown += dt;
+          if (boss.shootCooldown >= 1800) {
+            boss.shootCooldown = 0;
+            bossProjectiles.push({ x: boss.x + boss.width / 2, y: boss.y + boss.height, dy: 3.5 });
+          }
+
+          // تحديث مقذوفات الزعيم
+          for (let i = bossProjectiles.length - 1; i >= 0; i--) {
+            const p = bossProjectiles[i];
+            p.y += p.dy;
+
+            // اصطدام مع المضرب
+            if (p.x >= paddle.x && p.x <= paddle.x + paddle.width && p.y >= paddle.y && p.y <= paddle.y + paddle.height) {
+              bossProjectiles.splice(i, 1);
+              if (!paddle.shieldActive) {
+                // تجميد المضرب أو خسارة قلب
+                lives--;
+                updateLivesUI();
+                shakeDuration = 10;
+                playBeep(180, 'sawtooth', 0.25, 0.2);
+                if (lives <= 0) showGameOver();
+              } else {
+                createParticles(p.x, p.y, '#38bdf8', 10);
+              }
+            } else if (p.y > canvas.height) {
+              bossProjectiles.splice(i, 1);
+            }
+          }
+        }
+
+        // تحديث الكرات
+        for (let i = balls.length - 1; i >= 0; i--) {
+          const ball = balls[i];
+
+          if (ball.stuck) {
+            ball.x = paddle.x + paddle.width / 2;
+            ball.y = paddle.y - ball.radius - 2;
+            continue;
+          }
+
+          // مسار الكرة
+          ball.trailHistory.push({ x: ball.x, y: ball.y });
+          if (ball.trailHistory.length > 8) ball.trailHistory.shift();
+
+          ball.x += ball.dx;
+          ball.y += ball.dy;
+
+          // ارتداد الجدران
+          if (ball.x - ball.radius <= 0) { ball.x = ball.radius; ball.dx = Math.abs(ball.dx); playBeep(350); }
+          if (ball.x + ball.radius >= canvas.width) { ball.x = canvas.width - ball.radius; ball.dx = -Math.abs(ball.dx); playBeep(350); }
+          if (ball.y - ball.radius <= 0) { ball.y = ball.radius; ball.dy = Math.abs(ball.dy); playBeep(350); }
+
+          // تصادم الكرة مع المضرب وتأثير الشطفة (Slice)
+          if (
+            ball.y + ball.radius >= paddle.y &&
+            ball.y - ball.radius <= paddle.y + paddle.height &&
+            ball.x >= paddle.x &&
+            ball.x <= paddle.x + paddle.width &&
+            ball.dy > 0
+          ) {
+            playBeep(440, 'sine', 0.1, 0.12);
+            combo = 1; // تصفير الكومبو عند لمس المضرب
+
+            // زاوية الانحراف بناءً على موقع الاصطدام وسرعة المضرب
+            const hitPoint = (ball.x - (paddle.x + paddle.width / 2)) / (paddle.width / 2);
+            const sliceEffect = paddle.speed * 0.12;
+            ball.dx = hitPoint * (ball.speed * 0.85) + sliceEffect;
+            ball.dy = -Math.sqrt(Math.max(4, ball.speed * ball.speed - ball.dx * ball.dx));
+          }
+
+          // تصادم الكرة مع الزعيم
+          if (boss.active && ball.x >= boss.x && ball.x <= boss.x + boss.width && ball.y >= boss.y && ball.y <= boss.height + 70) {
+            boss.hp -= ball.fireball ? 3 : 1;
+            shakeDuration = 8;
+            playBeep(580, 'square', 0.15, 0.15);
+            createParticles(ball.x, ball.y, '#f59e0b', 10);
+            if (!ball.fireball) ball.dy = Math.abs(ball.dy);
+            checkLevelClear();
+          }
+
+          // تصادم الكرة مع البلوكات
+          for (let b of bricks) {
+            if (b.hp <= 0) continue;
+
+            if (
+              ball.x + ball.radius > b.x &&
+              ball.x - ball.radius < b.x + b.w &&
+              ball.y + ball.radius > b.y &&
+              ball.y - ball.radius < b.y + b.h
+            ) {
+              if (b.type === 'key') {
+                triggerKeyWin(b);
+                break;
+              } else if (b.type === 'tnt') {
+                triggerTntExplosion(b);
+              } else if (b.type !== 'steel') {
+                b.hp--;
+                const earned = (isFrenzyActive ? 30 : 10) * combo;
+                score += earned;
+                combo++;
+                frenzyEnergy = Math.min(100, frenzyEnergy + 6);
+                if (frenzyEnergy >= 100 && !isFrenzyActive) {
+                  isFrenzyActive = true;
+                  frenzyTimer = 8000;
+                  playBeep(700, 'sine', 0.3, 0.2);
+                }
+
+                createParticles(ball.x, ball.y, b.color, 8);
+                playBeep(520 + combo * 30);
+                dropPowerUp(b.x + b.w / 2, b.y + b.h / 2);
+              } else {
+                playBeep(240, 'triangle', 0.1); // اصطدام بالفولاذ
+              }
+
+              // ارتداد الكرة الفيزيائي (ما لم تكن كرة نارية)
+              if (!ball.fireball && b.type !== 'key') {
+                const prevX = ball.x - ball.dx;
+                const prevY = ball.y - ball.dy;
+                if (prevX <= b.x || prevX >= b.x + b.w) ball.dx *= -1;
+                else ball.dy *= -1;
+              }
+
+              checkLevelClear();
+              break;
+            }
+          }
+
+          // سقوط الكرة لأسفل الشاشة
+          if (ball.y - ball.radius > canvas.height) {
+            if (paddle.bottomFloorShield) {
+              // شبكة الأمان السفلية تنقذ الكرة
+              ball.y = canvas.height - ball.radius - 5;
+              ball.dy = -Math.abs(ball.dy);
+              paddle.bottomFloorShield = false;
+              playBeep(400, 'sine', 0.2, 0.2);
+            } else {
+              balls.splice(i, 1);
+            }
+          }
+        }
+
+        // إذا سقطت كل الكرات
+        if (balls.length === 0) {
+          lives--;
+          updateLivesUI();
+          combo = 1;
+          shakeDuration = 10;
+          playBeep(180, 'triangle', 0.3, 0.2);
+
+          if (lives <= 0) {
+            showGameOver();
+          } else {
+            resetBall();
+          }
+        }
+
+        // تحديث الجوائز المتساقطة
+        for (let i = powerUps.length - 1; i >= 0; i--) {
+          const p = powerUps[i];
+          p.y += p.dy;
+
+          if (
+            p.y >= paddle.y &&
+            p.y <= paddle.y + paddle.height &&
+            p.x >= paddle.x &&
+            p.x <= paddle.x + paddle.width
+          ) {
+            applyPowerUp(p.type);
+            powerUps.splice(i, 1);
+          } else if (p.y > canvas.height) {
+            powerUps.splice(i, 1);
+          }
+        }
+
+        // تحديث جزيئات التفتت
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const pt = particles[i];
+          pt.x += pt.dx;
+          pt.y += pt.dy;
+          pt.alpha -= 0.025;
+          if (pt.alpha <= 0) particles.splice(i, 1);
+        }
+
+        scoreDisplay.textContent = score;
+      }
+
+      render();
+      requestAnimationFrame(update);
+    }
+
+    // الرسم على الكانفاس
+    function render() {
+      ctx.save();
+
+      // اهتزاز الشاشة (Screen Shake)
+      if (shakeDuration > 0) {
+        const sx = (Math.random() - 0.5) * 8;
+        const sy = (Math.random() - 0.5) * 8;
+        ctx.translate(sx, sy);
+        shakeDuration--;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // شبكة أمان الدرع السفلية
+      if (paddle.bottomFloorShield) {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
+        ctx.fillRect(0, canvas.height - 6, canvas.width, 6);
+      }
+
+      // رسم البلوكات
+      bricks.forEach(b => {
+        if (b.hp <= 0) return;
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        ctx.roundRect(b.x, b.y, b.w, b.h, 4);
+        ctx.fill();
+
+        // تأثيرات البلوكات الخاصة
+        if (b.type === 'key') {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillText('🔑', b.x + b.w / 2 - 7, b.y + 15);
+        } else if (b.type === 'tnt') {
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 10px sans-serif';
+          ctx.fillText('TNT', b.x + b.w / 2 - 11, b.y + 15);
+        } else if (b.type === 'armored' && b.hp === 1) {
+          // خطوط تشقق للدرع
+          ctx.strokeStyle = '#334155';
+          ctx.beginPath();
+          ctx.moveTo(b.x + 5, b.y + 5);
+          ctx.lineTo(b.x + b.w - 5, b.y + b.h - 5);
+          ctx.stroke();
+        }
+      });
+
+      // رسم الزعيم في المرحلة 10
+      if (boss.active) {
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.roundRect(boss.x, boss.y, boss.width, boss.height, 8);
+        ctx.fill();
+
+        // شريط طاقة الزعيم
+        ctx.fillStyle = '#374151';
+        ctx.fillRect(boss.x, boss.y - 12, boss.width, 6);
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(boss.x, boss.y - 12, (boss.hp / boss.maxHp) * boss.width, 6);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('👑 زعيم الفضاء', boss.x + 18, boss.y + 35);
+      }
+
+      // مقذوفات الزعيم
+      bossProjectiles.forEach(p => {
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // رسم المضرب ومظهره
+      let padColor = '#3b82f6';
+      if (equippedPaddle === 'gold') padColor = '#f59e0b';
+      if (equippedPaddle === 'cyber') padColor = '#8b5cf6';
+
+      ctx.fillStyle = padColor;
+      ctx.beginPath();
+      ctx.roundRect(paddle.x, paddle.y, paddle.width, paddle.height, 7);
+      ctx.fill();
+
+      // هالة درع المضرب
+      if (paddle.shieldActive) {
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      // رسم الليزر
+      lasers.forEach(l => {
+        ctx.fillStyle = '#a855f7';
+        ctx.fillRect(l.x - 2, l.y, 4, 12);
+      });
+
+      // رسم الجوائز المتساقطة
+      powerUps.forEach(p => {
+        ctx.font = '16px sans-serif';
+        ctx.fillText(p.text, p.x - 8, p.y);
+      });
+
+      // رسم الجزيئات
+      particles.forEach(pt => {
+        ctx.fillStyle = pt.color;
+        ctx.globalAlpha = Math.max(0, pt.alpha);
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
+      // رسم الكرات ومساراتها
+      balls.forEach(ball => {
+        // رسم المسار (Trail)
+        ball.trailHistory.forEach((pos, idx) => {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, ball.radius * (idx / 10), 0, Math.PI * 2);
+          if (equippedTrail === 'fire' || ball.fireball) {
+            ctx.fillStyle = `rgba(249, 115, 22, ${idx / 12})`;
+          } else if (equippedTrail === 'rainbow') {
+            ctx.fillStyle = `hsla(${idx * 40}, 100%, 50%, ${idx / 12})`;
+          } else {
+            ctx.fillStyle = `rgba(255, 255, 255, ${idx / 16})`;
+          }
+          ctx.fill();
+        });
+
+        // رسم جسم الكرة
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = ball.fireball ? '#f97316' : '#fff';
+        ctx.fill();
+      });
+
+      ctx.restore();
+    }
+
+    // بدء اللعبة وتغيير المراحل
+    document.getElementById('start-game-btn').addEventListener('click', () => {
+      startModal.classList.add('hidden');
+      score = 0;
+      lives = 3;
+      currentLevel = 1;
+      levelDisplay.textContent = currentLevel;
+      updateLivesUI();
+      buildLevel(currentLevel);
+      resetBall();
+      isPlaying = true;
+    });
+
+    document.getElementById('next-level-btn').addEventListener('click', () => {
+      levelClearModal.classList.add('hidden');
+      currentLevel++;
+      levelDisplay.textContent = currentLevel;
+      buildLevel(currentLevel);
+      resetBall();
+      isPlaying = true;
+    });
+
+    document.getElementById('restart-game-btn').addEventListener('click', () => {
+      gameOverModal.classList.add('hidden');
+      score = 0;
+      lives = 3;
+      currentLevel = 1;
+      levelDisplay.textContent = currentLevel;
+      updateLivesUI();
+      buildLevel(currentLevel);
+      resetBall();
+      isPlaying = true;
+    });
+
+    // حفظ النتيجة في Firebase والليدربورد
+    document.getElementById('save-score-btn').addEventListener('click', () => {
+      const name = playerNameInput.value.trim() || 'بطل الطوب';
+      localStorage.setItem('player_nickname', name);
+
+      db.ref('breaker_leaderboard').push({
+        name: name,
+        score: score,
+        level: currentLevel,
+        timestamp: Date.now()
+      }).then(() => {
+        alert('تم حفظ نتيجتك بنجاح في قائمة الشرف! 🚀');
+        gameOverModal.classList.add('hidden');
+        openLeaderboard();
+      });
+    });
+
+    // إدارة المتجر وتحديد المظاهر
+    document.getElementById('open-shop-btn').addEventListener('click', () => {
+      shopModal.classList.remove('hidden');
+      updateShopUI();
+    });
+    document.getElementById('close-shop-btn').addEventListener('click', () => {
+      shopModal.classList.add('hidden');
+    });
+
+    function updateShopUI() {
+      shopCoins.textContent = userCoins;
+      // تحديث مظهر المضرب
+      ['neon', 'gold', 'cyber'].forEach(s => {
+        const el = document.getElementById(`skin-pad-${s}`);
+        if (!el) return;
+        el.classList.toggle('active', equippedPaddle === s);
+        const priceEl = document.getElementById(`price-pad-${s}`);
+        if (priceEl && ownedSkins.pad.includes(s)) priceEl.textContent = 'ممتلك ✅';
+      });
+      // تحديث مسارات الكرة
+      ['classic', 'fire', 'rainbow'].forEach(t => {
+        const el = document.getElementById(`skin-trail-${t}`);
+        if (!el) return;
+        el.classList.toggle('active', equippedTrail === t);
+        const priceEl = document.getElementById(`price-trail-${t}`);
+        if (priceEl && ownedSkins.trail.includes(t)) priceEl.textContent = 'ممتلك ✅';
+      });
+    }
+
+    window.selectPaddleSkin = function(skin) {
+      const prices = { neon: 0, gold: 150, cyber: 300 };
+      if (!ownedSkins.pad.includes(skin)) {
+        if (userCoins >= prices[skin]) {
+          userCoins -= prices[skin];
+          ownedSkins.pad.push(skin);
+          equippedPaddle = skin;
+          saveEconomy();
+        } else {
+          alert('رصيدك من العملات لا يكفي!');
+        }
+      } else {
+        equippedPaddle = skin;
+        saveEconomy();
+      }
+      updateShopUI();
+    };
+
+    window.selectTrailSkin = function(trail) {
+      const prices = { classic: 0, fire: 120, rainbow: 250 };
+      if (!ownedSkins.trail.includes(trail)) {
+        if (userCoins >= prices[trail]) {
+          userCoins -= prices[trail];
+          ownedSkins.trail.push(trail);
+          equippedTrail = trail;
+          saveEconomy();
+        } else {
+          alert('رصيدك من العملات لا يكفي!');
+        }
+      } else {
+        equippedTrail = trail;
+        saveEconomy();
+      }
+      updateShopUI();
+    };
+
+    // فتح وعرض الليدربورد
+    function openLeaderboard() {
+      leaderboardModal.classList.remove('hidden');
+      leaderboardBody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);">جاري تحميل النتائج...</td></tr>';
+
+      db.ref('breaker_leaderboard').orderByChild('score').limitToLast(10).once('value', snap => {
+        leaderboardBody.innerHTML = '';
+        const list = [];
+        snap.forEach(child => list.push(child.val()));
+        list.reverse();
+
+        if (list.length === 0) {
+          leaderboardBody.innerHTML = '<tr><td colspan="4" style="color:var(--text-muted);">لا توجد نتائج مسجلة بعد.</td></tr>';
+          return;
+        }
+
+        list.forEach((item, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${idx + 1 === 1 ? '🥇' : (idx + 1 === 2 ? '🥈' : (idx + 1 === 3 ? '🥉' : idx + 1))}</td>
+            <td style="font-weight:700;">${item.name}</td>
+            <td>مرحلة ${item.level || 1}</td>
+            <td style="color:var(--gold); font-weight:800;">${item.score}</td>
+          `;
+          leaderboardBody.appendChild(tr);
+        });
+      });
+    }
+
+    document.getElementById('open-leaderboard-btn').addEventListener('click', openLeaderboard);
+    document.getElementById('close-leaderboard-btn').addEventListener('click', () => {
+      leaderboardModal.classList.add('hidden');
+    });
+
+    // بدء حلقة التحديث
+    requestAnimationFrame(update);
+  </script>
+</body>
+</html>
