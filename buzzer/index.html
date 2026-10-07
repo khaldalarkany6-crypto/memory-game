@@ -409,6 +409,28 @@
       cursor: pointer;
     }
 
+    .make-host-btn {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--gold);
+      border-radius: 0.4rem;
+      padding: 0.2rem 0.45rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .demote-host-btn {
+      background: rgba(148, 163, 184, 0.15);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: #94a3b8;
+      border-radius: 0.4rem;
+      padding: 0.2rem 0.45rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     .kick-btn {
       background: rgba(239, 68, 68, 0.15);
       color: #ef4444;
@@ -670,6 +692,7 @@
     
     let myPlayerName = localStorage.getItem('player_nickname') || '';
     let isHost = false;
+    let roomHosts = {};
     let currentPlayersCache = {};
     let roomMode = 'solo';
     let myTeam = 'blue';
@@ -730,9 +753,13 @@
       const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
       isHost = true;
 
+      const initialHosts = {};
+      initialHosts[myPlayerId] = true;
+
       const roomRef = db.ref('buzzer_rooms/' + roomCode);
       roomRef.set({
         hostId: myPlayerId,
+        hosts: initialHosts,
         hostName: name,
         createdAt: Date.now(),
         mode: 'solo',
@@ -767,7 +794,6 @@
           alert('أنت محظور من هذه الغرفة بواسطة المشرف!');
           return;
         }
-        isHost = (snap.val().hostId === myPlayerId);
         enterRoom(code);
       });
     });
@@ -784,17 +810,11 @@
         window.history.replaceState(null, '', `?room=${code}`);
       } catch (e) {}
 
-      if (isHost) {
-        hostTools.classList.remove('hidden');
-        hostTag.textContent = 'أنت مدير الغرفة 👑';
-      }
-
       const playerRef = db.ref(`buzzer_rooms/${code}/players/${myPlayerId}`);
       playerRef.set({
         name: myPlayerName,
         score: 0,
-        team: myTeam,
-        isHost: isHost
+        team: myTeam
       });
 
       playerRef.onDisconnect().remove();
@@ -816,6 +836,7 @@
       entries.forEach(([id, p]) => {
         const pTeam = p.team || 'blue';
         const isCurrentMe = (id === myPlayerId);
+        const isPlayerHost = !!(roomHosts && roomHosts[id]);
         const li = document.createElement('li');
         li.className = 'player-row';
 
@@ -824,7 +845,7 @@
 
         if (roomMode === 'teams') {
           teamBadgeHTML = `<span class="team-badge-tag ${pTeam}">${pTeam === 'blue' ? '🔵 أزرق' : '🔴 أحمر'}</span>`;
-          if (isHost) {
+          if (isHost && !isCurrentMe) {
             controlsHTML += `<button class="switch-team-btn" onclick="switchPlayerTeam('${id}', '${pTeam}')">تبديل 🔄</button>`;
           }
         } else {
@@ -838,12 +859,17 @@
         }
 
         if (isHost && !isCurrentMe) {
+          if (!isPlayerHost) {
+            controlsHTML += `<button class="make-host-btn" onclick="addHost('${id}', '${p.name}')" title="إعطاء صلاحية مشرف">👑 ترقية</button>`;
+          } else {
+            controlsHTML += `<button class="demote-host-btn" onclick="removeHost('${id}', '${p.name}')" title="سحب صلاحية الإشراف">نزع 👑</button>`;
+          }
           controlsHTML += `<button class="kick-btn" onclick="kickPlayer('${id}')">طرد 🚪</button>`;
         }
 
         li.innerHTML = `
           <div class="player-meta">
-            <span>${p.isHost ? '👑' : '👤'}</span>
+            <span>${isPlayerHost ? '👑' : '👤'}</span>
             <span style="font-weight: 700; ${isCurrentMe ? 'color: var(--gold);' : ''}">${p.name} ${isCurrentMe ? '(أنت)' : ''}</span>
             ${teamBadgeHTML}
           </div>
@@ -857,6 +883,28 @@
 
     function listenToRoom(code) {
       const roomRef = db.ref('buzzer_rooms/' + code);
+
+      // استماع المشرفين المتعددين
+      roomRef.child('hosts').on('value', snap => {
+        roomHosts = snap.val() || {};
+        isHost = !!roomHosts[myPlayerId];
+
+        if (isHost) {
+          hostTools.classList.remove('hidden');
+          hostTag.textContent = 'أنت مشرف في الغرفة 👑';
+          if (roomMode === 'teams') {
+            shuffleTeamsBtn.classList.remove('hidden');
+            hostBlueBtns.classList.remove('hidden');
+            hostRedBtns.classList.remove('hidden');
+          }
+        } else {
+          hostTools.classList.add('hidden');
+          hostTag.textContent = '';
+          hostBlueBtns.classList.add('hidden');
+          hostRedBtns.classList.add('hidden');
+        }
+        renderPlayers();
+      });
 
       if (!isHost) {
         roomRef.child('banned/' + myPlayerId).on('value', snap => {
@@ -942,7 +990,7 @@
           buzzer.disabled = true;
           buzzerLabel.textContent = 'أنت الأول! 🟢';
           
-          if (roomMode === 'teams') {
+          if (roomMode === 'teams' && state.winnerTeam) {
             statusText.textContent = `كفو! نقطة لـ (${state.winnerTeam === 'blue' ? '🔵 الفريق الأزرق' : '🔴 الفريق الأحمر'}) 👑`;
             document.body.classList.add(state.winnerTeam === 'blue' ? 'blue-glow' : 'red-glow');
           } else {
@@ -956,7 +1004,7 @@
         } else {
           buzzer.className = 'buzzer-btn locked';
           buzzer.disabled = true;
-          if (roomMode === 'teams') {
+          if (roomMode === 'teams' && state.winnerTeam) {
             const teamTitle = state.winnerTeam === 'blue' ? '🔵 الأزرق' : '🔴 الأحمر';
             buzzerLabel.textContent = `${teamTitle} ضغط!`;
             statusText.textContent = `الأسرع: ${state.winnerName} (${teamTitle})!`;
@@ -974,6 +1022,23 @@
 
       roomRef.child('players').on('value', snap => {
         currentPlayersCache = snap.val() || {};
+        
+        // التحقق الذكي: إذا غادر المشرفون جميعاً، توريث الإشراف تلقائياً للمتبقين
+        roomRef.child('hosts').once('value', hSnap => {
+          const activeHosts = hSnap.val() || {};
+          const currentHostIds = Object.keys(activeHosts);
+          const hasOnlineHost = currentHostIds.some(hId => currentPlayersCache[hId]);
+
+          if (!hasOnlineHost) {
+            const remainingPlayers = Object.keys(currentPlayersCache);
+            if (remainingPlayers.length > 0) {
+              const newHostObj = {};
+              newHostObj[remainingPlayers[0]] = true;
+              roomRef.child('hosts').set(newHostObj);
+            }
+          }
+        });
+
         if (currentPlayersCache[myPlayerId]) {
           myTeam = currentPlayersCache[myPlayerId].team || 'blue';
           if (myTeam === 'blue') {
@@ -991,6 +1056,22 @@
         }
       });
     }
+
+    // ترقية متسابق لمشرف إضافي
+    window.addHost = function(targetId, targetName) {
+      if (!isHost || !currentRoom) return;
+      if (confirm(`هل تريد ترقية (${targetName}) ليصبح مشرفاً إضافياً معك؟`)) {
+        db.ref(`buzzer_rooms/${currentRoom}/hosts/${targetId}`).set(true);
+      }
+    };
+
+    // سحب الإشراف من مشرف
+    window.removeHost = function(targetId, targetName) {
+      if (!isHost || !currentRoom) return;
+      if (confirm(`هل تريد إزالة صلاحية الإشراف من (${targetName})؟`)) {
+        db.ref(`buzzer_rooms/${currentRoom}/hosts/${targetId}`).remove();
+      }
+    };
 
     pickBlueBtn.addEventListener('click', () => { setMyTeam('blue'); });
     pickRedBtn.addEventListener('click', () => { setMyTeam('red'); });
