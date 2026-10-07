@@ -86,25 +86,36 @@
       margin-bottom: -0.5rem;
     }
 
-    .back-home-btn {
+    .nav-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
-      padding: 0.4rem 0.85rem;
+      padding: 0.4rem 0.75rem;
       border-radius: 0.6rem;
+      cursor: pointer;
       transition: all 0.2s ease;
     }
 
-    .back-home-btn:hover {
+    .nav-btn:hover {
       color: #fff;
       border-color: var(--gold);
       background: rgba(245, 158, 11, 0.1);
+    }
+
+    .leave-btn {
+      color: #ef4444 !important;
+      border-color: rgba(239, 68, 68, 0.3) !important;
+    }
+
+    .leave-btn:hover {
+      background: rgba(239, 68, 68, 0.15) !important;
+      border-color: #ef4444 !important;
     }
 
     .header {
@@ -131,9 +142,9 @@
       background: rgba(245, 158, 11, 0.15);
       border: 1px solid rgba(245, 158, 11, 0.4);
       color: var(--gold);
-      padding: 0.35rem 0.9rem;
+      padding: 0.35rem 0.8rem;
       border-radius: 9999px;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 700;
       cursor: pointer;
     }
@@ -378,6 +389,16 @@
     .team-badge-tag.blue { background: rgba(37, 99, 235, 0.2); color: #60a5fa; }
     .team-badge-tag.red { background: rgba(220, 38, 38, 0.2); color: #f87171; }
 
+    .role-badge {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 0.4rem;
+      font-weight: 700;
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--gold);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
     .score-controls {
       display: flex;
       align-items: center;
@@ -534,11 +555,12 @@
 
   <div class="container">
     <div class="top-bar">
-      <a href="../index.html" class="back-home-btn">← الرئيسية</a>
+      <a href="../index.html" class="nav-btn">← الرئيسية</a>
       <div id="room-info" class="room-badge hidden" title="اضغط لنسخ الرابط">
-        <span>غرفة رقم: <strong id="display-room-code">----</strong></span>
-        <span>📋 نسخ</span>
+        <span>غرفة: <strong id="display-room-code">----</strong></span>
+        <span>📋</span>
       </div>
+      <button id="leave-room-btn" class="nav-btn leave-btn hidden" title="الخروج من الغرفة الحالية">🚪 خروج</button>
     </div>
 
     <div class="header">
@@ -546,6 +568,7 @@
       <p style="color: var(--text-muted); font-size: 0.9rem;">أسرع ضغطة تحسم الإجابة بالملي ثانية</p>
     </div>
 
+    <!-- شاشة إعداد الغرفة والدخول -->
     <div id="setup-view" class="setup-card">
       <h2>اختر طريقة المشاركة</h2>
       <input type="text" id="player-name-input" class="input-box" placeholder="اكتب اسمك هنا..." maxlength="15">
@@ -559,15 +582,17 @@
       </div>
     </div>
 
+    <!-- شاشة الاستبعاد -->
     <div id="blocked-view" class="blocked-card hidden">
       <h2 id="blocked-title" style="color: #f87171; font-size: 1.4rem;">تم استبعادك من الغرفة</h2>
       <p id="blocked-desc" style="color: #fca5a5; font-size: 0.9rem;">قام المشرف باستبعادك من هذه الجولة.</p>
       <div style="display: flex; gap: 0.5rem;">
         <button id="rejoin-btn" class="btn" style="flex: 1;">إعادة المحاولة 🔄</button>
-        <a href="../index.html" class="btn btn-danger" style="flex: 1; text-decoration: none;">الرئيسية</a>
+        <button id="blocked-exit-btn" class="btn btn-danger" style="flex: 1;">الخروج للرئيسية</button>
       </div>
     </div>
 
+    <!-- ساحة اللعب والجرس -->
     <div id="game-view" class="buzzer-stage hidden">
       <div id="teams-scoreboard" class="teams-scoreboard hidden">
         <div class="team-score-box blue">
@@ -652,7 +677,9 @@
     const blockedTitle = document.getElementById('blocked-title');
     const blockedDesc = document.getElementById('blocked-desc');
     const rejoinBtn = document.getElementById('rejoin-btn');
+    const blockedExitBtn = document.getElementById('blocked-exit-btn');
     const roomInfo = document.getElementById('room-info');
+    const leaveRoomBtn = document.getElementById('leave-room-btn');
     const displayRoomCode = document.getElementById('display-room-code');
     const playerNameInput = document.getElementById('player-name-input');
     const roomCodeInput = document.getElementById('room-code-input');
@@ -684,6 +711,7 @@
     const pickRedBtn = document.getElementById('pick-red-btn');
 
     let currentRoom = null;
+    let roomCreatorId = null;
     let myPlayerId = localStorage.getItem('buzzer_player_uid');
     if (!myPlayerId) {
       myPlayerId = 'p_' + Math.random().toString(36).substr(2, 9);
@@ -692,6 +720,7 @@
     
     let myPlayerName = localStorage.getItem('player_nickname') || '';
     let isHost = false;
+    let isOwner = false;
     let roomHosts = {};
     let currentPlayersCache = {};
     let roomMode = 'solo';
@@ -743,6 +772,18 @@
       } catch (e) {}
     }
 
+    // دالة لحل تشابه الأسماء تلقائياً بالترقيم
+    function resolveUniqueName(name, existingPlayers) {
+      let uniqueName = name;
+      const names = Object.values(existingPlayers || {}).map(p => p.name);
+      let counter = 2;
+      while (names.includes(uniqueName)) {
+        uniqueName = `${name} (${counter})`;
+        counter++;
+      }
+      return uniqueName;
+    }
+
     createRoomBtn.addEventListener('click', () => {
       getAudioContext();
       const name = playerNameInput.value.trim();
@@ -752,13 +793,15 @@
 
       const roomCode = Math.floor(1000 + Math.random() * 9000).toString();
       isHost = true;
+      isOwner = true;
+      roomCreatorId = myPlayerId;
 
       const initialHosts = {};
       initialHosts[myPlayerId] = true;
 
       const roomRef = db.ref('buzzer_rooms/' + roomCode);
       roomRef.set({
-        hostId: myPlayerId,
+        creatorId: myPlayerId,
         hosts: initialHosts,
         hostName: name,
         createdAt: Date.now(),
@@ -772,7 +815,7 @@
           winnerTeam: null
         }
       }).then(() => {
-        enterRoom(roomCode);
+        enterRoom(roomCode, myPlayerName);
       });
     });
 
@@ -783,27 +826,31 @@
       if (!name) return alert('الرجاء كتابة اسمك أولاً!');
       if (!code || code.length !== 4) return alert('كود الغرفة غير صحيح (4 أرقام)!');
       localStorage.setItem('player_nickname', name);
-      myPlayerName = name;
 
       db.ref('buzzer_rooms/' + code).once('value', snap => {
         if (!snap.exists()) {
           alert('الغرفة غير موجودة أو انتهت صلاحيتها!');
           return;
         }
-        if (snap.val().banned && snap.val().banned[myPlayerId]) {
+        const rData = snap.val();
+        if (rData.banned && rData.banned[myPlayerId]) {
           alert('أنت محظور من هذه الغرفة بواسطة المشرف!');
           return;
         }
-        enterRoom(code);
+
+        const finalName = resolveUniqueName(name, rData.players);
+        myPlayerName = finalName;
+        enterRoom(code, finalName);
       });
     });
 
-    function enterRoom(code) {
+    function enterRoom(code, finalName) {
       currentRoom = code;
       setupView.classList.add('hidden');
       blockedView.classList.add('hidden');
       gameView.classList.remove('hidden');
       roomInfo.classList.remove('hidden');
+      leaveRoomBtn.classList.remove('hidden');
       displayRoomCode.textContent = code;
 
       try {
@@ -812,7 +859,7 @@
 
       const playerRef = db.ref(`buzzer_rooms/${code}/players/${myPlayerId}`);
       playerRef.set({
-        name: myPlayerName,
+        name: finalName,
         score: 0,
         team: myTeam
       });
@@ -820,6 +867,39 @@
       playerRef.onDisconnect().remove();
       listenToRoom(code);
     }
+
+    // زر الخروج المباشر
+    function leaveRoom() {
+      if (!currentRoom) return;
+      if (confirm('هل أنت متأكد من الخروج من الغرفة؟')) {
+        db.ref(`buzzer_rooms/${currentRoom}/players/${myPlayerId}`).remove();
+        
+        // إذا كان المشرف الوحيد وخرج، يتم التوريث تلقائياً للمتبقين
+        if (isHost && roomHosts[myPlayerId]) {
+          db.ref(`buzzer_rooms/${currentRoom}/hosts/${myPlayerId}`).remove();
+        }
+
+        currentRoom = null;
+        gameView.classList.add('hidden');
+        roomInfo.classList.add('hidden');
+        leaveRoomBtn.classList.add('hidden');
+        blockedView.classList.add('hidden');
+        setupView.classList.remove('hidden');
+        document.body.className = '';
+
+        try {
+          window.history.replaceState(null, '', window.location.pathname);
+        } catch (e) {}
+      }
+    }
+
+    leaveRoomBtn.addEventListener('click', leaveRoom);
+    blockedExitBtn.addEventListener('click', () => {
+      blockedView.classList.add('hidden');
+      setupView.classList.remove('hidden');
+      document.body.className = '';
+      try { window.history.replaceState(null, '', window.location.pathname); } catch (e) {}
+    });
 
     roomInfo.addEventListener('click', () => {
       const shareUrl = window.location.origin + window.location.pathname + `?room=${currentRoom}`;
@@ -836,9 +916,17 @@
       entries.forEach(([id, p]) => {
         const pTeam = p.team || 'blue';
         const isCurrentMe = (id === myPlayerId);
+        const isTargetOwner = (id === roomCreatorId);
         const isPlayerHost = !!(roomHosts && roomHosts[id]);
         const li = document.createElement('li');
         li.className = 'player-row';
+
+        let badgeRoleHTML = '';
+        if (isTargetOwner) {
+          badgeRoleHTML = `<span class="role-badge">👑 المالك</span>`;
+        } else if (isPlayerHost) {
+          badgeRoleHTML = `<span class="role-badge" style="border-color:#38bdf8; color:#38bdf8; background:rgba(56,189,248,0.15);">🛡️ مشرف</span>`;
+        }
 
         let teamBadgeHTML = '';
         let controlsHTML = '';
@@ -858,19 +946,27 @@
           }
         }
 
+        // أزرار التحكم بالمشرفين
         if (isHost && !isCurrentMe) {
-          if (!isPlayerHost) {
-            controlsHTML += `<button class="make-host-btn" onclick="addHost('${id}', '${p.name}')" title="إعطاء صلاحية مشرف">👑 ترقية</button>`;
-          } else {
-            controlsHTML += `<button class="demote-host-btn" onclick="removeHost('${id}', '${p.name}')" title="سحب صلاحية الإشراف">نزع 👑</button>`;
+          // المالك لا يمكن لأحد سحب إشرافه أو طرده
+          if (!isTargetOwner) {
+            if (!isPlayerHost) {
+              controlsHTML += `<button class="make-host-btn" onclick="addHost('${id}', '${p.name}')" title="إعطاء صلاحية مشرف">👑 ترقية</button>`;
+            } else {
+              // فقط المالك يستطيع سحب الإشراف من المشرفين المساعدين
+              if (isOwner) {
+                controlsHTML += `<button class="demote-host-btn" onclick="removeHost('${id}', '${p.name}')" title="سحب صلاحية الإشراف">نزع 👑</button>`;
+              }
+            }
+            controlsHTML += `<button class="kick-btn" onclick="kickPlayer('${id}')">طرد 🚪</button>`;
           }
-          controlsHTML += `<button class="kick-btn" onclick="kickPlayer('${id}')">طرد 🚪</button>`;
         }
 
         li.innerHTML = `
           <div class="player-meta">
-            <span>${isPlayerHost ? '👑' : '👤'}</span>
+            <span>${isTargetOwner ? '👑' : (isPlayerHost ? '🛡️' : '👤')}</span>
             <span style="font-weight: 700; ${isCurrentMe ? 'color: var(--gold);' : ''}">${p.name} ${isCurrentMe ? '(أنت)' : ''}</span>
+            ${badgeRoleHTML}
             ${teamBadgeHTML}
           </div>
           <div class="score-controls">
@@ -884,14 +980,20 @@
     function listenToRoom(code) {
       const roomRef = db.ref('buzzer_rooms/' + code);
 
-      // استماع المشرفين المتعددين
+      // استماع لمالك الغرفة الأصلي
+      roomRef.child('creatorId').on('value', snap => {
+        roomCreatorId = snap.val();
+        isOwner = (roomCreatorId === myPlayerId);
+      });
+
+      // استماع المشرفين
       roomRef.child('hosts').on('value', snap => {
         roomHosts = snap.val() || {};
         isHost = !!roomHosts[myPlayerId];
 
         if (isHost) {
           hostTools.classList.remove('hidden');
-          hostTag.textContent = 'أنت مشرف في الغرفة 👑';
+          hostTag.textContent = isOwner ? 'أنت مالك الغرفة 👑' : 'أنت مشرف في الغرفة 🛡️';
           if (roomMode === 'teams') {
             shuffleTeamsBtn.classList.remove('hidden');
             hostBlueBtns.classList.remove('hidden');
@@ -911,6 +1013,7 @@
           if (snap.exists() && snap.val()) {
             gameView.classList.add('hidden');
             roomInfo.classList.add('hidden');
+            leaveRoomBtn.classList.add('hidden');
             blockedView.classList.remove('hidden');
             blockedTitle.textContent = 'تم حظرك نهائياً من الغرفة 🚫';
             blockedDesc.textContent = 'قام المشرف بحظرك من دخول هذه الغرفة.';
@@ -926,6 +1029,7 @@
           if (snap.exists() && snap.val()) {
             roomRef.child('kicked/' + myPlayerId).remove();
             gameView.classList.add('hidden');
+            leaveRoomBtn.classList.add('hidden');
             blockedView.classList.remove('hidden');
             blockedTitle.textContent = 'تم طردك من الجولة 🚪';
             blockedDesc.textContent = 'قام المشرف باستبعادك، لكن يمكنك إعادة المحاولة والانضمام ثانية.';
@@ -1023,7 +1127,7 @@
       roomRef.child('players').on('value', snap => {
         currentPlayersCache = snap.val() || {};
         
-        // التحقق الذكي: إذا غادر المشرفون جميعاً، توريث الإشراف تلقائياً للمتبقين
+        // توريث الإشراف التلقائي في حال غادر جميع المشرفين
         roomRef.child('hosts').once('value', hSnap => {
           const activeHosts = hSnap.val() || {};
           const currentHostIds = Object.keys(activeHosts);
@@ -1057,18 +1161,18 @@
       });
     }
 
-    // ترقية متسابق لمشرف إضافي
+    // ترقية متسابق لمشرف
     window.addHost = function(targetId, targetName) {
       if (!isHost || !currentRoom) return;
-      if (confirm(`هل تريد ترقية (${targetName}) ليصبح مشرفاً إضافياً معك؟`)) {
+      if (confirm(`هل تريد ترقية (${targetName}) ليصبح مشرفاً معك في الغرفة؟`)) {
         db.ref(`buzzer_rooms/${currentRoom}/hosts/${targetId}`).set(true);
       }
     };
 
-    // سحب الإشراف من مشرف
+    // سحب الإشراف (خاص بالمالك)
     window.removeHost = function(targetId, targetName) {
-      if (!isHost || !currentRoom) return;
-      if (confirm(`هل تريد إزالة صلاحية الإشراف من (${targetName})؟`)) {
+      if (!isOwner || !currentRoom) return;
+      if (confirm(`هل تريد إزالة صلاحية الإشراف من المشرف (${targetName})؟`)) {
         db.ref(`buzzer_rooms/${currentRoom}/hosts/${targetId}`).remove();
       }
     };
@@ -1102,7 +1206,7 @@
     });
 
     rejoinBtn.addEventListener('click', () => {
-      if (currentRoom) enterRoom(currentRoom);
+      if (currentRoom) enterRoom(currentRoom, myPlayerName);
     });
 
     resetBuzzerBtn.addEventListener('click', () => {
@@ -1206,6 +1310,10 @@
         activePlayersBanList.innerHTML = '<li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem;">لا يوجد متسابقون آخرون حالياً.</li>';
       } else {
         activeEntries.forEach(([id, p]) => {
+          const isTargetOwner = (id === roomCreatorId);
+          // المالك لا يظهر في قائمة الحظر
+          if (isTargetOwner) return;
+
           const li = document.createElement('li');
           li.className = 'player-row';
           li.innerHTML = `
