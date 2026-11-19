@@ -2,132 +2,144 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ماينكرافت خلدون الكلاسيكية ⛏️</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ماينكرافت خلدون | النسخة الكلاسيكية المطورة ⛏️</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: none; }
   body { overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, sans-serif; color: #fff; }
   canvas#gameCanvas { display: block; width: 100vw; height: 100vh; }
 
-  /* مؤشر التصويب */
   #crosshair {
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 22px; height: 22px; pointer-events: none; z-index: 10;
   }
-  #crosshair::before, #crosshair::after {
-    content: ''; position: absolute; background: rgba(255,255,255,0.85);
-    box-shadow: 0 0 2px #000;
-  }
+  #crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.9); box-shadow: 0 0 2px #000; }
   #crosshair::before { width: 2px; height: 22px; left: 10px; top: 0; }
   #crosshair::after { height: 2px; width: 22px; top: 10px; left: 0; }
 
-  /* طبقة تحت الماء */
-  #waterOverlay {
-    position: fixed; inset: 0; background: rgba(20, 90, 210, 0.38);
-    pointer-events: none; display: none; z-index: 5;
+  #breakBarWrap {
+    position: fixed; top: calc(50% + 18px); left: 50%; transform: translateX(-50%);
+    width: 64px; height: 6px; background: rgba(0,0,0,0.6); border: 1px solid #fff;
+    border-radius: 3px; display: none; z-index: 10; pointer-events: none;
   }
-  /* وميض الضرر */
-  #damageOverlay {
-    position: fixed; inset: 0; background: rgba(220, 20, 20, 0.35);
-    pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 6;
-  }
+  #breakBarFill { width: 0%; height: 100%; background: #7cfc00; }
 
-  /* معلومات أعلى الشاشة */
+  #waterOverlay { position: fixed; inset: 0; background: rgba(20, 90, 210, 0.38); pointer-events: none; display: none; z-index: 5; }
+  #damageOverlay { position: fixed; inset: 0; background: rgba(220, 20, 20, 0.35); pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 6; }
+
   #topInfo {
-    position: fixed; top: 10px; right: 12px; z-index: 12;
-    background: rgba(0,0,0,0.45); padding: 6px 12px; border-radius: 6px;
-    font-size: 13px; line-height: 1.6; pointer-events: none; border: 1px solid rgba(255,255,255,0.15);
+    position: fixed; top: 10px; right: 10px; z-index: 12;
+    background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 6px;
+    font-size: 12px; line-height: 1.5; pointer-events: none; border: 1px solid rgba(255,255,255,0.15);
   }
-  #controlsHint {
-    position: fixed; top: 10px; left: 12px; z-index: 12;
-    background: rgba(0,0,0,0.45); padding: 6px 12px; border-radius: 6px;
-    font-size: 12px; line-height: 1.6; pointer-events: none; border: 1px solid rgba(255,255,255,0.15);
-    direction: rtl;
+  #topLeftBtns {
+    position: fixed; top: 10px; left: 10px; z-index: 20; display: flex; gap: 6px;
+  }
+  .miniBtn {
+    background: rgba(0,0,0,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+    padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit;
+  }
+  .miniBtn:hover { background: rgba(60,60,60,0.85); }
+
+  #pickupToast {
+    position: fixed; bottom: 118px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.65); color: #a5ff6b; padding: 4px 12px; border-radius: 12px;
+    font-size: 13px; font-weight: bold; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 16;
   }
 
-  /* شريط الحياة والجوع والشريط السفلي */
   #hudBottom {
-    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
-    z-index: 15; display: flex; flex-direction: column; align-items: center; gap: 6px;
-    pointer-events: none;
+    position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+    z-index: 15; display: flex; flex-direction: column; align-items: center; gap: 4px;
   }
   #statusBars {
     width: 100%; display: flex; justify-content: space-between; padding: 0 4px;
-    font-size: 15px; text-shadow: 1px 1px 2px #000;
+    font-size: 14px; text-shadow: 1px 1px 2px #000; pointer-events: none;
   }
   #hotbar {
-    display: flex; gap: 4px; background: rgba(20, 20, 20, 0.78);
-    padding: 5px; border: 2px solid #555; border-radius: 6px;
+    display: flex; gap: 3px; background: rgba(20, 20, 20, 0.82);
+    padding: 4px; border: 2px solid #555; border-radius: 6px;
   }
   .slot {
-    width: 48px; height: 48px; background: rgba(60, 60, 60, 0.7);
+    width: 44px; height: 44px; background: rgba(65, 65, 65, 0.75);
     border: 2px solid #333; position: relative; display: flex;
-    align-items: center; justify-content: center; border-radius: 4px;
+    align-items: center; justify-content: center; border-radius: 4px; cursor: pointer;
   }
-  .slot.active { border-color: #fff; background: rgba(110, 110, 110, 0.85); transform: scale(1.06); }
-  .slot canvas { width: 34px; height: 34px; image-rendering: pixelated; }
-  .slot .count {
-    position: absolute; bottom: 2px; left: 4px; font-size: 12px; font-weight: bold;
-    text-shadow: 1px 1px 0 #000; color: #fff;
-  }
-  .slot .keyNum {
-    position: absolute; top: 1px; right: 3px; font-size: 10px; color: #bbb;
-  }
-  #itemNamePopup {
-    font-size: 14px; font-weight: bold; text-shadow: 1px 1px 2px #000;
-    min-height: 20px; color: #ffeb3b;
-  }
+  .slot.active { border-color: #fff; background: rgba(115, 115, 115, 0.9); transform: scale(1.06); }
+  .slot canvas { width: 30px; height: 30px; image-rendering: pixelated; pointer-events: none; }
+  .slot .count { position: absolute; bottom: 1px; left: 3px; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 0 #000; pointer-events: none; }
+  .slot .keyNum { position: absolute; top: 1px; right: 3px; font-size: 9px; color: #bbb; pointer-events: none; }
+  #itemNamePopup { font-size: 13px; font-weight: bold; text-shadow: 1px 1px 2px #000; min-height: 18px; color: #ffeb3b; pointer-events: none; }
 
-  /* شاشات القوائم (البداية / الإيقاف / التصنيع) */
-  .modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 30;
-    display: flex; align-items: center; justify-content: center;
+  /* أزرار الجوال */
+  #mobileControls { position: fixed; inset: 0; pointer-events: none; z-index: 18; display: none; }
+  #joystickArea {
+    position: absolute; bottom: 85px; left: 20px; width: 120px; height: 120px;
+    background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%; pointer-events: auto;
   }
+  #joystickKnob {
+    position: absolute; left: 36px; top: 36px; width: 44px; height: 44px;
+    background: rgba(255,255,255,0.65); border-radius: 50%; pointer-events: none;
+  }
+  #mobileActionBtns {
+    position: absolute; bottom: 85px; right: 18px; display: grid;
+    grid-template-columns: 62px 62px; gap: 10px; pointer-events: auto;
+  }
+  .mBtn {
+    width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(20,20,20,0.6); color: #fff; font-size: 13px; font-weight: bold;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .mBtn:active { background: rgba(255,255,255,0.35); transform: scale(0.95); }
+
+  /* النوافذ */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.76); z-index: 30; display: flex; align-items: center; justify-content: center; }
   .hidden { display: none !important; }
   .panel {
     background: #242424; border: 3px solid #555; border-radius: 10px;
-    padding: 24px; max-width: 720px; width: 92%; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-    text-align: center;
+    padding: 20px; max-width: 760px; width: 94%; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.85); text-align: center;
   }
-  .panel h1 { font-size: 28px; margin-bottom: 10px; color: #7cfc00; text-shadow: 2px 2px #000; }
-  .panel p { color: #ccc; margin-bottom: 16px; font-size: 14px; line-height: 1.7; }
+  .panel h1 { font-size: 24px; margin-bottom: 8px; color: #7cfc00; text-shadow: 2px 2px #000; }
+  .panel p { color: #ccc; margin-bottom: 12px; font-size: 13px; line-height: 1.6; }
   .btn {
     background: #4caf50; color: #fff; border: 2px solid #2e7d32; border-bottom-width: 4px;
-    padding: 10px 22px; font-size: 16px; font-weight: bold; border-radius: 6px;
-    cursor: pointer; margin: 5px; font-family: inherit;
+    padding: 9px 18px; font-size: 14px; font-weight: bold; border-radius: 6px;
+    cursor: pointer; margin: 4px; font-family: inherit;
   }
   .btn:hover { background: #5cc360; }
   .btn.secondary { background: #444; border-color: #222; }
-  .btn.secondary:hover { background: #555; }
   .btn.danger { background: #c62828; border-color: #8e0000; }
 
-  /* نافذة الحقيبة والتصنيع */
-  .invGridWrap {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 18px; text-align: right; margin-top: 12px;
+  .invGridWrap { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; text-align: right; margin-top: 10px; }
+  @media (max-width: 650px) {
+    .invGridWrap { grid-template-columns: 1fr; }
+    .slot { width: 37px; height: 37px; }
+    .slot canvas { width: 24px; height: 24px; }
   }
-  @media (max-width: 650px) { .invGridWrap { grid-template-columns: 1fr; } }
-  .invBox { background: #191919; padding: 12px; border-radius: 8px; border: 1px solid #444; max-height: 360px; overflow-y: auto; }
-  .invBox h3 { font-size: 15px; margin-bottom: 10px; color: #ffd54f; border-bottom: 1px solid #333; padding-bottom: 6px; }
-  .invItems { display: flex; flex-wrap: wrap; gap: 6px; }
+  .invBox { background: #191919; padding: 10px; border-radius: 8px; border: 1px solid #444; max-height: 330px; overflow-y: auto; }
+  .invBox h3 { font-size: 14px; margin-bottom: 8px; color: #ffd54f; border-bottom: 1px solid #333; padding-bottom: 5px; }
+  .slotsGrid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
   .invSlot {
-    width: 52px; height: 52px; background: #2c2c2c; border: 2px solid #444; border-radius: 5px;
+    aspect-ratio: 1; background: #2c2c2c; border: 2px solid #444; border-radius: 4px;
     position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer;
   }
-  .invSlot:hover { border-color: #ffd54f; }
-  .invSlot canvas { width: 34px; height: 34px; image-rendering: pixelated; }
-  .invSlot .count { position: absolute; bottom: 2px; left: 4px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px #000; }
+  .invSlot.selectedSwap { border-color: #ffeb3b; background: #424220; }
+  .invSlot.hotRow { border-color: #666; }
+  .invSlot canvas { width: 72%; height: 72%; image-rendering: pixelated; pointer-events: none; }
+  .invSlot .count { position: absolute; bottom: 1px; left: 2px; font-size: 10px; font-weight: bold; text-shadow: 1px 1px #000; }
   .recipeRow {
     display: flex; align-items: center; justify-content: space-between;
-    background: #252525; padding: 7px 10px; border-radius: 6px; margin-bottom: 6px;
-    border: 1px solid #383838; font-size: 13px;
+    background: #252525; padding: 6px 8px; border-radius: 6px; margin-bottom: 5px; border: 1px solid #383838; font-size: 12px;
   }
   .recipeInfo { display: flex; align-items: center; gap: 8px; }
-  .recipeInfo canvas { width: 28px; height: 28px; image-rendering: pixelated; }
+  .recipeInfo canvas { width: 26px; height: 26px; image-rendering: pixelated; }
   .craftBtn {
-    padding: 5px 12px; font-size: 12px; border-radius: 4px; border: none;
+    padding: 5px 10px; font-size: 12px; border-radius: 4px; border: none;
     background: #4caf50; color: #fff; font-weight: bold; cursor: pointer; font-family: inherit;
   }
   .craftBtn:disabled { background: #444; color: #888; cursor: not-allowed; }
+  .guideStep { background: #1c1c1c; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; text-align: right; font-size: 13px; border-right: 3px solid #7cfc00; }
 </style>
 </head>
 <body>
@@ -136,19 +148,29 @@
 <div id="waterOverlay"></div>
 <div id="damageOverlay"></div>
 <div id="crosshair"></div>
+<div id="breakBarWrap"><div id="breakBarFill"></div></div>
+<div id="pickupToast"></div>
 
 <div id="topInfo">
-  <div>الوقت: <span id="timeText">نهار</span> | الكائنات: <span id="mobCount">0</span></div>
-  <div>الإحداثيات: <span id="coordsText">0, 0, 0</span></div>
+  <div><span id="timeText">نهار ☀️</span> | الكائنات: <span id="mobCount">0</span> | Chunks: <span id="chunkCount">0</span></div>
+  <div id="coordsText">0, 0, 0</div>
+  <div id="compassHud" style="color:#ffd54f; display:none;"></div>
 </div>
 
-<div id="controlsHint">
-  <b>التحكم:</b><br>
-  WASD: حركة | Space: قفز/سباحة<br>
-  Shift: ركض | 1-9: تغيير الأداة<br>
-  كليك يسار: تكسير / ضرب<br>
-  كليك يمين: بناء / أكل<br>
-  E: الحقيبة والتصنيع | ESC: إيقاف
+<div id="topLeftBtns">
+  <button class="miniBtn" id="pauseBtn">⏸️ القائمة</button>
+  <button class="miniBtn" id="openGuideBtn">❓ التعليمات</button>
+  <button class="miniBtn" id="openInvQuickBtn">🎒 الحقيبة (E)</button>
+</div>
+
+<!-- أزرار التحكم باللمس للجوال -->
+<div id="mobileControls">
+  <div id="joystickArea"><div id="joystickKnob"></div></div>
+  <div id="mobileActionBtns">
+    <button class="mBtn" id="mBreakBtn">⛏️<span style="font-size:10px;">تكسير/ضرب</span></button>
+    <button class="mBtn" id="mPlaceBtn">✋<span style="font-size:10px;">بناء/استخدام</span></button>
+    <button class="mBtn" id="mJumpBtn" style="grid-column: span 2; width: 134px; border-radius: 16px; height: 48px;">⬆️ قفز / سباحة</button>
+  </div>
 </div>
 
 <div id="hudBottom">
@@ -160,21 +182,34 @@
   <div id="hotbar"></div>
 </div>
 
-<!-- قائمة البداية / الإيقاف -->
+<!-- القائمة الرئيسية / الإيقاف -->
 <div id="menuModal" class="modal">
   <div class="panel">
-    <h1>⛏️ ماينكرافت الكلاسيكية</h1>
-    <p id="menuDesc">
-      استكشف العالم، كسّر البلوكات، اصطد الحيوانات، اصنع سيوفك وأدواتك، واطبخ أكلك!<br>
-      في الليل يظهر الزومبي — دافع عن نفسك بالسيف!
-    </p>
+    <h1>⛏️ ماينكرافت الكلاسيكية المطورة</h1>
+    <p>عالم لا نهائي، حيوانات 3D، طاولة تصنيع، فرن لصهر الحديد، بوصلة، وأدوات ثلاثية الأبعاد!</p>
     <div>
       <button class="btn" id="playBtn">▶ ابدأ / متابعة اللعب</button>
       <button class="btn secondary" id="saveBtn">💾 حفظ العالم</button>
+      <button class="btn secondary" id="renderDistBtn">👁️ مدى الرؤية: متوسط (4)</button>
+      <button class="btn secondary" id="mobileToggleBtn">📱 أزرار الجوال: تلقائي</button>
       <button class="btn secondary" id="toggleZombiesBtn">🧟 وحوش الليل: مفعّل</button>
       <button class="btn danger" id="resetWorldBtn">🔄 عالم جديد</button>
     </div>
-    <p id="saveStatus" style="margin-top:10px; color:#8bc34a; font-size:13px;"></p>
+    <p id="saveStatus" style="margin-top:8px; color:#8bc34a;"></p>
+  </div>
+</div>
+
+<!-- شاشة التعليمات -->
+<div id="guideModal" class="modal hidden">
+  <div class="panel">
+    <h1>❓ كيف تلعب وتصنع الأسلحة والأدوات؟</h1>
+    <div class="guideStep"><b>1. التجميع:</b> كسر الخشب والأحجار والبلوكات، واقترب من البلوكات اللي تطيح على الأرض عشان تدخل حقيبتك.</div>
+    <div class="guideStep"><b>2. طاولة التصنيع (Crafting Table):</b> اضغط <b>E</b> لفتح الحقيبة ⬅️ حوّل الخشب إلى <b>ألواح خشب</b> ⬅️ اصنع <b>طاولة تصنيع</b>.</div>
+    <div class="guideStep"><b>3. استخدام الطاولة:</b> حط طاولة التصنيع على الأرض واضغط عليها <b>كليك يمين</b> (أو زر بناء/استخدام بالجوال) لتفتح وصفات <b>البيكاكس، الفأس، السيف، الفرن، والبوصلة</b>!</div>
+    <div class="guideStep"><b>4. صهر الحديد والأكل:</b> اصنع <b>فرن (Furnace)</b> وحطه على الأرض واضغط عليه <b>كليك يمين</b> لتحويل خام الحديد إلى سبائك وشوي اللحم.</div>
+    <div class="guideStep"><b>5. القتال والبقاء:</b> استخدم السيف ضد الحيوانات (لجمع اللحم) وضد الزومبي بالليل، واستخدم <b>البوصلة</b> لتحديد أقرب كائن أو نقطة البداية!</div>
+    <p style="margin-top:10px;"><b>تحكم الكمبيوتر:</b> WASD حركة | Space قفز | Shift ركض | E الحقيبة | 1-9 تبديل | كليك يسار تكسير/ضرب | كليك يمين بناء/أكل/فتح طاولة وفرن.</p>
+    <button class="btn" id="closeGuideBtn">فهمت، ارجع للعبة</button>
   </div>
 </div>
 
@@ -182,26 +217,26 @@
 <div id="deathModal" class="modal hidden">
   <div class="panel">
     <h1 style="color:#ff5252;">💀 لقد متّ!</h1>
-    <p>انتهت طاقتك، يمكنك العودة للعالم والاستمرار في اللعب.</p>
+    <p>انتهت قلوبك! اضغط لإعادة الإحياء في نقطة البداية.</p>
     <button class="btn" id="respawnBtn">إعادة الإحياء</button>
   </div>
 </div>
 
-<!-- نافذة الحقيبة والتصنيع -->
+<!-- نافذة الحقيبة / الطاولة / الفرن -->
 <div id="invModal" class="modal hidden">
   <div class="panel">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="color:#7cfc00;">🎒 الحقيبة والتصنيع</h2>
-      <button class="btn secondary" id="closeInvBtn" style="padding:5px 14px; font-size:13px;">إغلاق (E)</button>
+      <h2 id="invTitle" style="color:#7cfc00;">🎒 الحقيبة والتصنيع السريع</h2>
+      <button class="btn secondary" id="closeInvBtn" style="padding:5px 12px; font-size:12px;">إغلاق</button>
     </div>
-    <p style="margin:6px 0 0 0; font-size:12px;">اضغط على أي غرض في الحقيبة لوضعه في الخانة المحددة حالياً بالشريط السفلي.</p>
+    <p style="margin:4px 0 0 0; font-size:12px;">اضغط على خانتين في الحقيبة للتبديل بينهما (الصف الأول هو الشريط السفلي).</p>
     <div class="invGridWrap">
       <div class="invBox">
-        <h3>المخزون (اضغط للتجهيز)</h3>
-        <div class="invItems" id="invItems"></div>
+        <h3>الحقيبة (27 خانة)</h3>
+        <div class="slotsGrid" id="invGrid"></div>
       </div>
       <div class="invBox">
-        <h3>طاولة التصنيع (Crafting)</h3>
+        <h3 id="craftTitle">التصنيع</h3>
         <div id="recipesList"></div>
       </div>
     </div>
@@ -214,78 +249,100 @@
   // ==========================================
   // 1. تعريف البلوكات والأدوات والوصفات
   // ==========================================
-  const WORLD_W = 64, WORLD_H = 28, WORLD_D = 64;
-  const CHUNK_S = 16;
-  const SEA_LEVEL = 7;
+  const CHUNK_S = 16, WORLD_H = 32, SEA_LEVEL = 7;
+  const WORLD_SEED = Math.floor(Math.random() * 99999);
+  let activeSeed = WORLD_SEED;
 
   const B = {
     AIR: 0, GRASS: 1, DIRT: 2, STONE: 3, WOOD: 4, LEAVES: 5,
     SAND: 6, WATER: 7, PLANKS: 8, COBBLE: 9, COAL_ORE: 10,
-    IRON_ORE: 11, WOOL: 12, BEDROCK: 13
+    IRON_ORE: 11, WOOL: 12, BEDROCK: 13, CRAFT_TABLE: 14, FURNACE: 15
   };
 
   const ITEMS = {
-    [B.GRASS]:   { name: 'عشب', block: B.GRASS, tile: [0,0] },
-    [B.DIRT]:    { name: 'تراب', block: B.DIRT, tile: [2,0] },
-    [B.STONE]:   { name: 'حجر أملس', block: B.STONE, tile: [3,0] },
-    [B.WOOD]:    { name: 'جذع شجرة', block: B.WOOD, tile: [4,0] },
-    [B.LEAVES]:  { name: 'أوراق شجر', block: B.LEAVES, tile: [6,0] },
-    [B.SAND]:    { name: 'رمل', block: B.SAND, tile: [7,0] },
-    [B.PLANKS]:  { name: 'ألواح خشب', block: B.PLANKS, tile: [8,0] },
-    [B.COBBLE]:  { name: 'حجر مكسر', block: B.COBBLE, tile: [9,0] },
-    [B.COAL_ORE]:{ name: 'فحم', block: B.COAL_ORE, tile: [10,0] },
-    [B.IRON_ORE]:{ name: 'خام حديد', block: B.IRON_ORE, tile: [11,0] },
-    [B.WOOL]:    { name: 'صوف', block: B.WOOL, tile: [12,0] },
+    [B.GRASS]:       { name: 'عشب', block: B.GRASS, tile: [0,0], stack: 64 },
+    [B.DIRT]:        { name: 'تراب', block: B.DIRT, tile: [2,0], stack: 64 },
+    [B.STONE]:       { name: 'حجر أملس', block: B.STONE, tile: [3,0], stack: 64 },
+    [B.WOOD]:        { name: 'جذع شجرة', block: B.WOOD, tile: [4,0], stack: 64 },
+    [B.LEAVES]:      { name: 'أوراق شجر', block: B.LEAVES, tile: [6,0], stack: 64 },
+    [B.SAND]:        { name: 'رمل', block: B.SAND, tile: [7,0], stack: 64 },
+    [B.PLANKS]:      { name: 'ألواح خشب', block: B.PLANKS, tile: [8,0], stack: 64 },
+    [B.COBBLE]:      { name: 'حجر مكسر', block: B.COBBLE, tile: [9,0], stack: 64 },
+    [B.COAL_ORE]:    { name: 'فحم', block: B.COAL_ORE, tile: [10,0], stack: 64 },
+    [B.IRON_ORE]:    { name: 'خام حديد', block: B.IRON_ORE, tile: [11,0], stack: 64 },
+    [B.WOOL]:        { name: 'صوف', block: B.WOOL, tile: [12,0], stack: 64 },
+    [B.CRAFT_TABLE]: { name: 'طاولة تصنيع', block: B.CRAFT_TABLE, tile: [0,1], stack: 64 },
+    [B.FURNACE]:     { name: 'فرن', block: B.FURNACE, tile: [1,1], stack: 64 },
 
-    // أدوات وأسلحة وأكل (ID >= 100)
-    100: { name: 'عصا خشبية', tool: 'material', icon: 'stick' },
-    101: { name: 'سيف خشبي', tool: 'sword', dmg: 4, icon: 'sword_wood' },
-    102: { name: 'فأس خشبي', tool: 'pick', speed: 2.2, icon: 'pick_wood' },
-    103: { name: 'سيف حجري', tool: 'sword', dmg: 7, icon: 'sword_stone' },
-    104: { name: 'فأس حجري', tool: 'pick', speed: 3.5, icon: 'pick_stone' },
-    105: { name: 'سيف حديدي', tool: 'sword', dmg: 10, icon: 'sword_iron' },
-    106: { name: 'لحم نيء', food: 2, heal: 1, icon: 'meat_raw' },
-    107: { name: 'لحم مشوي', food: 5, heal: 4, icon: 'meat_cooked' },
-    108: { name: 'تفاحة', food: 3, heal: 2, icon: 'apple' }
+    // أدوات وأسلحة ومواد وأكل
+    100: { name: 'عصا خشبية', icon: 'stick', stack: 64 },
+    101: { name: 'سيف خشبي', tool: 'sword', tier: 'wood', dmg: 5, icon: 'sword_wood', stack: 1 },
+    102: { name: 'بيكاكس خشبي', tool: 'pick', tier: 'wood', speed: 2.5, icon: 'pick_wood', stack: 1 },
+    103: { name: 'فأس خشبي', tool: 'axe', tier: 'wood', speed: 2.6, icon: 'axe_wood', stack: 1 },
+    104: { name: 'سيف حجري', tool: 'sword', tier: 'stone', dmg: 7, icon: 'sword_stone', stack: 1 },
+    105: { name: 'بيكاكس حجري', tool: 'pick', tier: 'stone', speed: 4.0, icon: 'pick_stone', stack: 1 },
+    106: { name: 'فأس حجري', tool: 'axe', tier: 'stone', speed: 4.0, icon: 'axe_stone', stack: 1 },
+    107: { name: 'سبيكة حديد', icon: 'iron_ingot', stack: 64 },
+    108: { name: 'سيف حديدي', tool: 'sword', tier: 'iron', dmg: 10, icon: 'sword_iron', stack: 1 },
+    109: { name: 'بيكاكس حديدي', tool: 'pick', tier: 'iron', speed: 6.0, icon: 'pick_iron', stack: 1 },
+    110: { name: 'فأس حديدي', tool: 'axe', tier: 'iron', speed: 6.0, icon: 'axe_iron', stack: 1 },
+    111: { name: 'لحم نيء', food: 2, heal: 1, icon: 'meat_raw', stack: 64 },
+    112: { name: 'لحم مشوي', food: 6, heal: 5, icon: 'meat_cooked', stack: 64 },
+    113: { name: 'تفاحة', food: 3, heal: 2, icon: 'apple', stack: 64 },
+    114: { name: 'بوصلة تتبع', tool: 'compass', icon: 'compass', stack: 1 }
   };
 
-  // خريطة وجوه البلوكات في الأطلس [top, side, bottom]
   const BLOCK_TILES = {
-    [B.GRASS]:    [[0,0], [1,0], [2,0]],
-    [B.DIRT]:     [[2,0], [2,0], [2,0]],
-    [B.STONE]:    [[3,0], [3,0], [3,0]],
-    [B.WOOD]:     [[5,0], [4,0], [5,0]],
-    [B.LEAVES]:   [[6,0], [6,0], [6,0]],
-    [B.SAND]:     [[7,0], [7,0], [7,0]],
-    [B.WATER]:    [[13,0],[13,0],[13,0]],
-    [B.PLANKS]:   [[8,0], [8,0], [8,0]],
-    [B.COBBLE]:   [[9,0], [9,0], [9,0]],
-    [B.COAL_ORE]: [[10,0],[10,0],[10,0]],
-    [B.IRON_ORE]: [[11,0],[11,0],[11,0]],
-    [B.WOOL]:     [[12,0],[12,0],[12,0]],
-    [B.BEDROCK]:  [[14,0],[14,0],[14,0]]
+    [B.GRASS]:       [[0,0], [1,0], [2,0]],
+    [B.DIRT]:        [[2,0], [2,0], [2,0]],
+    [B.STONE]:       [[3,0], [3,0], [3,0]],
+    [B.WOOD]:        [[5,0], [4,0], [5,0]],
+    [B.LEAVES]:      [[6,0], [6,0], [6,0]],
+    [B.SAND]:        [[7,0], [7,0], [7,0]],
+    [B.WATER]:       [[13,0],[13,0],[13,0]],
+    [B.PLANKS]:      [[8,0], [8,0], [8,0]],
+    [B.COBBLE]:      [[9,0], [9,0], [9,0]],
+    [B.COAL_ORE]:    [[10,0],[10,0],[10,0]],
+    [B.IRON_ORE]:    [[11,0],[11,0],[11,0]],
+    [B.WOOL]:        [[12,0],[12,0],[12,0]],
+    [B.BEDROCK]:     [[14,0],[14,0],[14,0]],
+    [B.CRAFT_TABLE]: [[15,0],[0,1], [8,0]],
+    [B.FURNACE]:     [[2,1], [1,1], [2,1]]
   };
 
   const BLOCK_HARDNESS = {
-    [B.GRASS]: 0.35, [B.DIRT]: 0.35, [B.SAND]: 0.3, [B.LEAVES]: 0.2,
-    [B.WOOL]: 0.3, [B.WOOD]: 0.7, [B.PLANKS]: 0.55, [B.STONE]: 1.3,
-    [B.COBBLE]: 1.2, [B.COAL_ORE]: 1.4, [B.IRON_ORE]: 1.7, [B.BEDROCK]: 9999
+    [B.GRASS]: 0.4, [B.DIRT]: 0.4, [B.SAND]: 0.35, [B.LEAVES]: 0.25, [B.WOOL]: 0.35,
+    [B.WOOD]: 1.1, [B.PLANKS]: 0.9, [B.CRAFT_TABLE]: 0.9,
+    [B.STONE]: 1.8, [B.COBBLE]: 1.8, [B.COAL_ORE]: 2.0, [B.IRON_ORE]: 2.4, [B.FURNACE]: 2.0,
+    [B.BEDROCK]: 9999
   };
 
+  // وصفات: mode = 'basic' (باليد), 'table' (طاولة تصنيع), 'furnace' (فرن)
   const RECIPES = [
-    { out: B.PLANKS, count: 4, req: { [B.WOOD]: 1 } },
-    { out: 100, count: 4, req: { [B.PLANKS]: 2 } },
-    { out: 101, count: 1, req: { [B.PLANKS]: 2, 100: 1 } },
-    { out: 102, count: 1, req: { [B.PLANKS]: 3, 100: 2 } },
-    { out: 103, count: 1, req: { [B.COBBLE]: 2, 100: 1 } },
-    { out: 104, count: 1, req: { [B.COBBLE]: 3, 100: 2 } },
-    { out: 105, count: 1, req: { [B.IRON_ORE]: 2, 100: 1 } },
-    { out: 107, count: 1, req: { 106: 1, [B.COAL_ORE]: 1 } },
-    { out: 107, count: 1, req: { 106: 1, [B.WOOD]: 1 }, label: 'لحم مشوي (بخشب)' }
+    { mode: 'basic', out: B.PLANKS, count: 4, req: { [B.WOOD]: 1 } },
+    { mode: 'basic', out: 100, count: 4, req: { [B.PLANKS]: 2 } },
+    { mode: 'basic', out: B.CRAFT_TABLE, count: 1, req: { [B.PLANKS]: 4 } },
+
+    { mode: 'table', out: 101, count: 1, req: { [B.PLANKS]: 2, 100: 1 } },
+    { mode: 'table', out: 102, count: 1, req: { [B.PLANKS]: 3, 100: 2 } },
+    { mode: 'table', out: 103, count: 1, req: { [B.PLANKS]: 3, 100: 2 } },
+    { mode: 'table', out: B.FURNACE, count: 1, req: { [B.COBBLE]: 8 } },
+    { mode: 'table', out: 104, count: 1, req: { [B.COBBLE]: 2, 100: 1 } },
+    { mode: 'table', out: 105, count: 1, req: { [B.COBBLE]: 3, 100: 2 } },
+    { mode: 'table', out: 106, count: 1, req: { [B.COBBLE]: 3, 100: 2 } },
+    { mode: 'table', out: 108, count: 1, req: { 107: 2, 100: 1 } },
+    { mode: 'table', out: 109, count: 1, req: { 107: 3, 100: 2 } },
+    { mode: 'table', out: 110, count: 1, req: { 107: 3, 100: 2 } },
+    { mode: 'table', out: 114, count: 1, req: { 107: 4 } },
+
+    { mode: 'furnace', out: 107, count: 1, req: { [B.IRON_ORE]: 1, [B.COAL_ORE]: 1 }, label: 'صهر حديد (بفحم)' },
+    { mode: 'furnace', out: 107, count: 1, req: { [B.IRON_ORE]: 1, [B.WOOD]: 1 }, label: 'صهر حديد (بخشب)' },
+    { mode: 'furnace', out: 112, count: 1, req: { 111: 1, [B.COAL_ORE]: 1 }, label: 'شوي لحم (بفحم)' },
+    { mode: 'furnace', out: 112, count: 1, req: { 111: 1, [B.PLANKS]: 2 }, label: 'شوي لحم (بألواح)' }
   ];
 
   // ==========================================
-  // 2. مولد الأصوات (Web Audio API)
+  // 2. الأصوات (Web Audio)
   // ==========================================
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(type) {
@@ -294,122 +351,90 @@
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain); gain.connect(audioCtx.destination);
-
     if (type === 'break') {
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(160, now);
-      osc.frequency.exponentialRampToValueAtTime(60, now + 0.09);
-      gain.gain.setValueAtTime(0.14, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      osc.type = 'square'; osc.frequency.setValueAtTime(160, now); osc.frequency.exponentialRampToValueAtTime(55, now + 0.09);
+      gain.gain.setValueAtTime(0.13, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
       osc.start(now); osc.stop(now + 0.09);
     } else if (type === 'place') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.exponentialRampToValueAtTime(120, now + 0.07);
-      gain.gain.setValueAtTime(0.16, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(220, now); osc.frequency.exponentialRampToValueAtTime(120, now + 0.07);
+      gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
       osc.start(now); osc.stop(now + 0.07);
+    } else if (type === 'pickup') {
+      osc.type = 'sine'; osc.frequency.setValueAtTime(520, now); osc.frequency.exponentialRampToValueAtTime(860, now + 0.08);
+      gain.gain.setValueAtTime(0.11, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now); osc.stop(now + 0.08);
     } else if (type === 'hit') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(240, now);
-      osc.frequency.exponentialRampToValueAtTime(70, now + 0.12);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(240, now); osc.frequency.exponentialRampToValueAtTime(70, now + 0.12);
+      gain.gain.setValueAtTime(0.18, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
       osc.start(now); osc.stop(now + 0.12);
     } else if (type === 'eat') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(420, now);
-      osc.frequency.setValueAtTime(300, now + 0.05);
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+      osc.type = 'triangle'; osc.frequency.setValueAtTime(420, now); osc.frequency.setValueAtTime(300, now + 0.05);
+      gain.gain.setValueAtTime(0.14, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
       osc.start(now); osc.stop(now + 0.11);
     } else if (type === 'splash') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(320, now);
-      osc.frequency.exponentialRampToValueAtTime(90, now + 0.18);
-      gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-      osc.start(now); osc.stop(now + 0.18);
+      osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(90, now + 0.16);
+      gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+      osc.start(now); osc.stop(now + 0.16);
     }
   }
 
   // ==========================================
-  // 3. مولد نسيج البيكسل آرت (Atlas 16x16)
+  // 3. نسيج الأطلس 16x16 وأيقونات العناصر
   // ==========================================
   const atlasCanvas = document.createElement('canvas');
   atlasCanvas.width = 256; atlasCanvas.height = 256;
   const actx = atlasCanvas.getContext('2d');
 
   function rngPixel(seed) {
-    let s = seed;
+    let s = Math.abs(seed) % 2147483647 || 1;
     return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
   }
-
   function fillTileNoise(tx, ty, colors, seed = 1) {
     const r = rngPixel(seed + tx * 31 + ty * 97);
-    for (let y = 0; y < 16; y++) {
-      for (let x = 0; x < 16; x++) {
-        actx.fillStyle = colors[Math.floor(r() * colors.length)];
-        actx.fillRect(tx * 16 + x, ty * 16 + y, 1, 1);
-      }
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      actx.fillStyle = colors[Math.floor(r() * colors.length)];
+      actx.fillRect(tx * 16 + x, ty * 16 + y, 1, 1);
     }
   }
-
   function buildAtlas() {
-    // (0,0) Grass top
     fillTileNoise(0, 0, ['#4ea832','#5bbd3b','#3f8e27','#67c945'], 10);
-    // (1,0) Grass side
     fillTileNoise(1, 0, ['#79553a','#6b482f','#866043','#5d3d27'], 20);
     const rG = rngPixel(25);
-    for (let x = 0; x < 16; x++) {
-      const h = 3 + Math.floor(rG() * 3);
-      for (let y = 0; y < h; y++) {
-        actx.fillStyle = y === 0 ? '#5bbd3b' : '#4ea832';
-        actx.fillRect(16 + x, y, 1, 1);
-      }
-    }
-    // (2,0) Dirt
+    for (let x=0; x<16; x++) { const h=3+Math.floor(rG()*3); for (let y=0; y<h; y++){ actx.fillStyle=y===0?'#5bbd3b':'#4ea832'; actx.fillRect(16+x,y,1,1); } }
     fillTileNoise(2, 0, ['#79553a','#6b482f','#866043','#5d3d27'], 30);
-    // (3,0) Stone
     fillTileNoise(3, 0, ['#848484','#787878','#929292','#6e6e6e'], 40);
-    // (4,0) Wood side
-    for (let y = 0; y < 16; y++) {
-      for (let x = 0; x < 16; x++) {
-        actx.fillStyle = (x % 3 === 0) ? '#4f3620' : ((x % 2 === 0) ? '#634529' : '#593d24');
-        actx.fillRect(4*16 + x, y, 1, 1);
-      }
-    }
-    // (5,0) Wood top
+    for (let y=0;y<16;y++) for (let x=0;x<16;x++){ actx.fillStyle=(x%3===0)?'#4f3620':((x%2===0)?'#634529':'#593d24'); actx.fillRect(4*16+x,y,1,1); }
     fillTileNoise(5, 0, ['#b8915d','#a37e4d'], 50);
-    actx.strokeStyle = '#5c4024'; actx.strokeRect(5*16+0.5, 0.5, 15, 15);
-    actx.strokeStyle = '#8b683b'; actx.strokeRect(5*16+3.5, 3.5, 9, 9);
-    // (6,0) Leaves
+    actx.strokeStyle='#5c4024'; actx.strokeRect(5*16+0.5,0.5,15,15); actx.strokeStyle='#8b683b'; actx.strokeRect(5*16+3.5,3.5,9,9);
     fillTileNoise(6, 0, ['#2e7d22','#3b942b','#1e5915','#48a836'], 60);
-    // (7,0) Sand
     fillTileNoise(7, 0, ['#e5d399','#dcc788','#efe0ad','#d3be7c'], 70);
-    // (8,0) Planks
     fillTileNoise(8, 0, ['#ba9154','#ad8448','#c79e60'], 80);
-    actx.fillStyle = '#755329';
-    for (let y = 0; y < 16; y += 4) actx.fillRect(8*16, y, 16, 1);
-    // (9,0) Cobblestone
+    actx.fillStyle='#755329'; for (let y=0;y<16;y+=4) actx.fillRect(8*16,y,16,1);
     fillTileNoise(9, 0, ['#7a7a7a','#646464','#8d8d8d','#525252'], 90);
-    actx.fillStyle = '#474747';
-    actx.fillRect(9*16, 5, 16, 1); actx.fillRect(9*16, 11, 16, 1);
-    actx.fillRect(9*16+7, 0, 1, 5); actx.fillRect(9*16+12, 6, 1, 5); actx.fillRect(9*16+4, 12, 1, 4);
-    // (10,0) Coal ore
-    fillTileNoise(10, 0, ['#848484','#787878','#929292'], 40);
-    actx.fillStyle = '#1b1b1b';
+    actx.fillStyle='#474747'; actx.fillRect(9*16,5,16,1); actx.fillRect(9*16,11,16,1);
+    fillTileNoise(10, 0, ['#848484','#787878','#929292'], 40); actx.fillStyle='#1b1b1b';
     [[3,3,3,2],[10,4,3,3],[5,10,4,2],[11,11,2,2]].forEach(p=>actx.fillRect(10*16+p[0],p[1],p[2],p[3]));
-    // (11,0) Iron ore
-    fillTileNoise(11, 0, ['#848484','#787878','#929292'], 40);
-    actx.fillStyle = '#d8b08c';
+    fillTileNoise(11, 0, ['#848484','#787878','#929292'], 40); actx.fillStyle='#d8b08c';
     [[2,4,3,2],[9,3,3,2],[6,9,3,3],[11,11,2,2]].forEach(p=>actx.fillRect(11*16+p[0],p[1],p[2],p[3]));
-    // (12,0) Wool
     fillTileNoise(12, 0, ['#f2f2f2','#e4e4e4','#ffffff'], 120);
-    // (13,0) Water
     fillTileNoise(13, 0, ['#2878e0','#3288f0','#1f68cc','#4698fa'], 130);
-    // (14,0) Bedrock
     fillTileNoise(14, 0, ['#2a2a2a','#161616','#404040','#0d0d0d'], 140);
+    // (15,0) Crafting Table Top
+    fillTileNoise(15, 0, ['#9c6e3b','#8a5d2e'], 150);
+    actx.fillStyle = '#4e3115';
+    for (let i=0;i<=16;i+=5){ actx.fillRect(15*16+i,0,1,16); actx.fillRect(15*16,i,16,1); }
+    // (0,1) Crafting Table Side
+    fillTileNoise(0, 1, ['#b88a50','#a67942'], 160);
+    actx.fillStyle = '#4e3115'; actx.fillRect(0, 16, 16, 3);
+    actx.fillStyle = '#757575'; actx.fillRect(3, 21, 3, 7); actx.fillRect(9, 22, 4, 6);
+    // (1,1) Furnace Front
+    fillTileNoise(1, 1, ['#7a7a7a','#686868','#888888'], 170);
+    actx.fillStyle = '#1b1b1b'; actx.fillRect(16+4, 16+3, 8, 5);
+    actx.fillStyle = '#ff6d00'; actx.fillRect(16+4, 16+10, 8, 4);
+    actx.fillStyle = '#ffab00'; actx.fillRect(16+6, 16+11, 4, 2);
+    // (2,1) Furnace Side/Top
+    fillTileNoise(2, 1, ['#7a7a7a','#686868','#8a8a8a'], 175);
+    actx.strokeStyle='#4a4a4a'; actx.strokeRect(2*16+0.5, 16.5, 15, 15);
   }
   buildAtlas();
 
@@ -418,45 +443,45 @@
   atlasTexture.minFilter = THREE.NearestFilter;
   atlasTexture.generateMipmaps = false;
 
-  // رسم أيقونات العناصر والبلوكات على كانفاس صغير للواجهة
   const iconCache = {};
   function getItemIconCanvas(id) {
     if (iconCache[id]) return iconCache[id];
-    const c = document.createElement('canvas');
-    c.width = 16; c.height = 16;
+    const c = document.createElement('canvas'); c.width = 16; c.height = 16;
     const ctx = c.getContext('2d');
     const item = ITEMS[id];
     if (item && item.tile) {
       ctx.drawImage(atlasCanvas, item.tile[0]*16, item.tile[1]*16, 16, 16, 0, 0, 16, 16);
     } else if (item && item.icon) {
       const ic = item.icon;
+      const tierCol = ic.endsWith('wood') ? '#b88a4a' : (ic.endsWith('stone') ? '#9e9e9e' : '#eceff1');
       if (ic === 'stick') {
-        ctx.fillStyle = '#754e28';
-        for (let i=3; i<13; i++) ctx.fillRect(i, 15-i, 2, 2);
+        ctx.fillStyle = '#754e28'; for (let i=3; i<13; i++) ctx.fillRect(i, 15-i, 2, 2);
       } else if (ic.startsWith('sword_')) {
-        const col = ic.endsWith('wood') ? '#a87c45' : (ic.endsWith('stone') ? '#9e9e9e' : '#e3f2fd');
         ctx.fillStyle = '#5c3c1e'; ctx.fillRect(2,12,2,2); ctx.fillRect(4,10,2,2);
         ctx.fillStyle = '#4e342e'; ctx.fillRect(3,8,5,2); ctx.fillRect(6,8,2,5);
-        ctx.fillStyle = col;
-        for (let i=6; i<=13; i++) ctx.fillRect(i, 15-i, 2, 2);
+        ctx.fillStyle = tierCol; for (let i=6; i<=13; i++) ctx.fillRect(i, 15-i, 2, 2);
       } else if (ic.startsWith('pick_')) {
-        const col = ic.endsWith('wood') ? '#a87c45' : '#9e9e9e';
-        ctx.fillStyle = '#6b4723';
-        for (let i=2; i<11; i++) ctx.fillRect(i, 14-i, 2, 2);
-        ctx.fillStyle = col;
-        ctx.fillRect(5,2,7,2); ctx.fillRect(10,2,2,7); ctx.fillRect(4,3,2,2); ctx.fillRect(11,8,2,2);
+        ctx.fillStyle = '#6b4723'; for (let i=2; i<11; i++) ctx.fillRect(i, 14-i, 2, 2);
+        ctx.fillStyle = tierCol; ctx.fillRect(5,2,7,2); ctx.fillRect(10,2,2,7); ctx.fillRect(4,3,2,2); ctx.fillRect(11,8,2,2);
+      } else if (ic.startsWith('axe_')) {
+        ctx.fillStyle = '#6b4723'; for (let i=2; i<12; i++) ctx.fillRect(i, 14-i, 2, 2);
+        ctx.fillStyle = tierCol; ctx.fillRect(7,2,5,5); ctx.fillRect(9,7,3,2);
+      } else if (ic === 'iron_ingot') {
+        ctx.fillStyle = '#cfd8dc'; ctx.fillRect(3,5,10,6);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(4,6,8,2);
+        ctx.fillStyle = '#90a4ae'; ctx.fillRect(3,9,10,2);
       } else if (ic === 'meat_raw') {
-        ctx.fillStyle = '#c62828'; ctx.fillRect(3,4,10,8);
-        ctx.fillStyle = '#ef9a9a'; ctx.fillRect(5,6,5,3);
-        ctx.fillStyle = '#ffffff'; ctx.fillRect(11,5,2,2);
+        ctx.fillStyle = '#c62828'; ctx.fillRect(3,4,10,8); ctx.fillStyle = '#ef9a9a'; ctx.fillRect(5,6,5,3);
       } else if (ic === 'meat_cooked') {
-        ctx.fillStyle = '#6d3b1a'; ctx.fillRect(3,4,10,8);
-        ctx.fillStyle = '#a15a2a'; ctx.fillRect(5,6,6,4);
-        ctx.fillStyle = '#4a2511'; ctx.fillRect(4,5,2,6);
+        ctx.fillStyle = '#6d3b1a'; ctx.fillRect(3,4,10,8); ctx.fillStyle = '#a15a2a'; ctx.fillRect(5,6,6,4);
       } else if (ic === 'apple') {
         ctx.fillStyle = '#4caf50'; ctx.fillRect(7,2,2,2);
         ctx.fillStyle = '#e53935'; ctx.fillRect(4,4,8,9); ctx.fillRect(3,5,10,7);
-        ctx.fillStyle = '#ff8a80'; ctx.fillRect(5,6,2,2);
+      } else if (ic === 'compass') {
+        ctx.fillStyle = '#90a4ae'; ctx.fillRect(3,3,10,10);
+        ctx.fillStyle = '#263238'; ctx.fillRect(5,5,6,6);
+        ctx.fillStyle = '#ff1744'; ctx.fillRect(7,4,2,4);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(7,8,2,3);
       }
     }
     iconCache[id] = c;
@@ -464,7 +489,7 @@
   }
 
   // ==========================================
-  // 4. إعداد المشهد والضوء واليد ثلاثية الأبعاد
+  // 4. المشهد واليد ثلاثية الأبعاد الحقيقية (Voxel Hand Models)
   // ==========================================
   const canvas = document.getElementById('gameCanvas');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
@@ -474,37 +499,122 @@
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87ceeb);
-  scene.fog = new THREE.Fog(0x87ceeb, 26, 60);
+  let renderDist = 4; // عدد الشنكس في كل اتجاه
+  scene.fog = new THREE.Fog(0x87ceeb, 34, renderDist * CHUNK_S);
 
-  const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 100);
+  const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 140);
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
   scene.add(ambientLight);
   const sunLight = new THREE.DirectionalLight(0xfffbe8, 0.55);
-  sunLight.position.set(30, 50, 20);
+  sunLight.position.set(30, 60, 25);
   scene.add(sunLight);
 
-  // مشهد اليد (لا يدخل في الجدران)
   const handScene = new THREE.Scene();
-  handScene.add(new THREE.AmbientLight(0xffffff, 0.9));
-  const handCam = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.05, 10);
+  handScene.add(new THREE.AmbientLight(0xffffff, 0.92));
+  const hDir = new THREE.DirectionalLight(0xffffff, 0.35);
+  hDir.position.set(1, 2, 1); handScene.add(hDir);
+  const handCam = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.05, 10);
   const handGroup = new THREE.Group();
-  handGroup.position.set(0.45, -0.38, -0.65);
+  handGroup.position.set(0.42, -0.36, -0.62);
   handScene.add(handGroup);
-  let handSwing = 0;
+  let handSwing = 0, compassNeedleMesh = null;
 
-  // مكعب تحديد البلوكة المستهدفة
   const highlightBox = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(1.005, 1.005, 1.005)),
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(1.006, 1.006, 1.006)),
     new THREE.LineBasicMaterial({ color: 0x000000 })
   );
   highlightBox.visible = false;
   scene.add(highlightBox);
 
+  function addVoxelBox(parent, w, h, d, col, x, y, z) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color: col }));
+    m.position.set(x, y, z);
+    parent.add(m);
+    return m;
+  }
+
+  function build3DToolModel(item) {
+    const g = new THREE.Group();
+    const tierCol = item.tier === 'wood' ? 0xb58545 : (item.tier === 'stone' ? 0x999999 : 0xebeff2);
+    const tierDark = item.tier === 'wood' ? 0x8c622b : (item.tier === 'stone' ? 0x707070 : 0xb0bec5);
+
+    if (item.tool === 'sword') {
+      // مقبض وحارس ونصل متدرج ثلاثي الأبعاد
+      addVoxelBox(g, 0.045, 0.14, 0.045, 0x5c3c1e, 0, -0.05, 0);
+      addVoxelBox(g, 0.17, 0.045, 0.06, 0x4e342e, 0, 0.04, 0);
+      addVoxelBox(g, 0.08, 0.34, 0.032, tierCol, 0, 0.23, 0);
+      addVoxelBox(g, 0.05, 0.06, 0.034, tierDark, 0, 0.42, 0);
+      g.rotation.set(-0.35, -0.35, 0.15);
+      g.position.set(0.02, 0.02, -0.02);
+    } else if (item.tool === 'pick') {
+      addVoxelBox(g, 0.042, 0.42, 0.042, 0x6b4723, 0, 0.12, 0);
+      addVoxelBox(g, 0.3, 0.055, 0.05, tierCol, 0, 0.33, 0);
+      addVoxelBox(g, 0.055, 0.08, 0.05, tierDark, -0.15, 0.28, 0);
+      addVoxelBox(g, 0.055, 0.08, 0.05, tierDark, 0.15, 0.28, 0);
+      g.rotation.set(-0.45, -0.8, 0.1);
+    } else if (item.tool === 'axe') {
+      addVoxelBox(g, 0.042, 0.42, 0.042, 0x6b4723, 0, 0.12, 0);
+      addVoxelBox(g, 0.14, 0.14, 0.05, tierCol, -0.06, 0.28, 0);
+      addVoxelBox(g, 0.06, 0.09, 0.05, tierDark, -0.13, 0.25, 0);
+      g.rotation.set(-0.4, -0.75, 0.1);
+    } else if (item.tool === 'compass') {
+      addVoxelBox(g, 0.22, 0.22, 0.05, 0x90a4ae, 0, 0.04, 0);
+      addVoxelBox(g, 0.16, 0.16, 0.06, 0x263238, 0, 0.04, 0.005);
+      const needle = new THREE.Group();
+      needle.position.set(0, 0.04, 0.04);
+      addVoxelBox(needle, 0.025, 0.07, 0.02, 0xff1744, 0, 0.03, 0);
+      addVoxelBox(needle, 0.025, 0.06, 0.02, 0xffffff, 0, -0.03, 0);
+      g.add(needle);
+      compassNeedleMesh = needle;
+      g.rotation.set(-0.6, -0.2, 0);
+    } else if (item.food) {
+      const col = item.icon === 'apple' ? 0xe53935 : (item.icon === 'meat_raw' ? 0xc62828 : 0x7a421d);
+      addVoxelBox(g, 0.18, 0.14, 0.14, col, 0, 0.04, 0);
+      if (item.icon === 'apple') addVoxelBox(g, 0.04, 0.06, 0.04, 0x4caf50, 0, 0.13, 0);
+      g.rotation.set(0.1, 0.4, 0);
+    } else {
+      addVoxelBox(g, 0.18, 0.08, 0.1, 0xcfd8dc, 0, 0.04, 0);
+      g.rotation.set(0.2, 0.4, 0);
+    }
+    return g;
+  }
+
+  function updateHandMesh() {
+    while (handGroup.children.length) handGroup.remove(handGroup.children[0]);
+    compassNeedleMesh = null;
+    const slot = slots[activeSlot];
+    const item = slot ? ITEMS[slot.id] : null;
+    if (!item) {
+      const arm = new THREE.Mesh(
+        new THREE.BoxGeometry(0.16, 0.16, 0.46),
+        new THREE.MeshLambertMaterial({ color: 0xd9a077 })
+      );
+      arm.rotation.set(0.25, -0.25, 0);
+      handGroup.add(arm);
+    } else if (item.block) {
+      const tile = BLOCK_TILES[item.block][1];
+      const mat = new THREE.MeshLambertMaterial({ map: atlasTexture });
+      const geo = new THREE.BoxGeometry(0.24, 0.24, 0.24);
+      const u0 = (tile[0]+0.01)/16, u1 = (tile[0]+0.99)/16;
+      const v1 = 1 - (tile[1]+0.01)/16, v0 = 1 - (tile[1]+0.99)/16;
+      const uvs = geo.attributes.uv;
+      for (let i=0; i<uvs.count; i+=4) {
+        uvs.setXY(i,u0,v1); uvs.setXY(i+1,u1,v1); uvs.setXY(i+2,u0,v0); uvs.setXY(i+3,u1,v0);
+      }
+      const box = new THREE.Mesh(geo, mat);
+      box.rotation.set(0.15, 0.55, 0);
+      handGroup.add(box);
+    } else {
+      handGroup.add(build3DToolModel(item));
+    }
+  }
+
   // ==========================================
-  // 5. العالم وتوليد التضاريس
+  // 5. توليد العالم اللانهائي وإدارة الشنكس
   // ==========================================
-  let worldData = new Uint8Array(WORLD_W * WORLD_H * WORLD_D);
-  const chunks = {}; // key: "cx,cz" -> { solidMesh, waterMesh }
+  const chunkDataMap = new Map(); // "cx,cz" -> Uint8Array(16*32*16)
+  const chunkMeshes = new Map();  // "cx,cz" -> { solidMesh, waterMesh }
+  const dirtyChunks = new Set();  // الشنكس اللي عدلها اللاعب عشان الحفظ
 
   const solidMat = new THREE.MeshLambertMaterial({ map: atlasTexture, vertexColors: true });
   const waterMat = new THREE.MeshLambertMaterial({
@@ -512,12 +622,8 @@
     depthWrite: false, side: THREE.DoubleSide
   });
 
-  function idx(x, y, z) { return x + WORLD_W * (z + WORLD_D * y); }
-  function inBounds(x, y, z) { return x >= 0 && x < WORLD_W && y >= 0 && y < WORLD_H && z >= 0 && z < WORLD_D; }
-  function getBlock(x, y, z) { return inBounds(x, y, z) ? worldData[idx(x, y, z)] : B.AIR; }
-  function setBlockRaw(x, y, z, b) { if (inBounds(x, y, z)) worldData[idx(x, y, z)] = b; }
+  function cIdx(lx, y, lz) { return lx + CHUNK_S * (lz + CHUNK_S * y); }
 
-  // ضجيج متناغم لتوليد التضاريس
   function hash2D(x, z, seed) {
     let n = Math.sin(x * 127.1 + z * 311.7 + seed * 74.7) * 43758.5453;
     return n - Math.floor(n);
@@ -528,124 +634,174 @@
     const ux = fx * fx * (3 - 2 * fx), uz = fz * fz * (3 - 2 * fz);
     const a = hash2D(ix, iz, seed), b = hash2D(ix+1, iz, seed);
     const c = hash2D(ix, iz+1, seed), d = hash2D(ix+1, iz+1, seed);
-    return (a*(1-ux) + b*ux)*(1-uz) + (c*(1-ux) + d*ux)*uz;
+    return (a*(1-ux)+b*ux)*(1-uz) + (c*(1-ux)+d*ux)*uz;
   }
 
-  function generateWorld(seed = Math.floor(Math.random()*99999)) {
-    worldData.fill(B.AIR);
-    const r = rngPixel(seed);
+  function getTerrainHeight(wx, wz) {
+    const n1 = valueNoise(wx * 0.045, wz * 0.045, activeSeed);
+    const n2 = valueNoise(wx * 0.12, wz * 0.12, activeSeed + 77) * 0.35;
+    return Math.floor(4 + (n1 + n2) * 9.0);
+  }
 
-    for (let x = 0; x < WORLD_W; x++) {
-      for (let z = 0; z < WORLD_D; z++) {
-        const n1 = valueNoise(x * 0.055, z * 0.055, seed);
-        const n2 = valueNoise(x * 0.14, z * 0.14, seed + 55) * 0.35;
-        const h = Math.floor(4 + (n1 + n2) * 8.5);
+  function hasTreeAt(wx, wz) {
+    const h = getTerrainHeight(wx, wz);
+    if (h <= SEA_LEVEL + 1) return 0;
+    const r = hash2D(wx, wz, activeSeed + 500);
+    if (r < 0.015 && (Math.abs(wx) > 3 || Math.abs(wz) > 3)) {
+      return 4 + Math.floor(hash2D(wx, wz, activeSeed + 501) * 2);
+    }
+    return 0;
+  }
 
-        setBlockRaw(x, 0, z, B.BEDROCK);
+  function generateChunkData(cx, cz) {
+    const key = cx + ',' + cz;
+    if (chunkDataMap.has(key)) return chunkDataMap.get(key);
+    const data = new Uint8Array(CHUNK_S * WORLD_H * CHUNK_S);
+
+    for (let lx = 0; lx < CHUNK_S; lx++) {
+      for (let lz = 0; lz < CHUNK_S; lz++) {
+        const wx = cx * CHUNK_S + lx, wz = cz * CHUNK_S + lz;
+        const h = getTerrainHeight(wx, wz);
+        data[cIdx(lx, 0, lz)] = B.BEDROCK;
         for (let y = 1; y <= h; y++) {
           if (y < h - 2) {
-            const oreR = r();
-            if (y < 6 && oreR < 0.055) setBlockRaw(x, y, z, B.IRON_ORE);
-            else if (oreR < 0.08) setBlockRaw(x, y, z, B.COAL_ORE);
-            else setBlockRaw(x, y, z, B.STONE);
+            const ore = hash2D(wx * 3 + y, wz * 5 - y, activeSeed + 200);
+            if (y < 7 && ore < 0.055) data[cIdx(lx, y, lz)] = B.IRON_ORE;
+            else if (ore < 0.085) data[cIdx(lx, y, lz)] = B.COAL_ORE;
+            else data[cIdx(lx, y, lz)] = B.STONE;
           } else if (y < h) {
-            setBlockRaw(x, y, z, (h <= SEA_LEVEL + 1) ? B.SAND : B.DIRT);
+            data[cIdx(lx, y, lz)] = (h <= SEA_LEVEL + 1) ? B.SAND : B.DIRT;
           } else {
-            setBlockRaw(x, y, z, (h <= SEA_LEVEL + 1) ? B.SAND : B.GRASS);
+            data[cIdx(lx, y, lz)] = (h <= SEA_LEVEL + 1) ? B.SAND : B.GRASS;
           }
         }
-        // تعبئة الموية
         if (h < SEA_LEVEL) {
-          for (let y = h + 1; y <= SEA_LEVEL; y++) setBlockRaw(x, y, z, B.WATER);
+          for (let y = h + 1; y <= SEA_LEVEL; y++) data[cIdx(lx, y, lz)] = B.WATER;
         }
       }
     }
 
-    // توليد الأشجار
-    for (let x = 4; x < WORLD_W - 4; x++) {
-      for (let z = 4; z < WORLD_D - 4; z++) {
-        if (r() < 0.018) {
-          let sy = -1;
-          for (let y = WORLD_H - 6; y > SEA_LEVEL + 1; y--) {
-            if (getBlock(x, y, z) === B.GRASS) { sy = y; break; }
-          }
-          if (sy !== -1) {
-            const th = 4 + Math.floor(r() * 2);
-            for (let ty = 1; ty <= th; ty++) setBlockRaw(x, sy + ty, z, B.WOOD);
-            for (let lx = -2; lx <= 2; lx++) {
-              for (let lz = -2; lz <= 2; lz++) {
-                for (let ly = th - 1; ly <= th + 1; ly++) {
-                  if (Math.abs(lx) + Math.abs(lz) <= 3 && !(lx === 0 && lz === 0 && ly <= th)) {
-                    if (getBlock(x+lx, sy+ly, z+lz) === B.AIR) setBlockRaw(x+lx, sy+ly, z+lz, B.LEAVES);
-                  }
-                }
+    // الأشجار (نفحص نطاق -2..+2 حول كل عمود عشان أوراق الأشجار ما تنقص بين الشنكس!)
+    for (let lx = 0; lx < CHUNK_S; lx++) {
+      for (let lz = 0; lz < CHUNK_S; lz++) {
+        const wx = cx * CHUNK_S + lx, wz = cz * CHUNK_S + lz;
+        for (let ox = -2; ox <= 2; ox++) {
+          for (let oz = -2; oz <= 2; oz++) {
+            const tx = wx + ox, tz = wz + oz;
+            const th = hasTreeAt(tx, tz);
+            if (!th) continue;
+            const baseH = getTerrainHeight(tx, tz);
+            if (ox === 0 && oz === 0) {
+              for (let ty = 1; ty <= th; ty++) {
+                if (baseH + ty < WORLD_H) data[cIdx(lx, baseH + ty, lz)] = B.WOOD;
+              }
+            }
+            for (let ly = th - 1; ly <= th + 1; ly++) {
+              const py = baseH + ly;
+              if (py < WORLD_H && Math.abs(ox) + Math.abs(oz) <= 3 && !(ox === 0 && oz === 0 && ly <= th)) {
+                if (data[cIdx(lx, py, lz)] === B.AIR) data[cIdx(lx, py, lz)] = B.LEAVES;
               }
             }
           }
         }
       }
     }
+
+    chunkDataMap.set(key, data);
+    return data;
   }
 
-  // بناء مش الشانك مع إخفاء الوجوه المخفية
+  function getBlock(wx, wy, wz) {
+    const y = Math.floor(wy);
+    if (y < 0 || y >= WORLD_H) return B.AIR;
+    const x = Math.floor(wx), z = Math.floor(wz);
+    const cx = Math.floor(x / CHUNK_S), cz = Math.floor(z / CHUNK_S);
+    const data = chunkDataMap.get(cx + ',' + cz);
+    if (!data) return B.AIR;
+    const lx = ((x % CHUNK_S) + CHUNK_S) % CHUNK_S;
+    const lz = ((z % CHUNK_S) + CHUNK_S) % CHUNK_S;
+    return data[cIdx(lx, y, lz)];
+  }
+
+  function setBlock(wx, wy, wz, b) {
+    const y = Math.floor(wy);
+    if (y < 0 || y >= WORLD_H) return;
+    const x = Math.floor(wx), z = Math.floor(wz);
+    const cx = Math.floor(x / CHUNK_S), cz = Math.floor(z / CHUNK_S);
+    const key = cx + ',' + cz;
+    const data = generateChunkData(cx, cz);
+    const lx = ((x % CHUNK_S) + CHUNK_S) % CHUNK_S;
+    const lz = ((z % CHUNK_S) + CHUNK_S) % CHUNK_S;
+    data[cIdx(lx, y, lz)] = b;
+    dirtyChunks.add(key);
+
+    buildChunkMesh(cx, cz);
+    if (lx === 0 && chunkMeshes.has((cx-1)+','+cz)) buildChunkMesh(cx-1, cz);
+    if (lx === CHUNK_S-1 && chunkMeshes.has((cx+1)+','+cz)) buildChunkMesh(cx+1, cz);
+    if (lz === 0 && chunkMeshes.has(cx+','+(cz-1))) buildChunkMesh(cx, cz-1);
+    if (lz === CHUNK_S-1 && chunkMeshes.has(cx+','+(cz+1))) buildChunkMesh(cx, cz+1);
+  }
+
   const FACES = [
-    { dir:[0,1,0], shade:1.0,  type:0, verts:[[0,1,1],[1,1,1],[1,1,0],[0,1,0]] }, // +Y
-    { dir:[0,-1,0],shade:0.55, type:2, verts:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]] }, // -Y
-    { dir:[1,0,0], shade:0.82, type:1, verts:[[1,0,1],[1,0,0],[1,1,0],[1,1,1]] }, // +X
-    { dir:[-1,0,0],shade:0.82, type:1, verts:[[0,0,0],[0,0,1],[0,1,1],[0,1,0]] }, // -X
-    { dir:[0,0,1], shade:0.9,  type:1, verts:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]] }, // +Z
-    { dir:[0,0,-1],shade:0.75, type:1, verts:[[1,0,0],[0,0,0],[0,1,0],[1,1,0]] }  // -Z
+    { dir:[0,1,0], shade:1.0,  type:0, verts:[[0,1,1],[1,1,1],[1,1,0],[0,1,0]] },
+    { dir:[0,-1,0],shade:0.55, type:2, verts:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]] },
+    { dir:[1,0,0], shade:0.82, type:1, verts:[[1,0,1],[1,0,0],[1,1,0],[1,1,1]] },
+    { dir:[-1,0,0],shade:0.82, type:1, verts:[[0,0,0],[0,0,1],[0,1,1],[0,1,0]] },
+    { dir:[0,0,1], shade:0.9,  type:1, verts:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]] },
+    { dir:[0,0,-1],shade:0.75, type:1, verts:[[1,0,0],[0,0,0],[0,1,0],[1,1,0]] }
   ];
 
   function buildChunkMesh(cx, cz) {
     const key = cx + ',' + cz;
-    if (chunks[key]) {
-      if (chunks[key].solidMesh) { scene.remove(chunks[key].solidMesh); chunks[key].solidMesh.geometry.dispose(); }
-      if (chunks[key].waterMesh) { scene.remove(chunks[key].waterMesh); chunks[key].waterMesh.geometry.dispose(); }
+    const old = chunkMeshes.get(key);
+    if (old) {
+      if (old.solidMesh) { scene.remove(old.solidMesh); old.solidMesh.geometry.dispose(); }
+      if (old.waterMesh) { scene.remove(old.waterMesh); old.waterMesh.geometry.dispose(); }
     }
-
+    const data = generateChunkData(cx, cz);
     const sPos=[], sNorm=[], sUv=[], sCol=[], sIdx=[];
     const wPos=[], wNorm=[], wUv=[], wCol=[], wIdx=[];
-    const startX = cx * CHUNK_S, startZ = cz * CHUNK_S;
+    const baseX = cx * CHUNK_S, baseZ = cz * CHUNK_S;
 
-    for (let x = startX; x < startX + CHUNK_S; x++) {
-      for (let z = startZ; z < startZ + CHUNK_S; z++) {
+    for (let lx = 0; lx < CHUNK_S; lx++) {
+      for (let lz = 0; lz < CHUNK_S; lz++) {
+        const wx = baseX + lx, wz = baseZ + lz;
         for (let y = 0; y < WORLD_H; y++) {
-          const b = getBlock(x, y, z);
+          const b = data[cIdx(lx, y, lz)];
           if (b === B.AIR) continue;
           const isWater = (b === B.WATER);
           const tiles = BLOCK_TILES[b];
 
           for (const f of FACES) {
-            const nx = x + f.dir[0], ny = y + f.dir[1], nz = z + f.dir[2];
-            const nb = getBlock(nx, ny, nz);
-
-            if (isWater) {
-              if (nb !== B.AIR) continue;
-            } else {
-              if (nb !== B.AIR && nb !== B.WATER) continue;
+            const nx = wx + f.dir[0], ny = y + f.dir[1], nz = wz + f.dir[2];
+            let nb = B.AIR;
+            if (ny >= 0 && ny < WORLD_H) {
+              const nlx = lx + f.dir[0], nlz = lz + f.dir[2];
+              if (nlx >= 0 && nlx < CHUNK_S && nlz >= 0 && nlz < CHUNK_S) {
+                nb = data[cIdx(nlx, ny, nlz)];
+              } else {
+                const ncx = Math.floor(nx / CHUNK_S), ncz = Math.floor(nz / CHUNK_S);
+                const nd = chunkDataMap.get(ncx + ',' + ncz);
+                nb = nd ? nd[cIdx(((nx%CHUNK_S)+CHUNK_S)%CHUNK_S, ny, ((nz%CHUNK_S)+CHUNK_S)%CHUNK_S)] : (ny <= getTerrainHeight(nx, nz) ? B.STONE : B.AIR);
+              }
             }
+            if (isWater ? (nb !== B.AIR) : (nb !== B.AIR && nb !== B.WATER)) continue;
 
             const tile = tiles[f.type];
-            const u0 = (tile[0] + 0.01) / 16, u1 = (tile[0] + 0.99) / 16;
-            const v1 = 1 - (tile[1] + 0.01) / 16, v0 = 1 - (tile[1] + 0.99) / 16;
-
-            const pos = isWater ? wPos : sPos;
-            const norm = isWater ? wNorm : sNorm;
-            const uv = isWater ? wUv : sUv;
-            const col = isWater ? wCol : sCol;
-            const ind = isWater ? wIdx : sIdx;
-            const base = pos.length / 3;
-
-            const waterDrop = (isWater && getBlock(x, y+1, z) === B.AIR) ? 0.14 : 0;
+            const u0 = (tile[0]+0.01)/16, u1 = (tile[0]+0.99)/16;
+            const v1 = 1 - (tile[1]+0.01)/16, v0 = 1 - (tile[1]+0.99)/16;
+            const pos = isWater ? wPos : sPos, norm = isWater ? wNorm : sNorm;
+            const uv = isWater ? wUv : sUv, col = isWater ? wCol : sCol, ind = isWater ? wIdx : sIdx;
+            const vbase = pos.length / 3;
+            const waterDrop = (isWater && (y+1 < WORLD_H && data[cIdx(lx,y+1,lz)] === B.AIR)) ? 0.14 : 0;
 
             for (const v of f.verts) {
-              pos.push(x + v[0], y + v[1] - (v[1] === 1 ? waterDrop : 0), z + v[2]);
+              pos.push(wx + v[0], y + v[1] - (v[1]===1?waterDrop:0), wz + v[2]);
               norm.push(f.dir[0], f.dir[1], f.dir[2]);
               col.push(f.shade, f.shade, f.shade);
             }
             uv.push(u0, v0, u1, v0, u1, v1, u0, v1);
-            ind.push(base, base+1, base+2, base, base+2, base+3);
+            ind.push(vbase, vbase+1, vbase+2, vbase, vbase+2, vbase+3);
           }
         }
       }
@@ -673,44 +829,80 @@
       entry.waterMesh.renderOrder = 2;
       scene.add(entry.waterMesh);
     }
-    chunks[key] = entry;
+    chunkMeshes.set(key, entry);
   }
 
-  function rebuildAllChunks() {
-    for (let cx = 0; cx < WORLD_W / CHUNK_S; cx++)
-      for (let cz = 0; cz < WORLD_D / CHUNK_S; cz++)
-        buildChunkMesh(cx, cz);
-  }
-
-  function setBlock(x, y, z, b) {
-    if (!inBounds(x, y, z)) return;
-    setBlockRaw(x, y, z, b);
-    const cx = Math.floor(x / CHUNK_S), cz = Math.floor(z / CHUNK_S);
-    buildChunkMesh(cx, cz);
-    if (x % CHUNK_S === 0 && cx > 0) buildChunkMesh(cx - 1, cz);
-    if (x % CHUNK_S === CHUNK_S - 1 && cx < WORLD_W/CHUNK_S - 1) buildChunkMesh(cx + 1, cz);
-    if (z % CHUNK_S === 0 && cz > 0) buildChunkMesh(cx, cz - 1);
-    if (z % CHUNK_S === CHUNK_S - 1 && cz < WORLD_D/CHUNK_S - 1) buildChunkMesh(cx, cz + 1);
+  function updateChunksAroundPlayer(maxBuilds = 2) {
+    const pcx = Math.floor(player.x / CHUNK_S), pcz = Math.floor(player.z / CHUNK_S);
+    // حذف الشنكس البعيدة عن مدى الرؤية
+    for (const [key, entry] of chunkMeshes.entries()) {
+      const [cx, cz] = key.split(',').map(Number);
+      if (Math.abs(cx - pcx) > renderDist + 1 || Math.abs(cz - pcz) > renderDist + 1) {
+        if (entry.solidMesh) { scene.remove(entry.solidMesh); entry.solidMesh.geometry.dispose(); }
+        if (entry.waterMesh) { scene.remove(entry.waterMesh); entry.waterMesh.geometry.dispose(); }
+        chunkMeshes.delete(key);
+      }
+    }
+    // تحميل الشنكس القريبة تدريجياً بدون تقطيع
+    let built = 0;
+    for (let r = 0; r <= renderDist; r++) {
+      for (let dx = -r; dx <= r; dx++) {
+        for (let dz = -r; dz <= r; dz++) {
+          if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+          const key = (pcx + dx) + ',' + (pcz + dz);
+          if (!chunkMeshes.has(key)) {
+            buildChunkMesh(pcx + dx, pcz + dz);
+            built++;
+            if (built >= maxBuilds) return;
+          }
+        }
+      }
+    }
   }
 
   // ==========================================
-  // 6. نظام الحيوانات والوحوش (بكسلات ثلاثية الأبعاد)
+  // 6. البلوكات والأشياء الطايحة على الأرض (3D Dropped Items)
+  // ==========================================
+  const droppedItems = [];
+  function spawnDrop(id, count, x, y, z) {
+    const item = ITEMS[id];
+    if (!item) return;
+    let mesh;
+    if (item.block) {
+      const tile = BLOCK_TILES[item.block][1];
+      const geo = new THREE.BoxGeometry(0.28, 0.28, 0.28);
+      const u0=(tile[0]+0.01)/16, u1=(tile[0]+0.99)/16, v1=1-(tile[1]+0.01)/16, v0=1-(tile[1]+0.99)/16;
+      const uvs = geo.attributes.uv;
+      for (let i=0;i<uvs.count;i+=4){ uvs.setXY(i,u0,v1); uvs.setXY(i+1,u1,v1); uvs.setXY(i+2,u0,v0); uvs.setXY(i+3,u1,v0); }
+      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map: atlasTexture }));
+    } else {
+      const c = getItemIconCanvas(id);
+      const tex = new THREE.CanvasTexture(c); tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter;
+      mesh = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 0.06), new THREE.MeshLambertMaterial({ map: tex, transparent: true, alphaTest: 0.1 }));
+    }
+    mesh.position.set(x, y, z);
+    scene.add(mesh);
+    droppedItems.push({
+      id, count, mesh, x, y, z,
+      vx: (Math.random()-0.5)*2.5, vy: 3.2, vz: (Math.random()-0.5)*2.5,
+      age: 0
+    });
+  }
+
+  // ==========================================
+  // 7. الحيوانات والوحوش
   // ==========================================
   const mobs = [];
   let zombiesEnabled = true;
 
   function makeBoxPart(w, h, d, colorHex, x, y, z) {
-    const m = new THREE.Mesh(
-      new THREE.BoxGeometry(w, h, d),
-      new THREE.MeshLambertMaterial({ color: colorHex })
-    );
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshLambertMaterial({ color: colorHex }));
     m.position.set(x, y, z);
     return m;
   }
 
   function createMobMesh(type) {
-    const g = new THREE.Group();
-    const legs = [];
+    const g = new THREE.Group(); const legs = [];
     if (type === 'pig') {
       g.add(makeBoxPart(0.65, 0.5, 0.95, 0xf48fb1, 0, 0.55, 0));
       const head = makeBoxPart(0.5, 0.5, 0.5, 0xf48fb1, 0, 0.72, 0.58);
@@ -718,34 +910,24 @@
       head.add(makeBoxPart(0.08, 0.08, 0.04, 0x111111, -0.14, 0.06, 0.25));
       head.add(makeBoxPart(0.08, 0.08, 0.04, 0x111111, 0.14, 0.06, 0.25));
       g.add(head);
-      [[-0.2,0.32],[0.2,0.32],[-0.2,-0.32],[0.2,-0.32]].forEach(p => {
-        const leg = makeBoxPart(0.2, 0.35, 0.2, 0xf06292, p[0], 0.17, p[1]);
-        g.add(leg); legs.push(leg);
-      });
+      [[-0.2,0.32],[0.2,0.32],[-0.2,-0.32],[0.2,-0.32]].forEach(p => { const l = makeBoxPart(0.2,0.35,0.2,0xf06292,p[0],0.17,p[1]); g.add(l); legs.push(l); });
     } else if (type === 'cow') {
       const body = makeBoxPart(0.75, 0.65, 1.1, 0x5d4037, 0, 0.72, 0);
-      body.add(makeBoxPart(0.77, 0.25, 0.35, 0xeeeeee, 0, 0.12, 0.15));
-      g.add(body);
+      body.add(makeBoxPart(0.77, 0.25, 0.35, 0xeeeeee, 0, 0.12, 0.15)); g.add(body);
       const head = makeBoxPart(0.52, 0.52, 0.48, 0x5d4037, 0, 0.95, 0.68);
       head.add(makeBoxPart(0.08, 0.16, 0.08, 0xcccccc, -0.24, 0.26, 0));
       head.add(makeBoxPart(0.08, 0.16, 0.08, 0xcccccc, 0.24, 0.26, 0));
       head.add(makeBoxPart(0.08, 0.08, 0.04, 0x111111, -0.15, 0.06, 0.24));
       head.add(makeBoxPart(0.08, 0.08, 0.04, 0x111111, 0.15, 0.06, 0.24));
       g.add(head);
-      [[-0.24,0.38],[0.24,0.38],[-0.24,-0.38],[0.24,-0.38]].forEach(p => {
-        const leg = makeBoxPart(0.22, 0.45, 0.22, 0x4e342e, p[0], 0.22, p[1]);
-        g.add(leg); legs.push(leg);
-      });
+      [[-0.24,0.38],[0.24,0.38],[-0.24,-0.38],[0.24,-0.38]].forEach(p => { const l = makeBoxPart(0.22,0.45,0.22,0x4e342e,p[0],0.22,p[1]); g.add(l); legs.push(l); });
     } else if (type === 'sheep') {
       g.add(makeBoxPart(0.72, 0.6, 1.0, 0xf5f5f5, 0, 0.68, 0));
       const head = makeBoxPart(0.44, 0.44, 0.44, 0xd7ccc8, 0, 0.85, 0.62);
       head.add(makeBoxPart(0.07, 0.07, 0.04, 0x111111, -0.13, 0.06, 0.22));
       head.add(makeBoxPart(0.07, 0.07, 0.04, 0x111111, 0.13, 0.06, 0.22));
       g.add(head);
-      [[-0.22,0.34],[0.22,0.34],[-0.22,-0.34],[0.22,-0.34]].forEach(p => {
-        const leg = makeBoxPart(0.18, 0.42, 0.18, 0x8d6e63, p[0], 0.21, p[1]);
-        g.add(leg); legs.push(leg);
-      });
+      [[-0.22,0.34],[0.22,0.34],[-0.22,-0.34],[0.22,-0.34]].forEach(p => { const l = makeBoxPart(0.18,0.42,0.18,0x8d6e63,p[0],0.21,p[1]); g.add(l); legs.push(l); });
     } else if (type === 'chicken') {
       g.add(makeBoxPart(0.38, 0.34, 0.48, 0xffffff, 0, 0.4, 0));
       const head = makeBoxPart(0.26, 0.28, 0.24, 0xffffff, 0, 0.62, 0.26);
@@ -754,271 +936,233 @@
       head.add(makeBoxPart(0.05, 0.05, 0.03, 0x111111, -0.08, 0.05, 0.12));
       head.add(makeBoxPart(0.05, 0.05, 0.03, 0x111111, 0.08, 0.05, 0.12));
       g.add(head);
-      [[-0.1,0],[0.1,0]].forEach(p => {
-        const leg = makeBoxPart(0.08, 0.24, 0.08, 0xffb300, p[0], 0.12, p[1]);
-        g.add(leg); legs.push(leg);
-      });
+      [[-0.1,0],[0.1,0]].forEach(p => { const l = makeBoxPart(0.08,0.24,0.08,0xffb300,p[0],0.12,p[1]); g.add(l); legs.push(l); });
     } else if (type === 'zombie') {
-      g.add(makeBoxPart(0.52, 0.72, 0.28, 0x00acc1, 0, 1.05, 0)); // قميص
+      g.add(makeBoxPart(0.52, 0.72, 0.28, 0x00acc1, 0, 1.05, 0));
       const head = makeBoxPart(0.46, 0.46, 0.46, 0x43a047, 0, 1.64, 0);
       head.add(makeBoxPart(0.09, 0.06, 0.04, 0x1b5e20, -0.12, 0.04, 0.23));
       head.add(makeBoxPart(0.09, 0.06, 0.04, 0x1b5e20, 0.12, 0.04, 0.23));
       g.add(head);
-      // ذراعين ممدودتين
       g.add(makeBoxPart(0.2, 0.2, 0.65, 0x43a047, -0.36, 1.25, 0.32));
       g.add(makeBoxPart(0.2, 0.2, 0.65, 0x43a047, 0.36, 1.25, 0.32));
-      [[-0.14,0],[0.14,0]].forEach(p => {
-        const leg = makeBoxPart(0.22, 0.7, 0.24, 0x3949ab, p[0], 0.35, p[1]);
-        g.add(leg); legs.push(leg);
-      });
+      [[-0.14,0],[0.14,0]].forEach(p => { const l = makeBoxPart(0.22,0.7,0.24,0x3949ab,p[0],0.35,p[1]); g.add(l); legs.push(l); });
     }
     g.userData.legs = legs;
     return g;
   }
 
-  function findSurfaceY(x, z) {
-    const ix = Math.floor(x), iz = Math.floor(z);
-    for (let y = WORLD_H - 2; y >= 1; y--) {
-      const b = getBlock(ix, y, iz);
-      if (b !== B.AIR && b !== B.WATER && b !== B.LEAVES) return y + 1;
-    }
-    return SEA_LEVEL + 2;
-  }
-
   function spawnMob(type, x, z) {
-    const y = findSurfaceY(x, z);
-    if (y <= SEA_LEVEL && type !== 'zombie') return; // تجنب رسبنة الحيوانات جوا البحر
+    const h = getTerrainHeight(x, z);
+    if (h <= SEA_LEVEL && type !== 'zombie') return;
+    const y = h + 1.2;
     const mesh = createMobMesh(type);
     mesh.position.set(x, y, z);
     scene.add(mesh);
-    const maxHp = type === 'zombie' ? 16 : (type === 'cow' ? 10 : (type === 'chicken' ? 4 : 8));
+    const maxHp = type === 'zombie' ? 18 : (type === 'cow' ? 10 : (type === 'chicken' ? 4 : 8));
     mobs.push({
-      type, mesh, x, y, z, vx: 0, vy: 0, vz: 0,
-      yaw: Math.random() * Math.PI * 2,
-      hp: maxHp, maxHp, hurtTimer: 0, walkPhase: 0,
-      aiTimer: Math.random() * 3, fleeTimer: 0, attackCd: 0
+      type, mesh, x, y, z, vx: 0, vy: 0, vz: 0, yaw: Math.random()*Math.PI*2,
+      hp: maxHp, maxHp, hurtTimer: 0, walkPhase: 0, aiTimer: Math.random()*3, fleeTimer: 0, attackCd: 0
     });
   }
 
-  function spawnInitialMobs() {
-    const types = ['pig', 'cow', 'sheep', 'chicken'];
-    for (let i = 0; i < 20; i++) {
-      const t = types[i % types.length];
-      spawnMob(t, 6 + Math.random() * (WORLD_W - 12), 6 + Math.random() * (WORLD_D - 12));
-    }
-  }
-
   // ==========================================
-  // 7. الجزيئات (Particles)
+  // 8. الجزيئات، اللاعب، الحقيبة (27 خانة)
   // ==========================================
   const particles = [];
   function spawnParticles(x, y, z, colorHex, count = 8) {
     const mat = new THREE.MeshBasicMaterial({ color: colorHex });
-    const geo = new THREE.BoxGeometry(0.14, 0.14, 0.14);
+    const geo = new THREE.BoxGeometry(0.13, 0.13, 0.13);
     for (let i = 0; i < count; i++) {
       const m = new THREE.Mesh(geo, mat);
-      m.position.set(x + (Math.random()-0.5)*0.6, y + (Math.random()-0.5)*0.6, z + (Math.random()-0.5)*0.6);
+      m.position.set(x+(Math.random()-0.5)*0.5, y+(Math.random()-0.5)*0.5, z+(Math.random()-0.5)*0.5);
       scene.add(m);
-      particles.push({
-        mesh: m,
-        vx: (Math.random()-0.5)*4,
-        vy: 1.5 + Math.random()*3,
-        vz: (Math.random()-0.5)*4,
-        life: 0.45 + Math.random()*0.25
-      });
+      particles.push({ mesh: m, vx:(Math.random()-0.5)*4, vy:1.5+Math.random()*3, vz:(Math.random()-0.5)*4, life: 0.45 });
     }
   }
 
-  // ==========================================
-  // 8. بيانات اللاعب، الحقيبة، والفيزياء
-  // ==========================================
   const player = {
-    x: 32, y: 16, z: 32, vx: 0, vy: 0, vz: 0,
+    x: 0, y: 15, z: 0, vx: 0, vy: 0, vz: 0,
     yaw: 0, pitch: 0, onGround: false, inWater: false,
-    hp: 20, maxHp: 20, hunger: 20, maxHunger: 20,
-    hurtCd: 0, hungerTimer: 0
+    hp: 20, hunger: 20, hurtCd: 0, hungerTimer: 0
   };
 
-  let inventory = {
-    [B.PLANKS]: 12,
-    [B.COBBLE]: 8,
-    101: 1, // سيف خشبي بداية
-    102: 1, // فأس خشبي بداية
-    108: 3  // تفاح
-  };
-  let hotbar = [101, 102, B.PLANKS, B.COBBLE, 108, 0, 0, 0, 0];
+  // 27 خانة: 0..8 الشريط السفلي، 9..26 الحقيبة
+  let slots = new Array(27).fill(null);
   let activeSlot = 0;
+  let selectedSwapIdx = -1;
+  let currentInvMode = 'basic'; // 'basic' | 'table' | 'furnace'
+
+  let toastTimer = 0;
+  function showToast(msg) {
+    const el = document.getElementById('pickupToast');
+    el.textContent = msg; el.style.opacity = '1';
+    toastTimer = 1.6;
+  }
+
+  function getTotalItemCount(id) {
+    let sum = 0;
+    for (const s of slots) if (s && s.id === id) sum += s.count;
+    return sum;
+  }
 
   function addItem(id, count = 1) {
-    if (!ITEMS[id]) return;
-    inventory[id] = (inventory[id] || 0) + count;
-    if (!hotbar.includes(id)) {
-      const emptyIdx = hotbar.indexOf(0);
-      if (emptyIdx !== -1) hotbar[emptyIdx] = id;
-    }
-    updateHotbarUI();
-  }
-
-  function consumeItem(id, count = 1) {
-    if (!inventory[id]) return false;
-    inventory[id] -= count;
-    if (inventory[id] <= 0) {
-      delete inventory[id];
-      for (let i = 0; i < 9; i++) if (hotbar[i] === id) hotbar[i] = 0;
-    }
-    updateHotbarUI();
-    updateHandMesh();
-    return true;
-  }
-
-  // تحديث شكل اليد بالشيء الممسوك
-  function updateHandMesh() {
-    while (handGroup.children.length) handGroup.remove(handGroup.children[0]);
-    const id = hotbar[activeSlot];
     const item = ITEMS[id];
-    if (!id || !item || !inventory[id]) {
-      const arm = new THREE.Mesh(
-        new THREE.BoxGeometry(0.16, 0.16, 0.45),
-        new THREE.MeshLambertMaterial({ color: 0xd9a077 })
-      );
-      arm.rotation.set(0.2, -0.2, 0);
-      handGroup.add(arm);
-    } else if (item.block) {
-      const tile = BLOCK_TILES[item.block][1];
-      const mat = new THREE.MeshLambertMaterial({ map: atlasTexture });
-      const geo = new THREE.BoxGeometry(0.24, 0.24, 0.24);
-      const u0 = tile[0]/16, u1 = (tile[0]+1)/16;
-      const v1 = 1 - tile[1]/16, v0 = 1 - (tile[1]+1)/16;
-      const uvs = geo.attributes.uv;
-      for (let i=0; i<uvs.count; i+=4) {
-        uvs.setXY(i, u0, v1); uvs.setXY(i+1, u1, v1);
-        uvs.setXY(i+2, u0, v0); uvs.setXY(i+3, u1, v0);
+    if (!item) return;
+    let rem = count;
+    // دمج مع نفس النوع
+    for (let i = 0; i < 27 && rem > 0; i++) {
+      if (slots[i] && slots[i].id === id && slots[i].count < item.stack) {
+        const take = Math.min(rem, item.stack - slots[i].count);
+        slots[i].count += take; rem -= take;
       }
-      const box = new THREE.Mesh(geo, mat);
-      box.rotation.set(0.1, 0.5, 0);
-      handGroup.add(box);
-    } else {
-      const c = getItemIconCanvas(id);
-      const tex = new THREE.CanvasTexture(c);
-      tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter;
-      const plane = new THREE.Mesh(
-        new THREE.BoxGeometry(0.28, 0.28, 0.04),
-        new THREE.MeshLambertMaterial({ map: tex, transparent: true, alphaTest: 0.1 })
-      );
-      plane.rotation.set(0.1, -0.6, 0.2);
-      handGroup.add(plane);
     }
+    // وضع في خانة فارغة
+    for (let i = 0; i < 27 && rem > 0; i++) {
+      if (!slots[i]) {
+        const take = Math.min(rem, item.stack);
+        slots[i] = { id, count: take }; rem -= take;
+      }
+    }
+    updateHotbarUI(); updateHandMesh();
+    showToast(`+${count} ${item.name}`);
   }
 
-  // فحص التصادم مع البلوكات الصلبة (AABB)
-  function collidesWorld(px, py, pz, r = 0.3, h = 1.75) {
-    const minX = Math.floor(px - r), maxX = Math.floor(px + r);
-    const minY = Math.floor(py), maxY = Math.floor(py + h);
-    const minZ = Math.floor(pz - r), maxZ = Math.floor(pz + r);
-    for (let x = minX; x <= maxX; x++) {
-      for (let y = minY; y <= maxY; y++) {
-        for (let z = minZ; z <= maxZ; z++) {
-          const b = getBlock(x, y, z);
-          if (b !== B.AIR && b !== B.WATER) return true;
-        }
+  function consumeSlotItem(slotIdx, count = 1) {
+    const s = slots[slotIdx];
+    if (!s) return;
+    s.count -= count;
+    if (s.count <= 0) slots[slotIdx] = null;
+    updateHotbarUI(); updateHandMesh();
+  }
+
+  function consumeItemById(id, count = 1) {
+    let rem = count;
+    for (let i = 0; i < 27 && rem > 0; i++) {
+      if (slots[i] && slots[i].id === id) {
+        const take = Math.min(rem, slots[i].count);
+        slots[i].count -= take; rem -= take;
+        if (slots[i].count <= 0) slots[i] = null;
       }
+    }
+    updateHotbarUI(); updateHandMesh();
+  }
+
+  function collidesWorld(px, py, pz, r = 0.3, h = 1.75) {
+    const minX = Math.floor(px-r), maxX = Math.floor(px+r);
+    const minY = Math.floor(py), maxY = Math.floor(py+h);
+    const minZ = Math.floor(pz-r), maxZ = Math.floor(pz+r);
+    for (let x=minX; x<=maxX; x++) for (let y=minY; y<=maxY; y++) for (let z=minZ; z<=maxZ; z++) {
+      const b = getBlock(x, y, z);
+      if (b !== B.AIR && b !== B.WATER) return true;
     }
     return false;
   }
 
-  // خوارزمية DDA للتصويب الدقيق على البلوكات
-  function raycastVoxel(ox, oy, oz, dx, dy, dz, maxDist = 5.0) {
+  function raycastVoxel(ox, oy, oz, dx, dy, dz, maxDist = 5.2) {
     let x = Math.floor(ox), y = Math.floor(oy), z = Math.floor(oz);
-    const stepX = dx > 0 ? 1 : (dx < 0 ? -1 : 0);
-    const stepY = dy > 0 ? 1 : (dy < 0 ? -1 : 0);
-    const stepZ = dz > 0 ? 1 : (dz < 0 ? -1 : 0);
-    const tDeltaX = dx !== 0 ? Math.abs(1 / dx) : Infinity;
-    const tDeltaY = dy !== 0 ? Math.abs(1 / dy) : Infinity;
-    const tDeltaZ = dz !== 0 ? Math.abs(1 / dz) : Infinity;
-
-    let tMaxX = dx > 0 ? (x + 1 - ox) * tDeltaX : (dx < 0 ? (ox - x) * tDeltaX : Infinity);
-    let tMaxY = dy > 0 ? (y + 1 - oy) * tDeltaY : (dy < 0 ? (oy - y) * tDeltaY : Infinity);
-    let tMaxZ = dz > 0 ? (z + 1 - oz) * tDeltaZ : (dz < 0 ? (oz - z) * tDeltaZ : Infinity);
-
-    let nx = 0, ny = 0, nz = 0, dist = 0;
+    const stepX = dx>0?1:(dx<0?-1:0), stepY = dy>0?1:(dy<0?-1:0), stepZ = dz>0?1:(dz<0?-1:0);
+    const tDeltaX = dx!==0?Math.abs(1/dx):Infinity, tDeltaY = dy!==0?Math.abs(1/dy):Infinity, tDeltaZ = dz!==0?Math.abs(1/dz):Infinity;
+    let tMaxX = dx>0?(x+1-ox)*tDeltaX:(dx<0?(ox-x)*tDeltaX:Infinity);
+    let tMaxY = dy>0?(y+1-oy)*tDeltaY:(dy<0?(oy-y)*tDeltaY:Infinity);
+    let tMaxZ = dz>0?(z+1-oz)*tDeltaZ:(dz<0?(oz-z)*tDeltaZ:Infinity);
+    let nx=0, ny=0, nz=0, dist=0;
     while (dist <= maxDist) {
       const b = getBlock(x, y, z);
-      if (b !== B.AIR && b !== B.WATER) {
-        return { hit: true, x, y, z, nx, ny, nz, block: b, dist };
-      }
-      if (tMaxX < tMaxY && tMaxX < tMaxZ) {
-        dist = tMaxX; tMaxX += tDeltaX; x += stepX; nx = -stepX; ny = 0; nz = 0;
-      } else if (tMaxY < tMaxZ) {
-        dist = tMaxY; tMaxY += tDeltaY; y += stepY; nx = 0; ny = -stepY; nz = 0;
-      } else {
-        dist = tMaxZ; tMaxZ += tDeltaZ; z += stepZ; nx = 0; ny = 0; nz = -stepZ;
-      }
+      if (b !== B.AIR && b !== B.WATER) return { hit: true, x, y, z, nx, ny, nz, block: b, dist };
+      if (tMaxX < tMaxY && tMaxX < tMaxZ) { dist=tMaxX; tMaxX+=tDeltaX; x+=stepX; nx=-stepX; ny=0; nz=0; }
+      else if (tMaxY < tMaxZ) { dist=tMaxY; tMaxY+=tDeltaY; y+=stepY; nx=0; ny=-stepY; nz=0; }
+      else { dist=tMaxZ; tMaxZ+=tDeltaZ; z+=stepZ; nx=0; ny=0; nz=-stepZ; }
     }
     return { hit: false };
   }
 
-  // فحص استهداف حيوان
   function raycastMob(ox, oy, oz, dx, dy, dz, maxDist = 4.2) {
     let best = null, bestDist = maxDist;
     for (const m of mobs) {
-      const mx = m.x, my = m.y + (m.type === 'zombie' ? 1.0 : 0.6), mz = m.z;
-      const vx = mx - ox, vy = my - oy, vz = mz - oz;
+      const my = m.y + (m.type === 'zombie' ? 1.0 : 0.6);
+      const vx = m.x-ox, vy = my-oy, vz = m.z-oz;
       const proj = vx*dx + vy*dy + vz*dz;
       if (proj < 0 || proj > bestDist) continue;
-      const cx = ox + dx*proj - mx, cy = oy + dy*proj - my, cz = oz + dz*proj - mz;
-      const rad = m.type === 'chicken' ? 0.55 : 0.8;
-      if (cx*cx + cy*cy + cz*cz <= rad*rad) {
-        best = m; bestDist = proj;
-      }
+      const cx = ox+dx*proj-m.x, cy = oy+dy*proj-my, cz = oz+dz*proj-m.z;
+      const rad = m.type === 'chicken' ? 0.55 : 0.85;
+      if (cx*cx + cy*cy + cz*cz <= rad*rad) { best = m; bestDist = proj; }
     }
     return best ? { mob: best, dist: bestDist } : null;
   }
 
   // ==========================================
-  // 9. التفاعل (التحكم، الضرب، التكسير، البناء)
+  // 9. التحكم (الكمبيوتر + الجوال باللمس)
   // ==========================================
   const keys = {};
-  let isLocked = false, isDead = false, invOpen = false;
-  let leftMouseDown = false, breakProgress = 0, breakingPos = null;
+  let isLocked = false, isDead = false, invOpen = false, guideOpen = false;
+  let isMining = false, breakProgress = 0, breakingPos = null;
+  let mobileModeSetting = 'auto'; // 'auto' | 'on' | 'off'
+  const isTouchDevice = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  let joyMoveX = 0, joyMoveZ = 0, joyTouchId = null, lookTouchId = null, lastLookX = 0, lastLookY = 0;
+
+  function isMobileActive() {
+    if (mobileModeSetting === 'on') return true;
+    if (mobileModeSetting === 'off') return false;
+    return isTouchDevice;
+  }
+  function refreshMobileUI() {
+    document.getElementById('mobileControls').style.display = isMobileActive() ? 'block' : 'none';
+  }
 
   const menuModal = document.getElementById('menuModal');
   const deathModal = document.getElementById('deathModal');
   const invModal = document.getElementById('invModal');
+  const guideModal = document.getElementById('guideModal');
 
-  function lockPointer() {
-    if (!isDead && !invOpen) canvas.requestPointerLock();
+  function startOrResumeGame() {
+    menuModal.classList.add('hidden');
+    invModal.classList.add('hidden');
+    guideModal.classList.add('hidden');
+    invOpen = false; guideOpen = false;
+    refreshMobileUI();
+    if (isMobileActive()) {
+      isLocked = true;
+    } else if (!isDead) {
+      canvas.requestPointerLock();
+    }
   }
 
   document.addEventListener('pointerlockchange', () => {
+    if (isMobileActive()) return;
     isLocked = (document.pointerLockElement === canvas);
-    if (isLocked) {
-      menuModal.classList.add('hidden');
-      invModal.classList.add('hidden');
-    } else if (!invOpen && !isDead) {
-      menuModal.classList.remove('hidden');
-    }
+    if (isLocked) { menuModal.classList.add('hidden'); invModal.classList.add('hidden'); guideModal.classList.add('hidden'); }
+    else if (!invOpen && !isDead && !guideOpen) { menuModal.classList.remove('hidden'); }
   });
+
+  function openInventoryModal(mode = 'basic') {
+    currentInvMode = mode;
+    invOpen = true;
+    selectedSwapIdx = -1;
+    if (!isMobileActive() && document.pointerLockElement) document.exitPointerLock();
+    isLocked = false;
+    document.getElementById('invTitle').textContent =
+      mode === 'table' ? '🛠️ طاولة التصنيع' : (mode === 'furnace' ? '🔥 الفرن (صهر وشوي)' : '🎒 الحقيبة والتصنيع السريع');
+    document.getElementById('craftTitle').textContent =
+      mode === 'table' ? 'وصفات طاولة التصنيع' : (mode === 'furnace' ? 'وصفات الفرن' : 'التصنيع السريع (باليد)');
+    renderInventoryModal();
+    invModal.classList.remove('hidden');
+    menuModal.classList.add('hidden');
+  }
+
+  function closeInventoryModal() {
+    invOpen = false; invModal.classList.add('hidden');
+    startOrResumeGame();
+  }
 
   window.addEventListener('keydown', e => {
     keys[e.code] = true;
     if (e.code.startsWith('Digit')) {
-      const num = parseInt(e.code.replace('Digit', ''));
-      if (num >= 1 && num <= 9) {
-        activeSlot = num - 1;
-        updateHotbarUI(); updateHandMesh(); showItemName();
-      }
+      const n = parseInt(e.code.replace('Digit', ''));
+      if (n >= 1 && n <= 9) { activeSlot = n-1; updateHotbarUI(); updateHandMesh(); showItemName(); }
     }
-    if (e.code === 'KeyE' && !isDead) {
-      invOpen = !invOpen;
-      if (invOpen) {
-        document.exitPointerLock();
-        renderInventoryModal();
-        invModal.classList.remove('hidden');
-        menuModal.classList.add('hidden');
-      } else {
-        invModal.classList.add('hidden');
-        lockPointer();
-      }
+    if (e.code === 'KeyE' && !isDead && !guideOpen) {
+      if (invOpen) closeInventoryModal();
+      else openInventoryModal('basic');
     }
   });
   window.addEventListener('keyup', e => { keys[e.code] = false; });
@@ -1030,302 +1174,362 @@
   });
 
   window.addEventListener('mousemove', e => {
-    if (!isLocked) return;
+    if (!isLocked || isMobileActive()) return;
     player.yaw -= e.movementX * 0.0022;
-    player.pitch = Math.max(-Math.PI/2 + 0.05, Math.min(Math.PI/2 - 0.05, player.pitch - e.movementY * 0.0022));
+    player.pitch = Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, player.pitch - e.movementY*0.0022));
   });
-
   window.addEventListener('contextmenu', e => e.preventDefault());
-
-  window.addEventListener('mousedown', e => {
-    if (!isLocked) return;
-    handSwing = 1.0;
-    const look = getLookDir();
-
-    if (e.button === 0) {
-      leftMouseDown = true;
-      // فحص ضرب حيوان/وحش أولاً
-      const mobHit = raycastMob(player.x, player.y + 1.55, player.z, look.x, look.y, look.z);
-      const blockHit = raycastVoxel(player.x, player.y + 1.55, player.z, look.x, look.y, look.z);
-      if (mobHit && (!blockHit.hit || mobHit.dist < blockHit.dist)) {
-        attackMob(mobHit.mob, look);
-        leftMouseDown = false;
-      }
-    } else if (e.button === 2) {
-      // كليك يمين: أكل أو وضع بلوكة
-      const heldId = hotbar[activeSlot];
-      const item = ITEMS[heldId];
-      if (heldId && item && inventory[heldId]) {
-        if (item.food && (player.hunger < 20 || player.hp < 20)) {
-          player.hunger = Math.min(20, player.hunger + item.food);
-          player.hp = Math.min(20, player.hp + (item.heal || 0));
-          consumeItem(heldId, 1);
-          playSound('eat');
-          updateStatusBars();
-          return;
-        }
-        if (item.block) {
-          const hit = raycastVoxel(player.x, player.y + 1.55, player.z, look.x, look.y, look.z);
-          if (hit.hit) {
-            const px = hit.x + hit.nx, py = hit.y + hit.ny, pz = hit.z + hit.nz;
-            // لا تضع بلوكة فوق جسم اللاعب
-            const overlapsPlayer = (
-              px + 1 > player.x - 0.3 && px < player.x + 0.3 &&
-              pz + 1 > player.z - 0.3 && pz < player.z + 0.3 &&
-              py + 1 > player.y && py < player.y + 1.75
-            );
-            if (!overlapsPlayer && inBounds(px, py, pz)) {
-              setBlock(px, py, pz, item.block);
-              consumeItem(heldId, 1);
-              playSound('place');
-            }
-          }
-        }
-      }
-    }
-  });
-
-  window.addEventListener('mouseup', e => {
-    if (e.button === 0) { leftMouseDown = false; breakProgress = 0; breakingPos = null; }
-  });
 
   function getLookDir() {
     const cp = Math.cos(player.pitch);
-    return {
-      x: -Math.sin(player.yaw) * cp,
-      y: Math.sin(player.pitch),
-      z: -Math.cos(player.yaw) * cp
-    };
+    return { x: -Math.sin(player.yaw)*cp, y: Math.sin(player.pitch), z: -Math.cos(player.yaw)*cp };
   }
 
-  function attackMob(m, look) {
-    const held = ITEMS[hotbar[activeSlot]];
-    const dmg = (held && held.dmg) ? held.dmg : 2;
-    m.hp -= dmg;
-    m.hurtTimer = 0.25;
-    m.fleeTimer = 3.5;
-    m.vx += look.x * 7;
-    m.vz += look.z * 7;
-    m.vy = 4.2;
-    playSound('hit');
-    spawnParticles(m.x, m.y + 0.7, m.z, 0xff2222, 10);
+  function handlePrimaryActionStart() {
+    if (!isLocked) return;
+    handSwing = 1.0;
+    const look = getLookDir();
+    const mobHit = raycastMob(player.x, player.y + 1.55, player.z, look.x, look.y, look.z);
+    const blockHit = raycastVoxel(player.x, player.y + 1.55, player.z, look.x, look.y, look.z);
+    if (mobHit && (!blockHit.hit || mobHit.dist < blockHit.dist)) {
+      attackMob(mobHit.mob, look);
+    } else {
+      isMining = true;
+    }
+  }
 
-    if (m.hp <= 0) {
-      scene.remove(m.mesh);
-      const idxMob = mobs.indexOf(m);
-      if (idxMob !== -1) mobs.splice(idxMob, 1);
-      spawnParticles(m.x, m.y + 0.5, m.z, 0xffffff, 14);
-      if (m.type === 'pig' || m.type === 'cow' || m.type === 'chicken') {
-        addItem(106, 1 + Math.floor(Math.random()*2)); // لحم نيء
-      } else if (m.type === 'sheep') {
-        addItem(B.WOOL, 1);
-        addItem(106, 1);
-      } else if (m.type === 'zombie') {
-        addItem(B.IRON_ORE, 1);
+  function handleSecondaryAction() {
+    if (!isLocked) return;
+    const look = getLookDir();
+    const hit = raycastVoxel(player.x, player.y + 1.55, player.z, look.x, look.y, look.z);
+    // 1. فتح طاولة التصنيع أو الفرن عند النظر إليهما
+    if (hit.hit) {
+      if (hit.block === B.CRAFT_TABLE) { openInventoryModal('table'); return; }
+      if (hit.block === B.FURNACE) { openInventoryModal('furnace'); return; }
+    }
+    // 2. الأكل أو البناء
+    const slot = slots[activeSlot];
+    const item = slot ? ITEMS[slot.id] : null;
+    if (!item) return;
+    if (item.food && (player.hunger < 20 || player.hp < 20)) {
+      player.hunger = Math.min(20, player.hunger + item.food);
+      player.hp = Math.min(20, player.hp + (item.heal || 0));
+      consumeSlotItem(activeSlot, 1);
+      playSound('eat'); updateStatusBars();
+      handSwing = 0.8;
+      return;
+    }
+    if (item.block && hit.hit) {
+      const px = hit.x + hit.nx, py = hit.y + hit.ny, pz = hit.z + hit.nz;
+      const overlaps = (px+1 > player.x-0.3 && px < player.x+0.3 && pz+1 > player.z-0.3 && pz < player.z+0.3 && py+1 > player.y && py < player.y+1.75);
+      if (!overlaps && py >= 0 && py < WORLD_H) {
+        setBlock(px, py, pz, item.block);
+        consumeSlotItem(activeSlot, 1);
+        playSound('place');
+        handSwing = 0.8;
       }
     }
   }
 
+  canvas.addEventListener('mousedown', e => {
+    if (!isLocked || isMobileActive()) return;
+    if (e.button === 0) handlePrimaryActionStart();
+    else if (e.button === 2) handleSecondaryAction();
+  });
+  window.addEventListener('mouseup', e => {
+    if (e.button === 0) { isMining = false; breakProgress = 0; breakingPos = null; }
+  });
+
+  // أحداث اللمس للجوال
+  const joyArea = document.getElementById('joystickArea');
+  const joyKnob = document.getElementById('joystickKnob');
+  joyArea.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0]; joyTouchId = t.identifier;
+    updateJoystick(t);
+  }, { passive: false });
+  joyArea.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) if (t.identifier === joyTouchId) updateJoystick(t);
+  }, { passive: false });
+  joyArea.addEventListener('touchend', e => {
+    for (const t of e.changedTouches) if (t.identifier === joyTouchId) {
+      joyTouchId = null; joyMoveX = 0; joyMoveZ = 0;
+      joyKnob.style.left = '36px'; joyKnob.style.top = '36px';
+    }
+  });
+  function updateJoystick(t) {
+    const rect = joyArea.getBoundingClientRect();
+    const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+    let dx = t.clientX - cx, dy = t.clientY - cy;
+    const dist = Math.hypot(dx, dy), maxR = 42;
+    if (dist > maxR) { dx = dx/dist*maxR; dy = dy/dist*maxR; }
+    joyKnob.style.left = (36 + dx) + 'px'; joyKnob.style.top = (36 + dy) + 'px';
+    joyMoveX = dx / maxR; joyMoveZ = dy / maxR;
+  }
+
+  canvas.addEventListener('touchstart', e => {
+    if (!isLocked) return;
+    for (const t of e.changedTouches) {
+      if (lookTouchId === null) { lookTouchId = t.identifier; lastLookX = t.clientX; lastLookY = t.clientY; }
+    }
+  }, { passive: true });
+  canvas.addEventListener('touchmove', e => {
+    if (!isLocked) return;
+    for (const t of e.changedTouches) {
+      if (t.identifier === lookTouchId) {
+        player.yaw -= (t.clientX - lastLookX) * 0.005;
+        player.pitch = Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, player.pitch - (t.clientY - lastLookY)*0.005));
+        lastLookX = t.clientX; lastLookY = t.clientY;
+      }
+    }
+  }, { passive: true });
+  canvas.addEventListener('touchend', e => {
+    for (const t of e.changedTouches) if (t.identifier === lookTouchId) lookTouchId = null;
+  });
+
+  const mBreakBtn = document.getElementById('mBreakBtn');
+  mBreakBtn.addEventListener('touchstart', e => { e.preventDefault(); handlePrimaryActionStart(); }, { passive: false });
+  mBreakBtn.addEventListener('touchend', e => { e.preventDefault(); isMining = false; breakProgress = 0; breakingPos = null; }, { passive: false });
+  document.getElementById('mPlaceBtn').addEventListener('touchstart', e => { e.preventDefault(); handleSecondaryAction(); }, { passive: false });
+  const mJumpBtn = document.getElementById('mJumpBtn');
+  mJumpBtn.addEventListener('touchstart', e => { e.preventDefault(); keys['Space'] = true; }, { passive: false });
+  mJumpBtn.addEventListener('touchend', e => { e.preventDefault(); keys['Space'] = false; }, { passive: false });
+
+  function attackMob(m, look) {
+    const slot = slots[activeSlot];
+    const item = slot ? ITEMS[slot.id] : null;
+    const dmg = (item && item.dmg) ? item.dmg : 2;
+    m.hp -= dmg; m.hurtTimer = 0.25; m.fleeTimer = 3.5;
+    m.vx += look.x * 7; m.vz += look.z * 7; m.vy = 4.2;
+    playSound('hit');
+    spawnParticles(m.x, m.y + 0.7, m.z, 0xff2222, 10);
+    if (m.hp <= 0) {
+      scene.remove(m.mesh);
+      const idxMob = mobs.indexOf(m); if (idxMob !== -1) mobs.splice(idxMob, 1);
+      spawnParticles(m.x, m.y + 0.5, m.z, 0xffffff, 12);
+      if (m.type === 'pig' || m.type === 'cow' || m.type === 'chicken') spawnDrop(111, 1 + Math.floor(Math.random()*2), m.x, m.y+0.5, m.z);
+      else if (m.type === 'sheep') { spawnDrop(B.WOOL, 1, m.x, m.y+0.5, m.z); spawnDrop(111, 1, m.x, m.y+0.5, m.z); }
+      else if (m.type === 'zombie') spawnDrop(B.IRON_ORE, 1, m.x, m.y+0.5, m.z);
+    }
+  }
+
   // ==========================================
-  // 10. واجهة المستخدم (Hotbar / Inventory / Save)
+  // 10. واجهة الشريط السفلي والحقيبة والتصنيع والحفظ
   // ==========================================
   function updateHotbarUI() {
-    const hb = document.getElementById('hotbar');
-    hb.innerHTML = '';
+    const hb = document.getElementById('hotbar'); hb.innerHTML = '';
     for (let i = 0; i < 9; i++) {
-      const slot = document.createElement('div');
-      slot.className = 'slot' + (i === activeSlot ? ' active' : '');
-      const num = document.createElement('span');
-      num.className = 'keyNum'; num.textContent = i + 1;
-      slot.appendChild(num);
-
-      const id = hotbar[i];
-      if (id && inventory[id]) {
-        const ic = getItemIconCanvas(id);
-        const clone = document.createElement('canvas');
-        clone.width = 16; clone.height = 16;
-        clone.getContext('2d').drawImage(ic, 0, 0);
-        slot.appendChild(clone);
-        const cnt = document.createElement('span');
-        cnt.className = 'count'; cnt.textContent = inventory[id];
-        slot.appendChild(cnt);
+      const slotEl = document.createElement('div');
+      slotEl.className = 'slot' + (i === activeSlot ? ' active' : '');
+      const num = document.createElement('span'); num.className = 'keyNum'; num.textContent = i + 1;
+      slotEl.appendChild(num);
+      const s = slots[i];
+      if (s && ITEMS[s.id]) {
+        const clone = document.createElement('canvas'); clone.width = 16; clone.height = 16;
+        clone.getContext('2d').drawImage(getItemIconCanvas(s.id), 0, 0);
+        slotEl.appendChild(clone);
+        if (s.count > 1) {
+          const cnt = document.createElement('span'); cnt.className = 'count'; cnt.textContent = s.count;
+          slotEl.appendChild(cnt);
+        }
       }
-      hb.appendChild(slot);
+      slotEl.onclick = () => { activeSlot = i; updateHotbarUI(); updateHandMesh(); showItemName(); };
+      hb.appendChild(slotEl);
     }
   }
 
   let popupTimer = 0;
   function showItemName() {
-    const id = hotbar[activeSlot];
-    const el = document.getElementById('itemNamePopup');
-    el.textContent = (id && inventory[id] && ITEMS[id]) ? ITEMS[id].name : '';
+    const s = slots[activeSlot];
+    document.getElementById('itemNamePopup').textContent = (s && ITEMS[s.id]) ? ITEMS[s.id].name : '';
     popupTimer = 2.0;
   }
 
   function updateStatusBars() {
-    const hearts = Math.ceil(player.hp / 2);
-    const hungers = Math.ceil(player.hunger / 2);
-    document.getElementById('healthBar').textContent = '❤️'.repeat(Math.max(0, hearts)) + '🖤'.repeat(Math.max(0, 10 - hearts));
-    document.getElementById('hungerBar').textContent = '🍗'.repeat(Math.max(0, hungers)) + '🦴'.repeat(Math.max(0, 10 - hungers));
+    const hearts = Math.ceil(player.hp / 2), hungers = Math.ceil(player.hunger / 2);
+    document.getElementById('healthBar').textContent = '❤️'.repeat(Math.max(0,hearts)) + '🖤'.repeat(Math.max(0,10-hearts));
+    document.getElementById('hungerBar').textContent = '🍗'.repeat(Math.max(0,hungers)) + '🦴'.repeat(Math.max(0,10-hungers));
   }
 
   function renderInventoryModal() {
-    const invEl = document.getElementById('invItems');
-    invEl.innerHTML = '';
-    for (const [idStr, count] of Object.entries(inventory)) {
-      const id = Number(idStr);
-      if (!count || !ITEMS[id]) continue;
+    const grid = document.getElementById('invGrid'); grid.innerHTML = '';
+    for (let i = 0; i < 27; i++) {
       const box = document.createElement('div');
-      box.className = 'invSlot';
-      box.title = ITEMS[id].name;
-      const c = document.createElement('canvas');
-      c.width = 16; c.height = 16;
-      c.getContext('2d').drawImage(getItemIconCanvas(id), 0, 0);
-      box.appendChild(c);
-      const sp = document.createElement('span');
-      sp.className = 'count'; sp.textContent = count;
-      box.appendChild(sp);
+      box.className = 'invSlot' + (i < 9 ? ' hotRow' : '') + (i === selectedSwapIdx ? ' selectedSwap' : '');
+      const s = slots[i];
+      if (s && ITEMS[s.id]) {
+        box.title = ITEMS[s.id].name;
+        const c = document.createElement('canvas'); c.width = 16; c.height = 16;
+        c.getContext('2d').drawImage(getItemIconCanvas(s.id), 0, 0);
+        box.appendChild(c);
+        if (s.count > 1) {
+          const sp = document.createElement('span'); sp.className = 'count'; sp.textContent = s.count;
+          box.appendChild(sp);
+        }
+      }
       box.onclick = () => {
-        const oldIdx = hotbar.indexOf(id);
-        if (oldIdx !== -1) hotbar[oldIdx] = hotbar[activeSlot];
-        hotbar[activeSlot] = id;
-        updateHotbarUI(); updateHandMesh(); showItemName();
+        if (selectedSwapIdx === -1) { selectedSwapIdx = i; }
+        else {
+          const tmp = slots[selectedSwapIdx]; slots[selectedSwapIdx] = slots[i]; slots[i] = tmp;
+          selectedSwapIdx = -1; updateHotbarUI(); updateHandMesh();
+        }
+        renderInventoryModal();
       };
-      invEl.appendChild(box);
+      grid.appendChild(box);
     }
 
-    const recEl = document.getElementById('recipesList');
-    recEl.innerHTML = '';
-    RECIPES.forEach(rec => {
-      let canCraft = true;
-      const reqText = [];
+    const recEl = document.getElementById('recipesList'); recEl.innerHTML = '';
+    const allowedModes = currentInvMode === 'table' ? ['basic', 'table'] : (currentInvMode === 'furnace' ? ['furnace'] : ['basic']);
+    RECIPES.filter(r => allowedModes.includes(r.mode)).forEach(rec => {
+      let canCraft = true; const reqText = [];
       for (const [rid, rcnt] of Object.entries(rec.req)) {
-        if ((inventory[rid] || 0) < rcnt) canCraft = false;
+        if (getTotalItemCount(Number(rid)) < rcnt) canCraft = false;
         reqText.push(`${rcnt} ${ITEMS[rid].name}`);
       }
-      const row = document.createElement('div');
-      row.className = 'recipeRow';
-      const info = document.createElement('div');
-      info.className = 'recipeInfo';
-      const c = document.createElement('canvas');
-      c.width = 16; c.height = 16;
+      const row = document.createElement('div'); row.className = 'recipeRow';
+      const info = document.createElement('div'); info.className = 'recipeInfo';
+      const c = document.createElement('canvas'); c.width = 16; c.height = 16;
       c.getContext('2d').drawImage(getItemIconCanvas(rec.out), 0, 0);
       info.appendChild(c);
       const txt = document.createElement('div');
-      txt.innerHTML = `<b>${rec.label || ITEMS[rec.out].name} (×${rec.count})</b><br><span style="color:#aaa;font-size:11px;">المطلوب: ${reqText.join(' + ')}</span>`;
+      txt.innerHTML = `<b>${rec.label || ITEMS[rec.out].name} (×${rec.count})</b><br><span style="color:#aaa;font-size:11px;">${reqText.join(' + ')}</span>`;
       info.appendChild(txt);
 
-      const btn = document.createElement('button');
-      btn.className = 'craftBtn';
-      btn.textContent = 'صنع';
+      const btn = document.createElement('button'); btn.className = 'craftBtn'; btn.textContent = currentInvMode === 'furnace' ? 'صهر/شوي' : 'صنع';
       btn.disabled = !canCraft;
       btn.onclick = () => {
-        for (const [rid, rcnt] of Object.entries(rec.req)) consumeItem(Number(rid), rcnt);
+        for (const [rid, rcnt] of Object.entries(rec.req)) consumeItemById(Number(rid), rcnt);
         addItem(rec.out, rec.count);
         playSound('place');
         renderInventoryModal();
       };
-      row.appendChild(info); row.appendChild(btn);
-      recEl.appendChild(row);
+      row.appendChild(info); row.appendChild(btn); recEl.appendChild(row);
     });
+
+    if (currentInvMode === 'basic') {
+      const tip = document.createElement('p');
+      tip.style.cssText = 'color:#ffd54f; font-size:12px; margin-top:8px; text-align:right;';
+      tip.textContent = '💡 لصنع السيوف والبيكاكس والفأس والفرن والبوصلة: اصنع (طاولة تصنيع)، حطها على الأرض واضغط عليها كليك يمين!';
+      recEl.appendChild(tip);
+    }
   }
 
-  // الحفظ والتحميل
   function saveWorld() {
     try {
-      const encoded = btoa(String.fromCharCode.apply(null, worldData));
-      localStorage.setItem('khaldun_mc_world', encoded);
-      localStorage.setItem('khaldun_mc_player', JSON.stringify({
-        x: player.x, y: player.y, z: player.z, hp: player.hp, hunger: player.hunger,
-        inventory, hotbar
+      const savedChunks = {};
+      for (const key of dirtyChunks) {
+        const d = chunkDataMap.get(key);
+        if (d) savedChunks[key] = btoa(String.fromCharCode.apply(null, d));
+      }
+      localStorage.setItem('khaldun_mc2_save', JSON.stringify({
+        seed: activeSeed,
+        player: { x: player.x, y: player.y, z: player.z, hp: player.hp, hunger: player.hunger },
+        slots,
+        chunks: savedChunks
       }));
-      document.getElementById('saveStatus').textContent = '✅ تم حفظ العالم والحقيبة بنجاح!';
+      document.getElementById('saveStatus').textContent = '✅ تم حفظ العالم والتعديلات بنجاح!';
     } catch (e) {
-      document.getElementById('saveStatus').textContent = '⚠️ تعذر الحفظ في هذا المتصفح.';
+      document.getElementById('saveStatus').textContent = '⚠️ تعذر الحفظ (المساحة ممتلئة).';
     }
   }
 
   function loadWorld() {
-    const w = localStorage.getItem('khaldun_mc_world');
-    const p = localStorage.getItem('khaldun_mc_player');
-    if (w && p) {
-      try {
-        const bin = atob(w);
-        if (bin.length === worldData.length) {
-          for (let i = 0; i < bin.length; i++) worldData[i] = bin.charCodeAt(i);
-          const pd = JSON.parse(p);
-          player.x = pd.x; player.y = pd.y; player.z = pd.z;
-          player.hp = pd.hp; player.hunger = pd.hunger;
-          inventory = pd.inventory; hotbar = pd.hotbar;
-          return true;
-        }
-      } catch (e) {}
-    }
-    return false;
+    const raw = localStorage.getItem('khaldun_mc2_save');
+    if (!raw) return false;
+    try {
+      const d = JSON.parse(raw);
+      activeSeed = d.seed;
+      Object.assign(player, d.player);
+      slots = d.slots;
+      for (const [key, b64] of Object.entries(d.chunks || {})) {
+        const bin = atob(b64); const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        chunkDataMap.set(key, arr); dirtyChunks.add(key);
+      }
+      return true;
+    } catch (e) { return false; }
   }
 
-  // أزرار القوائم
-  document.getElementById('playBtn').onclick = () => lockPointer();
-  document.getElementById('closeInvBtn').onclick = () => {
-    invOpen = false; invModal.classList.add('hidden'); lockPointer();
+  // أزرار الواجهة
+  document.getElementById('playBtn').onclick = startOrResumeGame;
+  document.getElementById('pauseBtn').onclick = () => {
+    isLocked = false; if (document.pointerLockElement) document.exitPointerLock();
+    menuModal.classList.remove('hidden');
   };
+  document.getElementById('openInvQuickBtn').onclick = () => openInventoryModal('basic');
+  document.getElementById('closeInvBtn').onclick = closeInventoryModal;
+  document.getElementById('openGuideBtn').onclick = () => {
+    guideOpen = true; isLocked = false;
+    if (document.pointerLockElement) document.exitPointerLock();
+    guideModal.classList.remove('hidden'); menuModal.classList.add('hidden');
+  };
+  document.getElementById('closeGuideBtn').onclick = startOrResumeGame;
   document.getElementById('saveBtn').onclick = saveWorld;
+  document.getElementById('renderDistBtn').onclick = (e) => {
+    renderDist = renderDist === 4 ? 5 : (renderDist === 5 ? 3 : 4);
+    const label = renderDist === 3 ? 'قريب (3)' : (renderDist === 4 ? 'متوسط (4)' : 'بعيد (5)');
+    e.target.textContent = '👁️ مدى الرؤية: ' + label;
+    scene.fog.near = (renderDist - 1) * CHUNK_S;
+    scene.fog.far = renderDist * CHUNK_S + 8;
+  };
+  document.getElementById('mobileToggleBtn').onclick = (e) => {
+    mobileModeSetting = mobileModeSetting === 'auto' ? 'on' : (mobileModeSetting === 'on' ? 'off' : 'auto');
+    e.target.textContent = '📱 أزرار الجوال: ' + (mobileModeSetting === 'auto' ? 'تلقائي' : (mobileModeSetting === 'on' ? 'مفعّل' : 'معطّل'));
+    refreshMobileUI();
+  };
   document.getElementById('toggleZombiesBtn').onclick = (e) => {
     zombiesEnabled = !zombiesEnabled;
     e.target.textContent = zombiesEnabled ? '🧟 وحوش الليل: مفعّل' : '🕊️ وحوش الليل: معطّل';
   };
   document.getElementById('resetWorldBtn').onclick = () => {
-    localStorage.removeItem('khaldun_mc_world');
-    localStorage.removeItem('khaldun_mc_player');
+    localStorage.removeItem('khaldun_mc2_save');
     location.reload();
   };
   document.getElementById('respawnBtn').onclick = () => {
     isDead = false; player.hp = 20; player.hunger = 20;
-    player.x = 32; player.z = 32; player.y = findSurfaceY(32, 32) + 1;
+    player.x = 0; player.z = 0; player.y = getTerrainHeight(0, 0) + 2;
     player.vx = player.vy = player.vz = 0;
-    deathModal.classList.add('hidden');
-    updateStatusBars();
-    lockPointer();
+    deathModal.classList.add('hidden'); updateStatusBars(); startOrResumeGame();
   };
 
   window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    handCam.aspect = window.innerWidth / window.innerHeight;
-    handCam.updateProjectionMatrix();
+    camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+    handCam.aspect = window.innerWidth / window.innerHeight; handCam.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
   // ==========================================
-  // 11. الحلقة الرئيسية للعبة (Game Loop)
+  // 11. التشغيل والحلقة الرئيسية
   // ==========================================
   if (!loadWorld()) {
-    generateWorld();
-    player.x = 32; player.z = 32;
-    player.y = findSurfaceY(32, 32) + 1;
+    // إيجاد بقعة يابسة للبداية
+    let sx = 0, sz = 0;
+    for (let r = 0; r < 30; r++) {
+      if (getTerrainHeight(r, 0) > SEA_LEVEL + 1) { sx = r; break; }
+    }
+    player.x = sx + 0.5; player.z = sz + 0.5;
+    player.y = getTerrainHeight(sx, sz) + 2;
   }
-  rebuildAllChunks();
-  spawnInitialMobs();
-  updateHotbarUI();
-  updateHandMesh();
-  updateStatusBars();
+  updateChunksAroundPlayer(40); // بناء الشنكس الأولية حول اللاعب
+  for (let i = 0; i < 16; i++) {
+    const t = ['pig', 'cow', 'sheep', 'chicken'][i % 4];
+    spawnMob(t, player.x + (Math.random()-0.5)*46, player.z + (Math.random()-0.5)*46);
+  }
+  updateHotbarUI(); updateHandMesh(); updateStatusBars(); refreshMobileUI();
 
-  let lastTime = performance.now();
-  let worldTime = 0.25; // يبدأ صباحاً (0..1)
-  let zombieSpawnTimer = 0;
+  let lastTime = performance.now(), worldTime = 0.25, mobSpawnTimer = 0;
 
   function hurtPlayer(amt) {
     if (player.hurtCd > 0 || isDead) return;
     player.hp = Math.max(0, player.hp - amt);
-    player.hurtCd = 0.65;
-    playSound('hit');
+    player.hurtCd = 0.65; playSound('hit');
     const dmgEl = document.getElementById('damageOverlay');
-    dmgEl.style.opacity = '1';
-    setTimeout(() => { dmgEl.style.opacity = '0'; }, 160);
+    dmgEl.style.opacity = '1'; setTimeout(() => { dmgEl.style.opacity = '0'; }, 160);
     updateStatusBars();
     if (player.hp <= 0) {
-      isDead = true;
-      document.exitPointerLock();
+      isDead = true; isLocked = false;
+      if (document.pointerLockElement) document.exitPointerLock();
       deathModal.classList.remove('hidden');
     }
   }
@@ -1335,35 +1539,52 @@
     const dt = Math.min(0.05, (now - lastTime) / 1000);
     lastTime = now;
 
-    // دورة الليل والنهار (دورة كل 4 دقائق)
-    worldTime = (worldTime + dt / 240) % 1;
+    worldTime = (worldTime + dt / 260) % 1;
     const sunAngle = worldTime * Math.PI * 2;
     const dayFactor = Math.max(0.15, Math.sin(sunAngle) * 0.5 + 0.55);
     const isNight = Math.sin(sunAngle) < -0.15;
 
     const skyCol = new THREE.Color().setHSL(0.56, 0.65, 0.08 + dayFactor * 0.58);
-    scene.background.copy(skyCol);
-    scene.fog.color.copy(skyCol);
+    scene.background.copy(skyCol); scene.fog.color.copy(skyCol);
     ambientLight.intensity = 0.22 + dayFactor * 0.6;
     sunLight.intensity = Math.max(0.05, Math.sin(sunAngle) * 0.65);
 
     document.getElementById('timeText').textContent = isNight ? 'ليل 🌙' : 'نهار ☀️';
     document.getElementById('mobCount').textContent = mobs.length;
+    document.getElementById('chunkCount').textContent = chunkMeshes.size;
 
-    if (popupTimer > 0) {
-      popupTimer -= dt;
-      if (popupTimer <= 0) document.getElementById('itemNamePopup').textContent = '';
+    if (popupTimer > 0) { popupTimer -= dt; if (popupTimer <= 0) document.getElementById('itemNamePopup').textContent = ''; }
+    if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) document.getElementById('pickupToast').style.opacity = '0'; }
+
+    // تحديث البوصلة إذا اللاعب ماسكها
+    const heldSlot = slots[activeSlot];
+    const compassHud = document.getElementById('compassHud');
+    if (heldSlot && heldSlot.id === 114) {
+      let targetX = 0, targetZ = 0, label = 'نقطة البداية';
+      let bestD = Infinity;
+      for (const m of mobs) {
+        const d = Math.hypot(m.x - player.x, m.z - player.z);
+        if (d < bestD) { bestD = d; targetX = m.x; targetZ = m.z; label = m.type === 'zombie' ? 'أقرب زومبي' : 'أقرب حيوان'; }
+      }
+      const dist = Math.floor(Math.hypot(targetX - player.x, targetZ - player.z));
+      const angToTarget = Math.atan2(targetX - player.x, targetZ - player.z);
+      if (compassNeedleMesh) compassNeedleMesh.rotation.z = -(angToTarget + player.yaw);
+      compassHud.style.display = 'block';
+      compassHud.textContent = `🧭 ${label}: ${dist} بلوكة`;
+    } else {
+      compassHud.style.display = 'none';
     }
 
-    if (isLocked && !isDead && !invOpen) {
-      // 1. حركة اللاعب والفيزياء
+    if (isLocked && !isDead && !invOpen && !guideOpen) {
+      updateChunksAroundPlayer(2);
+
       if (player.hurtCd > 0) player.hurtCd -= dt;
-      const headBlock = getBlock(Math.floor(player.x), Math.floor(player.y + 1.5), Math.floor(player.z));
-      const feetBlock = getBlock(Math.floor(player.x), Math.floor(player.y + 0.2), Math.floor(player.z));
+      const headB = getBlock(player.x, player.y + 1.5, player.z);
+      const feetB = getBlock(player.x, player.y + 0.2, player.z);
       const wasInWater = player.inWater;
-      player.inWater = (feetBlock === B.WATER || headBlock === B.WATER);
+      player.inWater = (feetB === B.WATER || headB === B.WATER);
       if (!wasInWater && player.inWater) playSound('splash');
-      document.getElementById('waterOverlay').style.display = (headBlock === B.WATER) ? 'block' : 'none';
+      document.getElementById('waterOverlay').style.display = (headB === B.WATER) ? 'block' : 'none';
 
       let moveX = 0, moveZ = 0;
       const sinY = Math.sin(player.yaw), cosY = Math.cos(player.yaw);
@@ -1371,112 +1592,128 @@
       if (keys['KeyS']) { moveX += sinY; moveZ += cosY; }
       if (keys['KeyA']) { moveX -= cosY; moveZ += sinY; }
       if (keys['KeyD']) { moveX += cosY; moveZ -= sinY; }
+      if (Math.abs(joyMoveX) > 0.1 || Math.abs(joyMoveZ) > 0.1) {
+        moveX += (-joyMoveZ * sinY + joyMoveX * cosY);
+        moveZ += (-joyMoveZ * cosY - joyMoveX * sinY);
+      }
 
       const len = Math.hypot(moveX, moveZ);
       if (len > 0) { moveX /= len; moveZ /= len; }
-      const sprinting = keys['ShiftLeft'] && player.hunger > 4;
+      const sprinting = (keys['ShiftLeft'] || Math.hypot(joyMoveX, joyMoveZ) > 0.85) && player.hunger > 4;
       const speed = player.inWater ? 3.2 : (sprinting ? 6.8 : 4.7);
-
-      player.vx = moveX * speed;
-      player.vz = moveZ * speed;
+      player.vx = moveX * speed; player.vz = moveZ * speed;
 
       if (player.inWater) {
-        player.vy -= 9 * dt;
-        if (keys['Space']) player.vy = 4.2;
-        player.vy *= 0.9;
+        player.vy -= 9 * dt; if (keys['Space']) player.vy = 4.2; player.vy *= 0.9;
       } else {
         player.vy -= 22 * dt;
-        if (keys['Space'] && player.onGround) {
-          player.vy = 7.9;
-          player.onGround = false;
-        }
+        if (keys['Space'] && player.onGround) { player.vy = 7.9; player.onGround = false; }
       }
 
-      // تحريك X
-      const nextX = Math.max(0.6, Math.min(WORLD_W - 0.6, player.x + player.vx * dt));
+      const nextX = player.x + player.vx * dt;
       if (!collidesWorld(nextX, player.y + 0.05, player.z)) player.x = nextX;
-
-      // تحريك Z
-      const nextZ = Math.max(0.6, Math.min(WORLD_D - 0.6, player.z + player.vz * dt));
+      const nextZ = player.z + player.vz * dt;
       if (!collidesWorld(player.x, player.y + 0.05, nextZ)) player.z = nextZ;
 
-      // تحريك Y + ضرر السقوط
-      const prevVy = player.vy;
-      const nextY = player.y + player.vy * dt;
-      if (!collidesWorld(player.x, nextY, player.z)) {
-        player.y = nextY;
-        player.onGround = false;
-      } else {
-        if (player.vy < 0) {
-          player.onGround = true;
-          if (!player.inWater && prevVy < -14) {
-            hurtPlayer(Math.floor((-prevVy - 13) * 1.5));
-          }
-        }
+      const prevVy = player.vy, nextY = player.y + player.vy * dt;
+      if (!collidesWorld(player.x, nextY, player.z)) { player.y = nextY; player.onGround = false; }
+      else {
+        if (player.vy < 0) { player.onGround = true; if (!player.inWater && prevVy < -14) hurtPlayer(Math.floor((-prevVy - 13) * 1.5)); }
         player.vy = 0;
       }
 
-      // نظام الجوع والشفاء
-      player.hungerTimer += dt * (sprinting && len > 0 ? 2.4 : 1);
-      if (player.hungerTimer >= 16) {
+      player.hungerTimer += dt * (sprinting && len > 0 ? 2.2 : 1);
+      if (player.hungerTimer >= 18) {
         player.hungerTimer = 0;
-        if (player.hunger > 0) player.hunger -= 1;
-        else hurtPlayer(1);
+        if (player.hunger > 0) player.hunger -= 1; else hurtPlayer(1);
         if (player.hunger >= 14 && player.hp < 20) player.hp = Math.min(20, player.hp + 1);
         updateStatusBars();
       }
 
-      // التصويب والتكسير المستمر
+      // التصويب والتكسير
       const look = getLookDir();
       const hit = raycastVoxel(player.x, player.y + 1.55, player.z, look.x, look.y, look.z);
+      const breakBar = document.getElementById('breakBarWrap');
+      const breakFill = document.getElementById('breakBarFill');
+
       if (hit.hit) {
         highlightBox.visible = true;
         highlightBox.position.set(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5);
-
-        if (leftMouseDown) {
+        if (isMining) {
           const bKey = hit.x + ',' + hit.y + ',' + hit.z;
           if (breakingPos !== bKey) { breakingPos = bKey; breakProgress = 0; }
-          const held = ITEMS[hotbar[activeSlot]];
-          const toolSpeed = (held && held.tool === 'pick') ? held.speed : 1.0;
-          const hard = BLOCK_HARDNESS[hit.block] || 0.5;
-          breakProgress += (dt * toolSpeed) / hard;
-          handSwing = 0.8;
+          const held = heldSlot ? ITEMS[heldSlot.id] : null;
+          let toolMult = 1.0;
+          const isWoodBlock = (hit.block === B.WOOD || hit.block === B.PLANKS || hit.block === B.CRAFT_TABLE);
+          const isStoneBlock = (hit.block === B.STONE || hit.block === B.COBBLE || hit.block === B.COAL_ORE || hit.block === B.IRON_ORE || hit.block === B.FURNACE);
+          if (held && held.tool === 'axe' && isWoodBlock) toolMult = held.speed;
+          if (held && held.tool === 'pick' && isStoneBlock) toolMult = held.speed;
+
+          breakProgress += (dt * toolMult) / (BLOCK_HARDNESS[hit.block] || 0.5);
+          handSwing = 0.85;
+          breakBar.style.display = 'block';
+          breakFill.style.width = Math.min(100, breakProgress * 100) + '%';
 
           if (breakProgress >= 1) {
             const broken = hit.block;
             setBlock(hit.x, hit.y, hit.z, B.AIR);
             playSound('break');
-            spawnParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, 0xaaaaaa, 9);
-            if (broken === B.STONE) addItem(B.COBBLE, 1);
-            else if (broken === B.LEAVES) {
-              if (Math.random() < 0.22) addItem(108, 1); // تفاحة من الشجرة
-            } else if (broken !== B.BEDROCK) {
-              addItem(broken, 1);
-            }
-            breakProgress = 0; breakingPos = null;
+            spawnParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, 0xaaaaaa, 8);
+            if (broken === B.STONE) spawnDrop(B.COBBLE, 1, hit.x+0.5, hit.y+0.5, hit.z+0.5);
+            else if (broken === B.LEAVES) { if (Math.random() < 0.25) spawnDrop(113, 1, hit.x+0.5, hit.y+0.5, hit.z+0.5); }
+            else if (broken !== B.BEDROCK) spawnDrop(broken, 1, hit.x+0.5, hit.y+0.5, hit.z+0.5);
+            breakProgress = 0; breakingPos = null; breakBar.style.display = 'none';
           }
+        } else {
+          breakBar.style.display = 'none';
         }
       } else {
-        highlightBox.visible = false;
-        breakProgress = 0;
+        highlightBox.visible = false; breakProgress = 0; breakBar.style.display = 'none';
       }
 
-      // رسبنة الزومبي بالليل والحيوانات بالنهار
-      zombieSpawnTimer += dt;
-      if (zombieSpawnTimer > 8 && mobs.length < 28) {
-        zombieSpawnTimer = 0;
-        const ang = Math.random() * Math.PI * 2;
-        const sx = Math.max(3, Math.min(WORLD_W - 3, player.x + Math.cos(ang) * 18));
-        const sz = Math.max(3, Math.min(WORLD_D - 3, player.z + Math.sin(ang) * 18));
-        if (isNight && zombiesEnabled) spawnMob('zombie', sx, sz);
-        else if (!isNight) {
-          const ts = ['pig', 'cow', 'sheep', 'chicken'];
-          spawnMob(ts[Math.floor(Math.random()*ts.length)], sx, sz);
+      // تحديث العناصر الطايحة وجذبها للاعب
+      for (let i = droppedItems.length - 1; i >= 0; i--) {
+        const d = droppedItems[i];
+        d.age += dt;
+        d.vy -= 14 * dt;
+        const nx = d.x + d.vx * dt, nz = d.z + d.vz * dt, ny = d.y + d.vy * dt;
+        if (getBlock(nx, d.y, d.z) === B.AIR || getBlock(nx, d.y, d.z) === B.WATER) d.x = nx;
+        if (getBlock(d.x, d.y, nz) === B.AIR || getBlock(d.x, d.y, nz) === B.WATER) d.z = nz;
+        if (getBlock(d.x, ny - 0.15, d.z) === B.AIR || getBlock(d.x, ny - 0.15, d.z) === B.WATER) d.y = ny;
+        else { d.vy = 0; d.vx *= 0.8; d.vz *= 0.8; }
+
+        d.mesh.position.set(d.x, d.y + Math.sin(d.age * 4) * 0.08, d.z);
+        d.mesh.rotation.y += dt * 2.2;
+
+        const distP = Math.hypot(player.x - d.x, (player.y + 0.8) - d.y, player.z - d.z);
+        if (distP < 2.2 && d.age > 0.25) {
+          d.x += (player.x - d.x) * dt * 8;
+          d.y += (player.y + 0.8 - d.y) * dt * 8;
+          d.z += (player.z - d.z) * dt * 8;
+        }
+        if (distP < 1.1 && d.age > 0.25) {
+          addItem(d.id, d.count);
+          playSound('pickup');
+          scene.remove(d.mesh);
+          droppedItems.splice(i, 1);
         }
       }
 
-      // تحديث حركة الحيوانات والزومبي
-      for (const m of mobs) {
+      // إدارة الكائنات حول اللاعب
+      mobSpawnTimer += dt;
+      if (mobSpawnTimer > 6 && mobs.length < 24) {
+        mobSpawnTimer = 0;
+        const ang = Math.random() * Math.PI * 2;
+        const sx = player.x + Math.cos(ang) * 22, sz = player.z + Math.sin(ang) * 22;
+        if (isNight && zombiesEnabled) spawnMob('zombie', sx, sz);
+        else if (!isNight) spawnMob(['pig','cow','sheep','chicken'][Math.floor(Math.random()*4)], sx, sz);
+      }
+
+      for (let i = mobs.length - 1; i >= 0; i--) {
+        const m = mobs[i];
+        if (Math.hypot(m.x - player.x, m.z - player.z) > 65) {
+          scene.remove(m.mesh); mobs.splice(i, 1); continue;
+        }
         if (m.hurtTimer > 0) {
           m.hurtTimer -= dt;
           m.mesh.traverse(c => { if (c.isMesh) c.material.emissive.setHex(m.hurtTimer > 0 ? 0xaa0000 : 0x000000); });
@@ -1484,79 +1721,53 @@
         if (m.fleeTimer > 0) m.fleeTimer -= dt;
         if (m.attackCd > 0) m.attackCd -= dt;
 
-        const distToPlayer = Math.hypot(player.x - m.x, player.z - m.z);
+        const distP = Math.hypot(player.x - m.x, player.z - m.z);
         let speedMob = 1.3;
-
         if (m.type === 'zombie') {
-          if (distToPlayer < 16) {
-            m.yaw = Math.atan2(player.x - m.x, player.z - m.z);
-            speedMob = 2.6;
-            if (distToPlayer < 1.35 && Math.abs(player.y - m.y) < 1.8 && m.attackCd <= 0) {
-              hurtPlayer(3);
-              m.attackCd = 1.1;
-            }
+          if (distP < 18) {
+            m.yaw = Math.atan2(player.x - m.x, player.z - m.z); speedMob = 2.6;
+            if (distP < 1.35 && Math.abs(player.y - m.y) < 1.8 && m.attackCd <= 0) { hurtPlayer(3); m.attackCd = 1.1; }
           }
         } else {
           if (m.fleeTimer > 0) speedMob = 3.6;
           m.aiTimer -= dt;
-          if (m.aiTimer <= 0) {
-            m.aiTimer = 1.5 + Math.random() * 3.5;
-            m.yaw += (Math.random() - 0.5) * 2.5;
-          }
+          if (m.aiTimer <= 0) { m.aiTimer = 1.5 + Math.random()*3.5; m.yaw += (Math.random()-0.5)*2.5; }
         }
 
-        const dirX = Math.sin(m.yaw), dirZ = Math.cos(m.yaw);
-        const mx = Math.max(1.5, Math.min(WORLD_W - 1.5, m.x + (dirX * speedMob + m.vx) * dt));
-        const mz = Math.max(1.5, Math.min(WORLD_D - 1.5, m.z + (dirZ * speedMob + m.vz) * dt));
+        const mx = m.x + (Math.sin(m.yaw) * speedMob + m.vx) * dt;
+        const mz = m.z + (Math.cos(m.yaw) * speedMob + m.vz) * dt;
         m.vx *= 0.85; m.vz *= 0.85;
-
-        // قفز تلقائي للحيوان إذا واجه بلوكة
-        const blocked = collidesWorld(mx, m.y + 0.1, mz, 0.3, 0.9);
-        if (!blocked) { m.x = mx; m.z = mz; }
+        if (!collidesWorld(mx, m.y + 0.1, mz, 0.3, 0.9)) { m.x = mx; m.z = mz; }
         else if (m.vy === 0) { m.vy = 6.2; }
 
         m.vy -= 20 * dt;
         const ny = m.y + m.vy * dt;
-        if (!collidesWorld(m.x, ny, m.z, 0.3, 0.9)) {
-          m.y = ny;
-        } else {
-          m.vy = 0;
-        }
-        if (getBlock(Math.floor(m.x), Math.floor(m.y + 0.2), Math.floor(m.z)) === B.WATER) {
-          m.vy = Math.max(m.vy, 2.5); // يطفو في الموية
-        }
+        if (!collidesWorld(m.x, ny, m.z, 0.3, 0.9)) m.y = ny; else m.vy = 0;
+        if (getBlock(m.x, m.y + 0.2, m.z) === B.WATER) m.vy = Math.max(m.vy, 2.5);
 
         m.mesh.position.set(m.x, m.y, m.z);
         m.mesh.rotation.y = m.yaw;
         m.walkPhase += dt * speedMob * 4;
-        m.mesh.userData.legs.forEach((leg, i) => {
-          leg.rotation.x = Math.sin(m.walkPhase + (i % 2 === 0 ? 0 : Math.PI)) * 0.55;
+        m.mesh.userData.legs.forEach((leg, li) => {
+          leg.rotation.x = Math.sin(m.walkPhase + (li % 2 === 0 ? 0 : Math.PI)) * 0.55;
         });
       }
 
-      // تحديث الجزيئات
       for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.life -= dt;
-        p.vy -= 14 * dt;
-        p.mesh.position.x += p.vx * dt;
-        p.mesh.position.y += p.vy * dt;
-        p.mesh.position.z += p.vz * dt;
+        const p = particles[i]; p.life -= dt; p.vy -= 14 * dt;
+        p.mesh.position.x += p.vx*dt; p.mesh.position.y += p.vy*dt; p.mesh.position.z += p.vz*dt;
         if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); }
       }
 
-      // تحديث الكاميرا والإحداثيات
       camera.position.set(player.x, player.y + 1.55, player.z);
       camera.rotation.order = 'YXZ';
-      camera.rotation.y = player.yaw;
-      camera.rotation.x = player.pitch;
+      camera.rotation.y = player.yaw; camera.rotation.x = player.pitch;
       document.getElementById('coordsText').textContent = `${Math.floor(player.x)}, ${Math.floor(player.y)}, ${Math.floor(player.z)}`;
     }
 
-    // أنميشن حركة اليد
     if (handSwing > 0) handSwing = Math.max(0, handSwing - dt * 5);
-    handGroup.rotation.x = -Math.sin(handSwing * Math.PI) * 0.7;
-    handGroup.position.y = -0.38 - Math.sin(handSwing * Math.PI) * 0.08;
+    handGroup.rotation.x = -Math.sin(handSwing * Math.PI) * 0.75;
+    handGroup.position.y = -0.36 - Math.sin(handSwing * Math.PI) * 0.08;
 
     renderer.clear();
     renderer.render(scene, camera);
