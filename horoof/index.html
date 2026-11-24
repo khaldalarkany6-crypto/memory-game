@@ -74,8 +74,8 @@
 
   .btn {
     width: 100%; padding: 12px 16px; border-radius: 14px; border: none;
-    font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer;
-    transition: transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer;
+    transition: transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .btn:active { transform: translateY(2px); }
   .btn-gold { background: var(--gold); color: #1e293b; box-shadow: 0 4px 0 var(--gold-dark); }
@@ -366,8 +366,8 @@
     </div>
 
     <div class="actionRow">
-      <button class="btn btn-gold" id="undoBtn">↩️ تراجع</button>
-      <button class="btn btn-red" id="rejectBtn">❌ رفض الجواب / طلع!</button>
+      <button class="btn btn-gold" id="undoBtn" disabled>↩️ ما فيه حركة</button>
+      <button class="btn btn-red" id="rejectBtn" disabled>❌ ما فيه جواب</button>
     </div>
   </div>
 
@@ -591,6 +591,7 @@
         turnIndex: 0,
         usedLetters: [],
         lastLetter: '',
+        lastPlayerId: '',
         turnEndsAt: 0,
         introEndsAt: 0,
         roundWinners: [],
@@ -853,7 +854,7 @@
   };
 
   // =========================================================================
-  // 7. منطق الجولات والحروف والتعادل + منع تكرار الفئات في نفس اللعبة
+  // 7. منطق الجولات والحروف والرفض الصحيح
   // =========================================================================
   function pickUniqueRandomCategory(s) {
     const all = [...CATEGORIES, ...asArr(s.settings.customCats)];
@@ -864,7 +865,6 @@
     let used = asArr(s.usedCatIds);
     let fresh = basePool.filter(c => !used.includes(c.id));
 
-    // إذا استُهلكت كل الفئات المختارة (مثلاً اختار فئتين ولعب 5 جولات) يعيد تدويرها بدون تكرار فئة الجولة السابقة مباشرة
     if (fresh.length === 0) {
       used = [];
       const prevCatId = s.game && s.game.category ? s.game.category.id : '';
@@ -889,6 +889,7 @@
         turnIndex: (roundNum - 1) % allPlayers.length,
         usedLetters: [],
         lastLetter: '',
+        lastPlayerId: '',
         introEndsAt: Date.now() + 3500,
         turnEndsAt: 0,
         roundWinners: [],
@@ -925,12 +926,14 @@
         aliveIds: [...curAlive],
         turnIndex: gm.turnIndex,
         usedLetters: [...curUsed],
-        lastLetter: gm.lastLetter || ''
+        lastLetter: gm.lastLetter || '',
+        lastPlayerId: gm.lastPlayerId || ''
       });
       gm.history = hist;
       curUsed.push(letter);
       gm.usedLetters = curUsed;
       gm.lastLetter = letter;
+      gm.lastPlayerId = currentId; // حفظ اللاعب اللي جاوب الحين عشان لو انرفض جوابه
       gm.turnIndex = (gm.turnIndex + 1) % curAlive.length;
       gm.turnEndsAt = Date.now() + s.settings.turnTime * 1000;
 
@@ -943,7 +946,58 @@
     });
   }
 
-  function eliminateCurrentPlayer() {
+  // رفض جواب اللاعب الأخير (اللي توه اختار الحرف) -> يطلع، والرافض/الباقي ياخذ النقطة!
+  function rejectLastAnswer() {
+    if (!state || state.status !== 'playing') return;
+    const g = state.game;
+    const targetId = g.lastPlayerId;
+    if (!targetId) return;
+    if (mode === 'online' && targetId === myId) return; // ما ترفض جواب نفسك بالغلط
+
+    sfx('out');
+    updateState(s => {
+      const gm = s.game;
+      const curAlive = asArr(gm.aliveIds);
+      const targetIdx = curAlive.indexOf(targetId);
+      if (targetIdx === -1) return;
+
+      const curTurnId = curAlive[gm.turnIndex];
+      const curUsed = asArr(gm.usedLetters);
+      const hist = asArr(gm.history);
+      hist.push({
+        aliveIds: [...curAlive],
+        turnIndex: gm.turnIndex,
+        usedLetters: [...curUsed],
+        lastLetter: gm.lastLetter || '',
+        lastPlayerId: gm.lastPlayerId || ''
+      });
+      gm.history = hist;
+
+      // إقصاء اللاعب اللي جاوب غلط وإرجاع الحرف المرفوض
+      curAlive.splice(targetIdx, 1);
+      gm.aliveIds = curAlive;
+      if (gm.lastLetter) {
+        gm.usedLetters = curUsed.filter(l => l !== gm.lastLetter);
+      }
+      gm.lastLetter = '';
+      gm.lastPlayerId = '';
+
+      if (curAlive.length <= 1) {
+        const winId = curAlive[0] || Object.keys(s.players)[0];
+        gm.roundWinners = [winId];
+        if (s.players[winId]) s.players[winId].score += 1;
+        s.status = gm.round >= s.settings.rounds ? 'gameEnd' : 'roundEnd';
+        sfx('win');
+      } else {
+        const newIdx = curAlive.indexOf(curTurnId);
+        gm.turnIndex = newIdx !== -1 ? newIdx : (gm.turnIndex % curAlive.length);
+        gm.turnEndsAt = Date.now() + s.settings.turnTime * 1000;
+      }
+    });
+  }
+
+  // انتهاء الوقت -> إقصاء صاحب الدور الحالي اللي خلص وقته
+  function eliminateTimedOutPlayer() {
     if (!state || state.status !== 'playing') return;
     sfx('out');
     updateState(s => {
@@ -954,11 +1008,13 @@
         aliveIds: [...curAlive],
         turnIndex: gm.turnIndex,
         usedLetters: [...asArr(gm.usedLetters)],
-        lastLetter: gm.lastLetter || ''
+        lastLetter: gm.lastLetter || '',
+        lastPlayerId: gm.lastPlayerId || ''
       });
       gm.history = hist;
       curAlive.splice(gm.turnIndex, 1);
       gm.aliveIds = curAlive;
+      gm.lastPlayerId = '';
 
       if (curAlive.length <= 1) {
         const winId = curAlive[0] || Object.keys(s.players)[0];
@@ -973,10 +1029,7 @@
     });
   }
 
-  document.getElementById('rejectBtn').onclick = () => {
-    if (!state || state.status !== 'playing') return;
-    eliminateCurrentPlayer();
-  };
+  document.getElementById('rejectBtn').onclick = rejectLastAnswer;
 
   document.getElementById('undoBtn').onclick = () => {
     if (!state || state.status !== 'playing') return;
@@ -991,6 +1044,7 @@
       s.game.turnIndex = prev.turnIndex;
       s.game.usedLetters = prev.usedLetters;
       s.game.lastLetter = prev.lastLetter;
+      s.game.lastPlayerId = prev.lastPlayerId || '';
       s.game.turnEndsAt = Date.now() + s.settings.turnTime * 1000;
     });
   };
@@ -1020,7 +1074,7 @@
         const rem = Math.max(0, Math.ceil((state.game.turnEndsAt - now) / 1000));
         document.getElementById('turnTimerBubble').textContent = rem;
         if (rem <= 3 && rem > 0 && rem !== lastTickSec) { lastTickSec = rem; sfx('tick'); }
-        if (rem <= 0 && isHost()) { lastTickSec = -1; eliminateCurrentPlayer(); }
+        if (rem <= 0 && isHost()) { lastTickSec = -1; eliminateTimedOutPlayer(); }
       }
     }, 200);
   }
@@ -1137,7 +1191,26 @@
         grid.appendChild(btn);
       });
 
-      document.getElementById('undoBtn').disabled = asArr(g.history).length === 0;
+      // تحديث أزرار التراجع والرفض باسم اللاعب صاحب الجواب الأخير
+      const histLen = asArr(g.history).length;
+      const lastP = (g.lastPlayerId && alive.includes(g.lastPlayerId)) ? state.players[g.lastPlayerId] : null;
+      const undoBtn = document.getElementById('undoBtn');
+      const rejectBtn = document.getElementById('rejectBtn');
+
+      undoBtn.disabled = histLen === 0;
+      undoBtn.textContent = lastP ? `↩️ تراجع (${lastP.name})` : (histLen > 0 ? '↩️ تراجع' : '↩️ ما فيه حركة');
+
+      if (!lastP) {
+        rejectBtn.disabled = true;
+        rejectBtn.textContent = '❌ ما فيه جواب';
+      } else if (mode === 'online' && g.lastPlayerId === myId) {
+        rejectBtn.disabled = true;
+        rejectBtn.textContent = `⏳ دور ${curP ? curP.name : 'الخصم'}`;
+      } else {
+        rejectBtn.disabled = false;
+        rejectBtn.textContent = `❌ رفض جواب (${lastP.name})`;
+      }
+
       scheduleBotIfNeeded();
     } else if (state.status === 'roundEnd' || state.status === 'gameEnd') {
       showScreen('resultScreen');
