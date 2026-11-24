@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>حروف والتحدي | ألعاب خلدون</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  :root {
+    --bg-blue: #1565d8;
+    --card-cream: #fcf9ed;
+    --gold: #ffca28;
+    --gold-dark: #f59e0b;
+    --red: #ef4444;
+    --red-dark: #b91c1c;
+    --green: #22c55e;
+    --green-dark: #15803d;
+    --text-dark: #1e293b;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-blue);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='%23ffffff' fill-opacity='0.06' font-family='Tahoma' font-size='28' font-weight='bold'%3E%3Ctext x='20' y='40' transform='rotate(-15 20 40)'%3Eع%3C/text%3E%3Ctext x='90' y='35' transform='rotate(12 90 35)'%3Eف%3C/text%3E%3Ctext x='145' y='55' transform='rotate(-10 145 55)'%3Eس%3C/text%3E%3Ctext x='35' y='110' transform='rotate(20 35 110)'%3Eن%3C/text%3E%3Ctext x='100' y='105' transform='rotate(-18 100 105)'%3Eح%3C/text%3E%3Ctext x='150' y='130' transform='rotate(14 150 130)'%3Eي%3C/text%3E%3Ctext x='25' y='165' transform='rotate(-8 25 165)'%3Eق%3C/text%3E%3Ctext x='95' y='168' transform='rotate(16 95 168)'%3Eل%3C/text%3E%3C/g%3E%3C/svg%3E");
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    overflow-x: hidden;
+  }
+
+  .appWrap { width: 100%; max-width: 520px; position: relative; z-index: 2; }
+
+  .topBar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; gap: 8px; flex-wrap: wrap;
+  }
+  .pill {
+    background: rgba(10, 45, 110, 0.72); color: #fff; padding: 7px 14px;
+    border-radius: 12px; font-weight: bold; font-size: 13px;
+    border: 1px solid rgba(255,255,255,0.18); display: flex; align-items: center; gap: 6px;
+  }
+  .iconBtn {
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background: var(--gold); color: #1e293b; font-size: 16px; font-weight: bold;
+    cursor: pointer; box-shadow: 0 3px 0 var(--gold-dark); display: flex; align-items: center; justify-content: center;
+  }
+  .iconBtn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--gold-dark); }
+
+  .card {
+    background: var(--card-cream);
+    border-radius: 20px;
+    padding: 18px;
+    box-shadow: 0 12px 30px rgba(0, 15, 50, 0.35);
+    border: 2px solid rgba(255,255,255,0.7);
+  }
+  .hidden { display: none !important; }
+
+  .logoBox { text-align: center; margin-bottom: 16px; }
+  .logoTitle {
+    display: inline-block; font-size: 34px; font-weight: 900; color: var(--gold);
+    text-shadow: 0 4px 0 #b45309, 0 6px 14px rgba(0,0,0,0.35);
+  }
+  .logoSub { color: #e0f2fe; font-size: 13px; margin-top: 4px; font-weight: bold; }
+
+  .inputField {
+    width: 100%; padding: 11px 14px; border-radius: 12px; border: 2px solid #cbd5e1;
+    font-size: 15px; font-family: inherit; outline: none; background: #fff; text-align: right;
+  }
+  .inputField:focus { border-color: var(--bg-blue); }
+
+  .btn {
+    width: 100%; padding: 12px 16px; border-radius: 14px; border: none;
+    font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer;
+    transition: transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn:active { transform: translateY(2px); }
+  .btn-gold { background: var(--gold); color: #1e293b; box-shadow: 0 4px 0 var(--gold-dark); }
+  .btn-red { background: var(--red); color: #fff; box-shadow: 0 4px 0 var(--red-dark); }
+  .btn-green { background: var(--green); color: #fff; box-shadow: 0 4px 0 var(--green-dark); }
+  .btn-blue { background: #2563eb; color: #fff; box-shadow: 0 4px 0 #1d4ed8; }
+  .btn-gray { background: #94a3b8; color: #fff; box-shadow: 0 4px 0 #64748b; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .avatarRow { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 10px 0 14px; }
+  .avaOpt {
+    width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 3px solid #e2e8f0;
+    font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .avaOpt.active { border-color: var(--bg-blue); background: #dbeafe; transform: scale(1.1); }
+
+  .playersList { display: flex; flex-direction: column; gap: 8px; min-height: 110px; max-height: 210px; overflow-y: auto; margin-bottom: 14px; }
+  .playerRow {
+    background: #fff; padding: 8px 12px; border-radius: 14px; border: 2px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .playerInfo { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 16px; }
+  .avaCircle {
+    width: 38px; height: 38px; border-radius: 50%; background: #fef3c7; border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .kickBtn {
+    width: 28px; height: 28px; border-radius: 8px; border: 1px solid #cbd5e1;
+    background: #f8fafc; color: #64748b; font-weight: bold; cursor: pointer;
+  }
+  .kickBtn:hover { background: #fee2e2; color: #dc2626; }
+
+  .settingRow {
+    background: #fff; border: 2px solid #e2e8f0; border-radius: 14px;
+    padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+  .segBtns { display: flex; gap: 6px; }
+  .segBtn {
+    width: 36px; height: 32px; border-radius: 8px; border: 2px solid #e2e8f0;
+    background: #fff; font-weight: bold; cursor: pointer; font-family: inherit;
+  }
+  .segBtn.active { background: var(--gold); border-color: var(--gold-dark); }
+
+  .catChips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 145px; overflow-y: auto; padding: 4px 0; margin: 8px 0; }
+  .catChip {
+    padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;
+    background: #e2e8f0; color: #334155; cursor: pointer; border: 2px solid transparent;
+  }
+  .catChip.active { background: #dbeafe; color: #1e40af; border-color: #3b82f6; }
+
+  .introCard {
+    background: #fff; border-radius: 20px; padding: 24px 18px; text-align: center;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.25); position: relative; margin-top: 10px;
+  }
+  .catBadge {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: var(--red); color: #fff; padding: 3px 16px; border-radius: 12px;
+    font-size: 12px; font-weight: bold;
+  }
+  .timerBubble {
+    width: 54px; height: 54px; border-radius: 50%; background: #fff; border: 4px solid var(--bg-blue);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 900; color: var(--text-dark); margin-top: 10px;
+  }
+
+  .turnBanner {
+    border-radius: 18px; padding: 14px 16px; display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 12px; border: 2px solid rgba(255,255,255,0.8);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2); transition: background 0.2s;
+  }
+  .turnBanner.myTurn { background: var(--gold); color: #1e293b; }
+  .turnBanner.otherTurn { background: #ffffff; color: #1e293b; }
+
+  .pickedLetterBox {
+    background: #fff; width: 64px; height: 64px; border-radius: 16px;
+    margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 34px; font-weight: 900; color: var(--bg-blue);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.2); border: 3px solid var(--gold);
+  }
+
+  .lettersWrap {
+    background: var(--card-cream); border-radius: 18px; padding: 12px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.28);
+  }
+  .lettersGrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .letterBtn {
+    aspect-ratio: 1.05; border-radius: 10px; border: 2px solid #cbd5e1;
+    border-bottom: 4px solid #94a3b8; background: #fff; color: #0f172a;
+    font-size: 19px; font-weight: 900; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: 0.1s;
+  }
+  .letterBtn:hover:not(:disabled) { background: #eff6ff; border-color: #3b82f6; }
+  .letterBtn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
+  .letterBtn:disabled {
+    background: #1d4ed8; color: #93c5fd; border-color: #1e40af; border-bottom-width: 2px;
+    opacity: 0.65; cursor: not-allowed;
+  }
+  .letterBtn.lastUsed { background: var(--bg-blue); color: #fff; border-color: var(--gold); opacity: 1; }
+
+  .actionRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+
+  .winnerLetters { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .wChar {
+    width: 38px; height: 42px; background: #fff; border-radius: 10px; border-bottom: 3px solid #cbd5e1;
+    display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900;
+  }
+  .rankRow {
+    background: #fff; padding: 10px 14px; border-radius: 12px; display: flex;
+    align-items: center; justify-content: space-between; margin-bottom: 6px; font-weight: bold;
+  }
+
+  #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+</style>
+</head>
+<body>
+
+<canvas id="confettiCanvas"></canvas>
+
+<div class="appWrap">
+  <div class="logoBox" id="mainLogo">
+    <div class="logoTitle">حروف وثواني</div>
+    <div class="logoSub">16+ فئة مجانية • أونلاين مع ربعك أو على نفس الجهاز</div>
+  </div>
+
+  <!-- 1. الشاشة الرئيسية -->
+  <div id="homeScreen" class="card">
+    <div style="margin-bottom:12px;">
+      <label style="font-weight:bold; font-size:13px; display:block; margin-bottom:5px;">اسمك في اللعبة:</label>
+      <input type="text" id="myNameInput" class="inputField" placeholder="اكتب اسمك (مثلاً: خلدون)" maxlength="14" value="خلدون">
+    </div>
+
+    <div style="text-align:center; font-size:13px; font-weight:bold;">اختر شخصيتك:</div>
+    <div class="avatarRow" id="avatarPicker"></div>
+
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <button class="btn btn-gold" id="createOnlineBtn">🌐 إنشاء غرفة أونلاين</button>
+
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="joinCodeInput" class="inputField" placeholder="رمز الغرفة (مثل 783-251)" style="text-align:center; letter-spacing:1px;">
+        <button class="btn btn-blue" id="joinOnlineBtn" style="width:130px;">انضمام</button>
+      </div>
+
+      <hr style="border:none; border-top:1px dashed #cbd5e1; margin:4px 0;">
+
+      <button class="btn btn-green" id="startLocalBtn">📱 لعب سريع بدون إنترنت (نفس الجهاز / ضد بوت)</button>
+    </div>
+    <p id="fbNotice" style="margin-top:10px; font-size:12px; color:#15803d; font-weight:bold; text-align:center;"></p>
+  </div>
+
+  <!-- 2. شاشة اللوبي -->
+  <div id="lobbyScreen" class="hidden">
+    <div class="topBar">
+      <div class="pill">رمز الغرفة: <span id="lobbyRoomCode" style="letter-spacing:1px;">---</span></div>
+      <div style="display:flex; gap:6px;">
+        <button class="iconBtn" id="copyInviteBtn" title="نسخ رابط الدعوة">🔗</button>
+        <button class="iconBtn" id="soundToggleBtn" title="الصوت">🔊</button>
+        <button class="iconBtn" id="leaveLobbyBtn" title="خروج">🚪</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="playersList" id="lobbyPlayersList"></div>
+
+      <div id="localAddBox" class="hidden" style="display:flex; gap:6px; margin-bottom:10px;">
+        <input type="text" id="localPlayerName" class="inputField" placeholder="اسم لاعب جديد..." maxlength="12" style="padding:8px;">
+        <button class="btn btn-blue" id="addLocalHumanBtn" style="width:105px; font-size:13px; padding:8px;">+ لاعب</button>
+        <button class="btn btn-gray" id="addLocalBotBtn" style="width:95px; font-size:13px; padding:8px;">+ بوت 🤖</button>
+      </div>
+
+      <div class="settingRow">
+        <span style="font-weight:bold; font-size:14px;">عدد الجولات</span>
+        <div class="segBtns" id="roundsPicker">
+          <button class="segBtn" data-val="3">3</button>
+          <button class="segBtn active" data-val="5">5</button>
+          <button class="segBtn" data-val="7">7</button>
+          <button class="segBtn" data-val="10">10</button>
+        </div>
+      </div>
+
+      <div class="settingRow">
+        <span style="font-weight:bold; font-size:14px;">وقت الدور (ثواني)</span>
+        <div class="segBtns" id="timePicker">
+          <button class="segBtn active" data-val="10">10</button>
+          <button class="segBtn" data-val="15">15</button>
+          <button class="segBtn" data-val="20">20</button>
+        </div>
+      </div>
+
+      <div style="background:#fff; border:2px solid #e2e8f0; border-radius:14px; padding:10px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-weight:bold; font-size:13px;">الفئات المختارة (<span id="catSelectedCount">16</span> فئة):</span>
+          <button id="toggleAllCatsBtn" style="border:none; background:#dbeafe; color:#1e40af; padding:3px 9px; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer;">تحديد الكل</button>
+        </div>
+        <div class="catChips" id="catChips"></div>
+        <div id="customCatRow" style="display:flex; gap:6px; margin-top:6px;">
+          <input type="text" id="customCatInput" class="inputField" placeholder="أضف فئة من عندك (اختياري)..." style="padding:6px 10px; font-size:12px;">
+          <button id="addCustomCatBtn" class="btn btn-blue" style="width:70px; padding:6px; font-size:12px;">إضافة</button>
+        </div>
+      </div>
+
+      <button class="btn btn-red" id="startGameBtn" disabled>لازم 2 لاعبين على الأقل</button>
+    </div>
+  </div>
+
+  <!-- 3. شاشة إعلان الفئة -->
+  <div id="introScreen" class="hidden">
+    <div class="topBar">
+      <div class="pill" id="introRoundPill">الجولة 1 من 5</div>
+      <div class="pill" id="introModeLabel">أونلاين</div>
+    </div>
+    <div class="introCard">
+      <div class="catBadge">الفئة</div>
+      <h2 id="introCatTitle" style="font-size:26px; margin:8px 0 4px;">مدن ودول</h2>
+      <p id="introCatDesc" style="color:#64748b; font-size:14px; margin-bottom:18px;">أي مدينة أو دولة بالعالم</p>
+      <div style="font-size:13px; color:#64748b; margin-bottom:6px;">البداية مع</div>
+      <div id="introFirstAva" style="font-size:44px;">🤓</div>
+      <div id="introFirstName" style="font-size:20px; font-weight:900; margin-top:4px;">خلدون</div>
+      <div class="timerBubble" id="introCountdown">4</div>
+    </div>
+  </div>
+
+  <!-- 4. شاشة اللعب -->
+  <div id="playScreen" class="hidden">
+    <div class="topBar">
+      <div class="pill" id="playRoundPill">الجولة 1 من 5</div>
+      <div class="pill" style="background:#fff; color:#1e293b;" id="playCatPill">مدن ودول</div>
+      <div class="pill" id="playAlivePill">باقي 2</div>
+    </div>
+
+    <div class="turnBanner myTurn" id="turnBanner">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="avaCircle" id="turnAvatar">🤓</div>
+        <div>
+          <div id="turnTitle" style="font-size:20px; font-weight:900;">دورك!</div>
+          <div id="turnNext" style="font-size:12px; opacity:0.85;">التالي: أسامة</div>
+        </div>
+      </div>
+      <div class="timerBubble" id="turnTimerBubble" style="margin:0; width:48px; height:48px; font-size:20px;">10</div>
+    </div>
+
+    <div class="pickedLetterBox" id="lastPickedBox">؟</div>
+
+    <div class="lettersWrap">
+      <div class="lettersGrid" id="lettersGrid"></div>
+    </div>
+
+    <div class="actionRow">
+      <button class="btn btn-gold" id="undoBtn">↩️ تراجع</button>
+      <button class="btn btn-red" id="rejectBtn">❌ رفض الجواب / طلع!</button>
+    </div>
+  </div>
+
+  <!-- 5. شاشة النتائج -->
+  <div id="resultScreen" class="hidden">
+    <div class="introCard" style="background:var(--gold); margin-bottom:12px;">
+      <div id="resultHeader" style="font-size:15px; font-weight:bold; color:#78350f;">نتيجة الجولة 1 من 5</div>
+      <div id="resultWinnerAva" style="font-size:48px; margin:8px 0;">🤓</div>
+      <div class="winnerLetters" id="resultWinnerChars"></div>
+      <div id="resultBadge" style="display:inline-block; background:#1565d8; color:#fff; padding:4px 16px; border-radius:14px; font-weight:bold; font-size:13px;">بطل الجولة</div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:10px; text-align:center;" id="rankTitle">الترتيب الحالي</h3>
+      <div id="leaderboardList"></div>
+      <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+        <button class="btn btn-gold" id="nextRoundBtn">الجولة التالية ⬅️</button>
+        <button class="btn btn-red hidden" id="backToLobbyBtn">العودة للغرفة 🔄</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+(() => {
+  // =========================================================================
+  // 1. ربط Firebase بمشروع خلدون (memory-game-2f2d4)
+  // =========================================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
+    authDomain: "memory-game-2f2d4.firebaseapp.com",
+    databaseURL: "https://memory-game-2f2d4-default-rtdb.firebaseio.com",
+    projectId: "memory-game-2f2d4",
+    storageBucket: "memory-game-2f2d4.firebasestorage.app",
+    messagingSenderId: "234692589834",
+    appId: "1:234692589834:web:ef0a831a3b71f7273062f3",
+    measurementId: "G-X3V9MP6LS5"
+  };
+
+  let db = null;
+  let firebaseReady = false;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    firebaseReady = true;
+  } catch (e) { firebaseReady = false; }
+
+  document.getElementById('fbNotice').textContent = firebaseReady
+    ? "✅ السيرفر السحابي متصل! أنشئ غرفة أونلاين وشارك الرابط مع أصدقائك مجاناً."
+    : "⚠️ تعذر الاتصال بقاعدة البيانات، يمكنك اللعب بالوضع المحلي.";
+
+  // =========================================================================
+  // 2. الحروف العربية (28) والفئات (16+)
+  // =========================================================================
+  const ARABIC_LETTERS = [
+    'أ','ب','ت','ث','ج','ح','خ',
+    'د','ذ','ر','ز','س','ش','ص',
+    'ض','ط','ظ','ع','غ','ف','ق',
+    'ك','ل','م','ن','هـ','و','ي'
+  ];
+  const AVATARS = ['🤓','😎','🤠','🥳','🧔','🦁','🦊','🐼','🤖','👾'];
+  const CATEGORIES = [
+    { id:'cities', title:'مدن ودول', desc:'أي مدينة أو دولة بالعالم' },
+    { id:'red', title:'أشياء حمراء', desc:'أي شيء لونه أحمر' },
+    { id:'study', title:'مواد وتخصصات دراسية', desc:'مادة دراسية أو تخصص جامعي' },
+    { id:'animals', title:'حيوانات وطيور', desc:'حيوان بري، بحري، أو طائر' },
+    { id:'food', title:'أكلات ومشروبات', desc:'طبخة، وجبة سريعة، حلى، أو مشروب' },
+    { id:'fruits', title:'فواكه وخضروات', desc:'أي نوع فاكهة أو خضار' },
+    { id:'names', title:'أسماء أولاد وبنات', desc:'اسم شخص عربي أو عالمي' },
+    { id:'jobs', title:'مهن ووظائف', desc:'أي وظيفة أو مهنة يعمل بها الناس' },
+    { id:'house', title:'أشياء في البيت والمطبخ', desc:'أثاث، أجهزة، أو أدوات مطبخ' },
+    { id:'brands', title:'ماركات وشركات مشهورة', desc:'شركة تقنية، ملابس، أو مطاعم' },
+    { id:'games', title:'ألعاب فيديو وتطبيقات', desc:'لعبة إلكترونية أو تطبيق جوال' },
+    { id:'football', title:'أندية ولاعبين كرة قدم', desc:'نادي رياضي أو لاعب مشهور' },
+    { id:'cars', title:'سيارات ووسائل نقل', desc:'شركة سيارات أو وسيلة مواصلات' },
+    { id:'movies', title:'أفلام ومسلسلات وأنمي', desc:'اسم فيلم أو مسلسل أو شخصية أنمي' },
+    { id:'clothes', title:'ملابس وإكسسوارات', desc:'أي قطعة لبس أو إكسسوار' },
+    { id:'plants', title:'نباتات وأشجار وزهور', desc:'شجرة، وردة، أو نبات معروف' }
+  ];
+
+  // مساعد آمن لقراءة المصفوفات من Firebase RTDB
+  function asArr(v) {
+    if (!v) return [];
+    return Array.isArray(v) ? v : Object.values(v);
+  }
+
+  // =========================================================================
+  // 3. الأصوات والكونفيتي
+  // =========================================================================
+  let soundOn = true;
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function sfx(type) {
+    if (!soundOn) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    if (type === 'click') {
+      o.type = 'sine'; o.frequency.setValueAtTime(520, now); o.frequency.exponentialRampToValueAtTime(780, now+0.07);
+      g.gain.setValueAtTime(0.14, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.07);
+      o.start(now); o.stop(now+0.07);
+    } else if (type === 'tick') {
+      o.type = 'triangle'; o.frequency.setValueAtTime(880, now);
+      g.gain.setValueAtTime(0.09, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.06);
+      o.start(now); o.stop(now+0.06);
+    } else if (type === 'out') {
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(220, now); o.frequency.exponentialRampToValueAtTime(80, now+0.28);
+      g.gain.setValueAtTime(0.16, now); g.gain.exponentialRampToValueAtTime(0.001, now+0.28);
+      o.start(now); o.stop(now+0.28);
+    } else if (type === 'win') {
+      [523, 659, 784, 1046].forEach((f, idx) => {
+        const osc = audioCtx.createOscillator(), gn = audioCtx.createGain();
+        osc.connect(gn); gn.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(f, now + idx*0.09);
+        gn.gain.setValueAtTime(0.14, now + idx*0.09);
+        gn.gain.exponentialRampToValueAtTime(0.001, now + idx*0.09 + 0.25);
+        osc.start(now + idx*0.09); osc.stop(now + idx*0.09 + 0.25);
+      });
+    }
+  }
+
+  function launchConfetti() {
+    const c = document.getElementById('confettiCanvas'), ctx = c.getContext('2d');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    const pieces = Array.from({length: 95}, () => ({
+      x: Math.random()*c.width, y: -20 - Math.random()*200,
+      vx: (Math.random()-0.5)*5, vy: 3 + Math.random()*5,
+      col: ['#ffca28','#ef4444','#22c55e','#38bdf8','#f472b6'][Math.floor(Math.random()*5)],
+      sz: 6 + Math.random()*7
+    }));
+    let frames = 0;
+    function step() {
+      ctx.clearRect(0,0,c.width,c.height);
+      pieces.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.06; ctx.fillStyle = p.col; ctx.fillRect(p.x, p.y, p.sz, p.sz*0.6); });
+      if (++frames < 140) requestAnimationFrame(step); else ctx.clearRect(0,0,c.width,c.height);
+    }
+    step();
+  }
+
+  // =========================================================================
+  // 4. إدارة الحالة والمزامنة
+  // =========================================================================
+  const myId = 'p_' + Math.random().toString(36).slice(2, 9);
+  let myAvatar = AVATARS[0];
+  let mode = 'local';
+  let roomCode = null;
+  let roomRef = null;
+  let state = null;
+  let localLoopInterval = null;
+  let botTimeout = null;
+  let lastTickSec = -1;
+
+  function makeInitialState(hostName, hostAvatar) {
+    return {
+      hostId: myId,
+      status: 'lobby',
+      settings: {
+        rounds: 5,
+        turnTime: 10,
+        selectedCats: CATEGORIES.map(c => c.id),
+        customCats: []
+      },
+      players: {
+        [myId]: { id: myId, name: hostName, avatar: hostAvatar, score: 0, isBot: false, order: 1 }
+      },
+      game: {
+        round: 1,
+        category: CATEGORIES[0],
+        aliveIds: [],
+        turnIndex: 0,
+        usedLetters: [],
+        lastLetter: '',
+        turnEndsAt: 0,
+        introEndsAt: 0,
+        roundWinnerId: '',
+        history: []
+      }
+    };
+  }
+
+  function updateState(mutator) {
+    const copy = JSON.parse(JSON.stringify(state));
+    mutator(copy);
+    state = copy;
+    if (mode === 'online' && roomRef) {
+      roomRef.update({
+        status: state.status,
+        settings: state.settings,
+        players: state.players,
+        game: state.game
+      }).catch(err => {
+        alert("حدث خطأ في الاتصال بفايربيس: " + err.message);
+      });
+    } else {
+      renderAll();
+    }
+  }
+
+  function getSortedPlayers() {
+    if (!state || !state.players) return [];
+    return Object.values(state.players).sort((a, b) => (a.order || 0) - (b.order || 0));
+  }
+  function isHost() {
+    return mode === 'local' || (state && state.hostId === myId);
+  }
+
+  // =========================================================================
+  // 5. بناء الشاشة الرئيسية واللوبي
+  // =========================================================================
+  const avaPicker = document.getElementById('avatarPicker');
+  AVATARS.forEach((av, idx) => {
+    const el = document.createElement('div');
+    el.className = 'avaOpt' + (idx === 0 ? ' active' : '');
+    el.textContent = av;
+    el.onclick = () => {
+      myAvatar = av;
+      document.querySelectorAll('.avaOpt').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+    };
+    avaPicker.appendChild(el);
+  });
+
+  function renderCategoryChips() {
+    if (!state) return;
+    const wrap = document.getElementById('catChips');
+    wrap.innerHTML = '';
+    const custom = asArr(state.settings.customCats);
+    const selected = new Set(asArr(state.settings.selectedCats));
+    const all = [...CATEGORIES, ...custom];
+    all.forEach(cat => {
+      const ch = document.createElement('div');
+      ch.className = 'catChip' + (selected.has(cat.id) ? ' active' : '');
+      ch.textContent = cat.title;
+      ch.onclick = () => {
+        if (!isHost()) return;
+        updateState(s => {
+          const cur = new Set(asArr(s.settings.selectedCats));
+          if (cur.has(cat.id)) { if (cur.size > 1) cur.delete(cat.id); }
+          else cur.add(cat.id);
+          s.settings.selectedCats = Array.from(cur);
+        });
+      };
+      wrap.appendChild(ch);
+    });
+    document.getElementById('catSelectedCount').textContent = selected.size;
+    document.getElementById('toggleAllCatsBtn').style.display = isHost() ? 'inline-block' : 'none';
+    document.getElementById('customCatRow').style.display = isHost() ? 'flex' : 'none';
+  }
+
+  document.getElementById('toggleAllCatsBtn').onclick = () => {
+    if (!isHost() || !state) return;
+    updateState(s => {
+      const all = [...CATEGORIES, ...asArr(s.settings.customCats)];
+      const cur = asArr(s.settings.selectedCats);
+      s.settings.selectedCats = (cur.length === all.length) ? [all[0].id] : all.map(c => c.id);
+    });
+  };
+
+  document.getElementById('addCustomCatBtn').onclick = () => {
+    if (!isHost() || !state) return;
+    const inp = document.getElementById('customCatInput');
+    const txt = inp.value.trim();
+    if (!txt) return;
+    const id = 'custom_' + Date.now();
+    inp.value = '';
+    updateState(s => {
+      const customs = asArr(s.settings.customCats);
+      customs.push({ id, title: txt, desc: 'فئة مخصصة من إعداد اللاعبين' });
+      s.settings.customCats = customs;
+      const sel = asArr(s.settings.selectedCats);
+      sel.push(id);
+      s.settings.selectedCats = sel;
+    });
+  };
+
+  // أزرار الدخول
+  document.getElementById('startLocalBtn').onclick = () => {
+    const name = document.getElementById('myNameInput').value.trim() || 'خلدون';
+    mode = 'local'; roomCode = 'محلي';
+    state = makeInitialState(name, myAvatar);
+    document.getElementById('localAddBox').classList.remove('hidden');
+    startTimerLoop(); renderAll();
+  };
+
+  document.getElementById('createOnlineBtn').onclick = async () => {
+    if (!firebaseReady) return;
+    const btn = document.getElementById('createOnlineBtn');
+    btn.disabled = true; btn.textContent = 'جاري إنشاء الغرفة...';
+    try {
+      const name = document.getElementById('myNameInput').value.trim() || 'خلدون';
+      mode = 'online';
+      const raw = Math.floor(100000 + Math.random() * 899999).toString();
+      roomCode = raw.slice(0,3) + '-' + raw.slice(3);
+      roomRef = db.ref('horoof_rooms/' + raw);
+      document.getElementById('localAddBox').classList.add('hidden');
+
+      const init = makeInitialState(name, myAvatar);
+      await roomRef.set(init);
+      roomRef.on('value', snap => {
+        const val = snap.val();
+        if (val) { state = val; renderAll(); }
+      });
+      startTimerLoop();
+    } catch (err) {
+      alert("تعذر إنشاء الغرفة! تأكد من تفعيل صلاحيات الكتابة في Realtime Database Rules.\n" + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '🌐 إنشاء غرفة أونلاين';
+    }
+  };
+
+  document.getElementById('joinOnlineBtn').onclick = async () => {
+    if (!firebaseReady) return;
+    const raw = document.getElementById('joinCodeInput').value.replace(/\D/g, '');
+    if (raw.length !== 6) { alert("اكتب رمز الغرفة المكون من 6 أرقام."); return; }
+    const btn = document.getElementById('joinOnlineBtn');
+    btn.disabled = true;
+    try {
+      const name = document.getElementById('myNameInput').value.trim() || 'لاعب';
+      mode = 'online';
+      roomCode = raw.slice(0,3) + '-' + raw.slice(3);
+      roomRef = db.ref('horoof_rooms/' + raw);
+      const snap = await roomRef.once('value');
+      if (!snap.exists()) { alert("الغرفة غير موجودة! تأكد من الرمز."); btn.disabled = false; return; }
+
+      document.getElementById('localAddBox').classList.add('hidden');
+      const cur = snap.val();
+      const order = Object.keys(cur.players || {}).length + 1;
+      await roomRef.child('players/' + myId).set({ id: myId, name, avatar: myAvatar, score: 0, isBot: false, order });
+      roomRef.on('value', s => { const v = s.val(); if (v) { state = v; renderAll(); } });
+      startTimerLoop();
+    } catch (err) {
+      alert("تعذر الانضمام للغرفة: " + err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  const urlRoom = new URLSearchParams(location.search).get('room');
+  if (urlRoom) document.getElementById('joinCodeInput').value = urlRoom;
+
+  document.getElementById('addLocalHumanBtn').onclick = () => {
+    const inp = document.getElementById('localPlayerName');
+    const n = inp.value.trim() || ('لاعب ' + (getSortedPlayers().length + 1));
+    const nid = 'loc_' + Math.random().toString(36).slice(2,7);
+    const av = AVATARS[getSortedPlayers().length % AVATARS.length];
+    updateState(s => {
+      s.players[nid] = { id: nid, name: n, avatar: av, score: 0, isBot: false, order: getSortedPlayers().length + 1 };
+    });
+    inp.value = '';
+  };
+
+  document.getElementById('addLocalBotBtn').onclick = () => {
+    const bots = ['أسامة 🤖','فهد 🤖','سعد 🤖','ريم 🤖'];
+    const cnt = getSortedPlayers().length;
+    const nid = 'bot_' + Math.random().toString(36).slice(2,7);
+    updateState(s => {
+      s.players[nid] = { id: nid, name: bots[cnt % bots.length], avatar: '🤖', score: 0, isBot: true, order: cnt + 1 };
+    });
+  };
+
+  document.getElementById('roundsPicker').onclick = e => {
+    if (!isHost() || !e.target.dataset.val) return;
+    const v = Number(e.target.dataset.val);
+    updateState(s => { s.settings.rounds = v; });
+  };
+  document.getElementById('timePicker').onclick = e => {
+    if (!isHost() || !e.target.dataset.val) return;
+    const v = Number(e.target.dataset.val);
+    updateState(s => { s.settings.turnTime = v; });
+  };
+
+  document.getElementById('copyInviteBtn').onclick = () => {
+    const raw = (roomCode || '').replace('-', '');
+    const link = location.origin + location.pathname + (mode === 'online' ? '?room=' + raw : '');
+    navigator.clipboard.writeText(link);
+    alert('تم نسخ رابط الدعوة!\n' + link);
+  };
+  document.getElementById('soundToggleBtn').onclick = e => {
+    soundOn = !soundOn; e.target.textContent = soundOn ? '🔊' : '🔇';
+  };
+  document.getElementById('leaveLobbyBtn').onclick = () => {
+    if (roomRef) {
+      if (state && state.players && state.players[myId]) roomRef.child('players/' + myId).remove();
+      roomRef.off();
+    }
+    clearInterval(localLoopInterval);
+    clearTimeout(botTimeout);
+    state = null; renderAll();
+  };
+
+  // =========================================================================
+  // 6. منطق الجولات والحروف
+  // =========================================================================
+  function pickRandomCategory() {
+    const all = [...CATEGORIES, ...asArr(state.settings.customCats)];
+    const sel = new Set(asArr(state.settings.selectedCats));
+    const pool = all.filter(c => sel.has(c.id));
+    const list = pool.length ? pool : CATEGORIES;
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function startRound(roundNum) {
+    const allPlayers = getSortedPlayers();
+    const cat = pickRandomCategory();
+    updateState(s => {
+      s.status = 'intro';
+      s.game = {
+        round: roundNum,
+        category: cat,
+        aliveIds: allPlayers.map(p => p.id),
+        turnIndex: (roundNum - 1) % allPlayers.length,
+        usedLetters: [],
+        lastLetter: '',
+        introEndsAt: Date.now() + 3500,
+        turnEndsAt: 0,
+        roundWinnerId: '',
+        history: []
+      };
+    });
+  }
+
+  document.getElementById('startGameBtn').onclick = () => {
+    if (!isHost() || getSortedPlayers().length < 2) return;
+    updateState(s => { Object.values(s.players).forEach(p => p.score = 0); });
+    startRound(1);
+  };
+
+  function handleLetterClick(letter) {
+    if (!state || state.status !== 'playing') return;
+    const g = state.game;
+    const alive = asArr(g.aliveIds);
+    const used = asArr(g.usedLetters);
+    const currentId = alive[g.turnIndex];
+    if (mode === 'online' && currentId !== myId) return;
+    if (used.includes(letter)) return;
+
+    sfx('click');
+    updateState(s => {
+      const gm = s.game;
+      const curAlive = asArr(gm.aliveIds);
+      const curUsed = asArr(gm.usedLetters);
+      const hist = asArr(gm.history);
+      hist.push({
+        aliveIds: [...curAlive],
+        turnIndex: gm.turnIndex,
+        usedLetters: [...curUsed],
+        lastLetter: gm.lastLetter || ''
+      });
+      gm.history = hist;
+      curUsed.push(letter);
+      gm.usedLetters = curUsed;
+      gm.lastLetter = letter;
+      gm.turnIndex = (gm.turnIndex + 1) % curAlive.length;
+      gm.turnEndsAt = Date.now() + s.settings.turnTime * 1000;
+
+      if (curUsed.length >= 28) {
+        gm.roundWinnerId = currentId;
+        s.players[currentId].score += 1;
+        s.status = gm.round >= s.settings.rounds ? 'gameEnd' : 'roundEnd';
+      }
+    });
+  }
+
+  function eliminateCurrentPlayer() {
+    if (!state || state.status !== 'playing') return;
+    sfx('out');
+    updateState(s => {
+      const gm = s.game;
+      const curAlive = asArr(gm.aliveIds);
+      const hist = asArr(gm.history);
+      hist.push({
+        aliveIds: [...curAlive],
+        turnIndex: gm.turnIndex,
+        usedLetters: [...asArr(gm.usedLetters)],
+        lastLetter: gm.lastLetter || ''
+      });
+      gm.history = hist;
+      curAlive.splice(gm.turnIndex, 1);
+      gm.aliveIds = curAlive;
+
+      if (curAlive.length <= 1) {
+        const winId = curAlive[0] || Object.keys(s.players)[0];
+        gm.roundWinnerId = winId;
+        s.players[winId].score += 1;
+        s.status = gm.round >= s.settings.rounds ? 'gameEnd' : 'roundEnd';
+        sfx('win');
+      } else {
+        gm.turnIndex = gm.turnIndex % curAlive.length;
+        gm.turnEndsAt = Date.now() + s.settings.turnTime * 1000;
+      }
+    });
+  }
+
+  document.getElementById('rejectBtn').onclick = () => {
+    if (!state || state.status !== 'playing') return;
+    eliminateCurrentPlayer();
+  };
+
+  document.getElementById('undoBtn').onclick = () => {
+    if (!state || state.status !== 'playing') return;
+    const hist = asArr(state.game.history);
+    if (hist.length === 0) return;
+    sfx('click');
+    updateState(s => {
+      const h = asArr(s.game.history);
+      const prev = h.pop();
+      s.game.history = h;
+      s.game.aliveIds = prev.aliveIds;
+      s.game.turnIndex = prev.turnIndex;
+      s.game.usedLetters = prev.usedLetters;
+      s.game.lastLetter = prev.lastLetter;
+      s.game.turnEndsAt = Date.now() + s.settings.turnTime * 1000;
+    });
+  };
+
+  document.getElementById('nextRoundBtn').onclick = () => {
+    if (isHost()) startRound(state.game.round + 1);
+  };
+  document.getElementById('backToLobbyBtn').onclick = () => {
+    if (isHost()) updateState(s => { s.status = 'lobby'; });
+  };
+
+  // =========================================================================
+  // 7. المؤقت والبوت
+  // =========================================================================
+  function startTimerLoop() {
+    clearInterval(localLoopInterval);
+    localLoopInterval = setInterval(() => {
+      if (!state) return;
+      const now = Date.now();
+      if (state.status === 'intro') {
+        const rem = Math.max(0, Math.ceil((state.game.introEndsAt - now) / 1000));
+        document.getElementById('introCountdown').textContent = rem;
+        if (rem <= 0 && isHost()) {
+          updateState(s => { s.status = 'playing'; s.game.turnEndsAt = Date.now() + s.settings.turnTime * 1000; });
+        }
+      } else if (state.status === 'playing') {
+        const rem = Math.max(0, Math.ceil((state.game.turnEndsAt - now) / 1000));
+        document.getElementById('turnTimerBubble').textContent = rem;
+        if (rem <= 3 && rem > 0 && rem !== lastTickSec) { lastTickSec = rem; sfx('tick'); }
+        if (rem <= 0 && isHost()) { lastTickSec = -1; eliminateCurrentPlayer(); }
+      }
+    }, 200);
+  }
+
+  function scheduleBotIfNeeded() {
+    clearTimeout(botTimeout);
+    if (mode !== 'local' || !state || state.status !== 'playing') return;
+    const alive = asArr(state.game.aliveIds);
+    const curId = alive[state.game.turnIndex];
+    const p = state.players[curId];
+    if (p && p.isBot) {
+      const used = asArr(state.game.usedLetters);
+      const avail = ARABIC_LETTERS.filter(l => !used.includes(l));
+      if (!avail.length) return;
+      botTimeout = setTimeout(() => {
+        if (!state || state.status !== 'playing') return;
+        handleLetterClick(avail[Math.floor(Math.random() * avail.length)]);
+      }, 1400 + Math.random() * 2200);
+    }
+  }
+
+  // =========================================================================
+  // 8. تحديث الشاشات
+  // =========================================================================
+  function showScreen(id) {
+    ['homeScreen','lobbyScreen','introScreen','playScreen','resultScreen'].forEach(s => {
+      document.getElementById(s).classList.toggle('hidden', s !== id);
+    });
+    document.getElementById('mainLogo').classList.toggle('hidden', id !== 'homeScreen');
+  }
+
+  function renderAll() {
+    if (!state) { showScreen('homeScreen'); return; }
+
+    if (state.status === 'lobby') {
+      showScreen('lobbyScreen');
+      document.getElementById('lobbyRoomCode').textContent = roomCode;
+      const list = document.getElementById('lobbyPlayersList'); list.innerHTML = '';
+      const players = getSortedPlayers();
+      players.forEach(p => {
+        const row = document.createElement('div'); row.className = 'playerRow';
+        row.innerHTML = `<div class="playerInfo"><div class="avaCircle">${p.avatar}</div><span>${p.name}${p.id === state.hostId ? ' 👑' : ''}</span></div>`;
+        if (isHost() && p.id !== state.hostId) {
+          const kb = document.createElement('button'); kb.className = 'kickBtn'; kb.textContent = '−';
+          kb.onclick = () => updateState(s => { delete s.players[p.id]; });
+          row.appendChild(kb);
+        }
+        list.appendChild(row);
+      });
+
+      document.querySelectorAll('#roundsPicker .segBtn').forEach(b => b.classList.toggle('active', Number(b.dataset.val) === state.settings.rounds));
+      document.querySelectorAll('#timePicker .segBtn').forEach(b => b.classList.toggle('active', Number(b.dataset.val) === state.settings.turnTime));
+      renderCategoryChips();
+
+      const startBtn = document.getElementById('startGameBtn');
+      if (players.length < 2) {
+        startBtn.disabled = true; startBtn.textContent = 'لازم 2 لاعبين على الأقل'; startBtn.className = 'btn btn-gray';
+      } else if (!isHost()) {
+        startBtn.disabled = true; startBtn.textContent = 'بانتظار المضيف يبدأ اللعبة...'; startBtn.className = 'btn btn-gold';
+      } else {
+        startBtn.disabled = false; startBtn.textContent = 'ابدأ اللعبة 🚀'; startBtn.className = 'btn btn-red';
+      }
+    } else if (state.status === 'intro') {
+      showScreen('introScreen');
+      document.getElementById('introRoundPill').textContent = `الجولة ${state.game.round} من ${state.settings.rounds}`;
+      document.getElementById('introModeLabel').textContent = mode === 'online' ? 'أونلاين 🌐' : 'جهاز واحد 📱';
+      document.getElementById('introCatTitle').textContent = state.game.category.title;
+      document.getElementById('introCatDesc').textContent = state.game.category.desc;
+      const alive = asArr(state.game.aliveIds);
+      const fp = state.players[alive[state.game.turnIndex]];
+      if (fp) {
+        document.getElementById('introFirstAva').textContent = fp.avatar;
+        document.getElementById('introFirstName').textContent = fp.name;
+      }
+    } else if (state.status === 'playing') {
+      showScreen('playScreen');
+      const g = state.game;
+      const alive = asArr(g.aliveIds);
+      const used = asArr(g.usedLetters);
+      const curId = alive[g.turnIndex];
+      const nextId = alive[(g.turnIndex + 1) % alive.length];
+      const curP = state.players[curId], nextP = state.players[nextId];
+      const isMine = (mode === 'local') ? !(curP && curP.isBot) : (curId === myId);
+
+      document.getElementById('playRoundPill').textContent = `الجولة ${g.round} من ${state.settings.rounds}`;
+      document.getElementById('playCatPill').textContent = g.category.title;
+      document.getElementById('playAlivePill').textContent = `باقي ${alive.length} من ${getSortedPlayers().length}`;
+
+      const banner = document.getElementById('turnBanner');
+      banner.className = 'turnBanner ' + (isMine ? 'myTurn' : 'otherTurn');
+      document.getElementById('turnAvatar').textContent = curP ? curP.avatar : '😀';
+      document.getElementById('turnTitle').textContent = (mode === 'local' && curP) ? `دور ${curP.name}` : (isMine ? 'دورك!' : (curP ? curP.name : ''));
+      document.getElementById('turnNext').textContent = nextP ? `التالي: ${nextP.name}` : '';
+      document.getElementById('lastPickedBox').textContent = g.lastLetter || '؟';
+
+      const grid = document.getElementById('lettersGrid'); grid.innerHTML = '';
+      ARABIC_LETTERS.forEach(lt => {
+        const btn = document.createElement('button');
+        const isUsed = used.includes(lt);
+        btn.className = 'letterBtn' + (lt === g.lastLetter ? ' lastUsed' : '');
+        btn.textContent = lt;
+        btn.disabled = isUsed || !isMine;
+        btn.onclick = () => handleLetterClick(lt);
+        grid.appendChild(btn);
+      });
+
+      document.getElementById('undoBtn').disabled = asArr(g.history).length === 0;
+      scheduleBotIfNeeded();
+    } else if (state.status === 'roundEnd' || state.status === 'gameEnd') {
+      showScreen('resultScreen');
+      const isFinal = state.status === 'gameEnd';
+      const sorted = getSortedPlayers().sort((a,b) => b.score - a.score);
+      const winP = isFinal ? sorted[0] : (state.players[state.game.roundWinnerId] || sorted[0]);
+
+      document.getElementById('resultHeader').textContent = isFinal ? '🏆 انتهت اللعبة!' : `نتيجة الجولة ${state.game.round} من ${state.settings.rounds}`;
+      document.getElementById('resultWinnerAva').textContent = winP ? winP.avatar : '🏆';
+      document.getElementById('resultBadge').textContent = isFinal ? 'بطل اللعبة' : 'بطل الجولة';
+
+      const charsEl = document.getElementById('resultWinnerChars'); charsEl.innerHTML = '';
+      (winP ? winP.name : '').replace(/\s+/g, '').split('').slice(0, 8).forEach(ch => {
+        const d = document.createElement('div'); d.className = 'wChar'; d.textContent = ch;
+        charsEl.appendChild(d);
+      });
+
+      document.getElementById('rankTitle').textContent = isFinal ? 'الترتيب النهائي' : 'الترتيب الحالي';
+      const lb = document.getElementById('leaderboardList'); lb.innerHTML = '';
+      sorted.forEach((p, idx) => {
+        const r = document.createElement('div'); r.className = 'rankRow';
+        r.innerHTML = `<div>${idx + 1}. ${p.avatar} ${p.name}</div><div style="color:#1565d8;">${p.score} نقطة</div>`;
+        lb.appendChild(r);
+      });
+
+      document.getElementById('nextRoundBtn').classList.toggle('hidden', isFinal || !isHost());
+      document.getElementById('backToLobbyBtn').classList.toggle('hidden', !isFinal || !isHost());
+      if (isFinal) launchConfetti();
+    }
+  }
+})();
+</script>
+</body>
+</html>
