@@ -31,23 +31,24 @@
     overflow-x: hidden;
   }
 
-  .appWrap { width: 100%; max-width: 520px; position: relative; z-index: 2; }
+  .appWrap { width: 100%; max-width: 540px; position: relative; z-index: 2; }
 
   .topBar {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 10px; gap: 6px; flex-wrap: wrap;
   }
   .pill {
-    background: rgba(10, 45, 110, 0.72); color: #fff; padding: 7px 14px;
-    border-radius: 12px; font-weight: bold; font-size: 13px;
-    border: 1px solid rgba(255,255,255,0.18); display: flex; align-items: center; gap: 6px;
+    background: rgba(10, 45, 110, 0.75); color: #fff; padding: 6px 12px;
+    border-radius: 12px; font-weight: bold; font-size: 12.5px;
+    border: 1px solid rgba(255,255,255,0.18); display: flex; align-items: center; gap: 5px;
   }
   .iconBtn {
-    width: 36px; height: 36px; border-radius: 50%; border: none;
-    background: var(--gold); color: #1e293b; font-size: 16px; font-weight: bold;
+    width: 34px; height: 34px; border-radius: 50%; border: none;
+    background: var(--gold); color: #1e293b; font-size: 15px; font-weight: bold;
     cursor: pointer; box-shadow: 0 3px 0 var(--gold-dark); display: flex; align-items: center; justify-content: center;
   }
-  .iconBtn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--gold-dark); }
+  .iconBtn.danger { background: var(--red); color: #fff; box-shadow: 0 3px 0 var(--red-dark); }
+  .iconBtn:active { transform: translateY(2px); }
 
   .card {
     background: var(--card-cream);
@@ -82,7 +83,7 @@
   .btn-green { background: var(--green); color: #fff; box-shadow: 0 4px 0 var(--green-dark); }
   .btn-blue { background: #2563eb; color: #fff; box-shadow: 0 4px 0 #1d4ed8; }
   .btn-gray { background: #94a3b8; color: #fff; box-shadow: 0 4px 0 #64748b; }
-  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
   .avatarRow { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 10px 0 14px; }
   .avaOpt {
@@ -91,15 +92,15 @@
   }
   .avaOpt.active { border-color: var(--bg-blue); background: #dbeafe; transform: scale(1.1); }
 
-  .playersList { display: flex; flex-direction: column; gap: 8px; min-height: 110px; max-height: 210px; overflow-y: auto; margin-bottom: 14px; }
+  .playersList { display: flex; flex-direction: column; gap: 7px; min-height: 105px; max-height: 205px; overflow-y: auto; margin-bottom: 12px; }
   .playerRow {
     background: #fff; padding: 8px 12px; border-radius: 14px; border: 2px solid #e2e8f0;
     display: flex; align-items: center; justify-content: space-between;
   }
-  .playerInfo { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 16px; }
+  .playerInfo { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 15px; }
   .avaCircle {
-    width: 38px; height: 38px; border-radius: 50%; background: #fef3c7; border: 2px solid var(--gold);
-    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    width: 36px; height: 36px; border-radius: 50%; background: #fef3c7; border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
   }
   .kickBtn {
     width: 28px; height: 28px; border-radius: 8px; border: 1px solid #cbd5e1;
@@ -118,7 +119,7 @@
   }
   .segBtn.active { background: var(--gold); border-color: var(--gold-dark); }
 
-  .catChips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 145px; overflow-y: auto; padding: 4px 0; margin: 8px 0; }
+  .catChips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 140px; overflow-y: auto; padding: 4px 0; margin: 8px 0; }
   .catChip {
     padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;
     background: #e2e8f0; color: #334155; cursor: pointer; border: 2px solid transparent;
@@ -141,20 +142,21 @@
   }
 
   .turnBanner {
-    border-radius: 18px; padding: 14px 16px; display: flex; align-items: center;
-    justify-content: space-between; margin-bottom: 12px; border: 2px solid rgba(255,255,255,0.8);
+    border-radius: 18px; padding: 12px 16px; display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 10px; border: 2px solid rgba(255,255,255,0.8);
     box-shadow: 0 6px 16px rgba(0,0,0,0.2); transition: background 0.2s;
   }
   .turnBanner.myTurn { background: var(--gold); color: #1e293b; }
   .turnBanner.otherTurn { background: #ffffff; color: #1e293b; }
 
   .pickedLetterBox {
-    background: #fff; width: 64px; height: 64px; border-radius: 16px;
-    margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
-    font-size: 34px; font-weight: 900; color: var(--bg-blue);
+    background: #fff; width: 62px; height: 62px; border-radius: 16px;
+    margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 32px; font-weight: 900; color: var(--bg-blue);
     box-shadow: 0 6px 14px rgba(0,0,0,0.2); border: 3px solid var(--gold);
   }
 
+  /* لوحة الـ 28 حرف: فصل واضح بين الحروف المتاحة والمستعملة حتى في دور الخصم */
   .lettersWrap {
     background: var(--card-cream); border-radius: 18px; padding: 12px;
     box-shadow: 0 10px 24px rgba(0,0,0,0.28);
@@ -162,17 +164,28 @@
   .lettersGrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .letterBtn {
     aspect-ratio: 1.05; border-radius: 10px; border: 2px solid #cbd5e1;
-    border-bottom: 4px solid #94a3b8; background: #fff; color: #0f172a;
+    border-bottom: 4px solid #94a3b8; background: #ffffff; color: #0f172a;
     font-size: 19px; font-weight: 900; font-family: inherit; cursor: pointer;
     display: flex; align-items: center; justify-content: center; transition: 0.1s;
   }
   .letterBtn:hover:not(:disabled) { background: #eff6ff; border-color: #3b82f6; }
   .letterBtn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
-  .letterBtn:disabled {
-    background: #1d4ed8; color: #93c5fd; border-color: #1e40af; border-bottom-width: 2px;
-    opacity: 0.65; cursor: not-allowed;
+
+  /* متاح لكن ليس دوري الآن */
+  .letterBtn:disabled:not(.used):not(.lastUsed) {
+    background: #ffffff; color: #334155; border-color: #cbd5e1;
+    opacity: 0.94; cursor: not-allowed;
   }
-  .letterBtn.lastUsed { background: var(--bg-blue); color: #fff; border-color: var(--gold); opacity: 1; }
+  /* تم استعماله */
+  .letterBtn.used, .letterBtn.used:disabled {
+    background: #1e3a8a; color: #93c5fd; border-color: #172554; border-bottom-width: 2px;
+    opacity: 0.55; text-decoration: line-through; cursor: not-allowed;
+  }
+  /* آخر حرف تم اختياره */
+  .letterBtn.lastUsed, .letterBtn.lastUsed:disabled {
+    background: #1d4ed8; color: #ffffff; border: 3px solid var(--gold);
+    opacity: 1; text-decoration: none;
+  }
 
   .actionRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 
@@ -185,6 +198,18 @@
     background: #fff; padding: 10px 14px; border-radius: 12px; display: flex;
     align-items: center; justify-content: space-between; margin-bottom: 6px; font-weight: bold;
   }
+  .rankRow.topTie { border: 2px solid var(--gold-dark); background: #fffbeb; }
+
+  /* نافذة التأكيد */
+  .modalOverlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 60;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modalBox {
+    background: #fff; border-radius: 20px; padding: 22px; max-width: 360px; width: 100%;
+    text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+  }
+  .modalBtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
 
   #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
 </style>
@@ -193,10 +218,23 @@
 
 <canvas id="confettiCanvas"></canvas>
 
+<!-- نافذة التأكيد (خروج / إعادة اللعبة) -->
+<div id="confirmModal" class="modalOverlay hidden">
+  <div class="modalBox">
+    <div id="confirmIcon" style="font-size:38px; margin-bottom:8px;">⚠️</div>
+    <h3 id="confirmTitle" style="font-size:19px; margin-bottom:6px;">تأكيد</h3>
+    <p id="confirmDesc" style="color:#64748b; font-size:14px; line-height:1.5;"></p>
+    <div class="modalBtns">
+      <button class="btn btn-red" id="confirmYesBtn">نعم، متأكد</button>
+      <button class="btn btn-gray" id="confirmNoBtn">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 <div class="appWrap">
   <div class="logoBox" id="mainLogo">
     <div class="logoTitle">حروف وثواني</div>
-    <div class="logoSub">16+ فئة مجانية • أونلاين مع ربعك أو على نفس الجهاز</div>
+    <div class="logoSub">32+ فئة مجانية • من 2 إلى 12 لاعب أونلاين أو نفس الجهاز</div>
   </div>
 
   <!-- 1. الشاشة الرئيسية -->
@@ -231,15 +269,19 @@
       <div style="display:flex; gap:6px;">
         <button class="iconBtn" id="copyInviteBtn" title="نسخ رابط الدعوة">🔗</button>
         <button class="iconBtn" id="soundToggleBtn" title="الصوت">🔊</button>
-        <button class="iconBtn" id="leaveLobbyBtn" title="خروج">🚪</button>
+        <button class="iconBtn danger" id="leaveLobbyBtn" title="خروج">🚪</button>
       </div>
     </div>
 
     <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:13px; font-weight:bold; color:#475569;">
+        <span>اللاعبون في الغرفة (<span id="lobbyPlayersCount">1</span> / 12)</span>
+        <span style="color:#1565d8;">شارك الرمز لدخول أكثر من لاعبين!</span>
+      </div>
       <div class="playersList" id="lobbyPlayersList"></div>
 
       <div id="localAddBox" class="hidden" style="display:flex; gap:6px; margin-bottom:10px;">
-        <input type="text" id="localPlayerName" class="inputField" placeholder="اسم لاعب جديد..." maxlength="12" style="padding:8px;">
+        <input type="text" id="localPlayerName" class="inputField" placeholder="أضف لاعب ثالث، رابع..." maxlength="12" style="padding:8px;">
         <button class="btn btn-blue" id="addLocalHumanBtn" style="width:105px; font-size:13px; padding:8px;">+ لاعب</button>
         <button class="btn btn-gray" id="addLocalBotBtn" style="width:95px; font-size:13px; padding:8px;">+ بوت 🤖</button>
       </div>
@@ -265,7 +307,7 @@
 
       <div style="background:#fff; border:2px solid #e2e8f0; border-radius:14px; padding:10px; margin-bottom:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-weight:bold; font-size:13px;">الفئات المختارة (<span id="catSelectedCount">16</span> فئة):</span>
+          <span style="font-weight:bold; font-size:13px;">الفئات المختارة (<span id="catSelectedCount">32</span> فئة):</span>
           <button id="toggleAllCatsBtn" style="border:none; background:#dbeafe; color:#1e40af; padding:3px 9px; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer;">تحديد الكل</button>
         </div>
         <div class="catChips" id="catChips"></div>
@@ -283,7 +325,11 @@
   <div id="introScreen" class="hidden">
     <div class="topBar">
       <div class="pill" id="introRoundPill">الجولة 1 من 5</div>
-      <div class="pill" id="introModeLabel">أونلاين</div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <div class="pill" id="introModeLabel">أونلاين</div>
+        <button class="iconBtn hostRestartBtn hidden" title="إعادة اللعبة من البداية">🔄</button>
+        <button class="iconBtn danger exitGameBtn" title="خروج من اللعبة">🚪</button>
+      </div>
     </div>
     <div class="introCard">
       <div class="catBadge">الفئة</div>
@@ -301,7 +347,11 @@
     <div class="topBar">
       <div class="pill" id="playRoundPill">الجولة 1 من 5</div>
       <div class="pill" style="background:#fff; color:#1e293b;" id="playCatPill">مدن ودول</div>
-      <div class="pill" id="playAlivePill">باقي 2</div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <div class="pill" id="playAlivePill">باقي 2</div>
+        <button class="iconBtn hostRestartBtn hidden" title="إعادة اللعبة من البداية">🔄</button>
+        <button class="iconBtn danger exitGameBtn" title="خروج من اللعبة">🚪</button>
+      </div>
     </div>
 
     <div class="turnBanner myTurn" id="turnBanner">
@@ -329,9 +379,17 @@
 
   <!-- 5. شاشة النتائج -->
   <div id="resultScreen" class="hidden">
+    <div class="topBar">
+      <div class="pill" id="resultTopPill">النتائج</div>
+      <div style="display:flex; gap:6px;">
+        <button class="iconBtn hostRestartBtn hidden" title="إعادة اللعبة من البداية">🔄</button>
+        <button class="iconBtn danger exitGameBtn" title="خروج من اللعبة">🚪</button>
+      </div>
+    </div>
+
     <div class="introCard" style="background:var(--gold); margin-bottom:12px;">
       <div id="resultHeader" style="font-size:15px; font-weight:bold; color:#78350f;">نتيجة الجولة 1 من 5</div>
-      <div id="resultWinnerAva" style="font-size:48px; margin:8px 0;">🤓</div>
+      <div id="resultWinnerAva" style="font-size:44px; margin:8px 0;">🤓</div>
       <div class="winnerLetters" id="resultWinnerChars"></div>
       <div id="resultBadge" style="display:inline-block; background:#1565d8; color:#fff; padding:4px 16px; border-radius:14px; font-weight:bold; font-size:13px;">بطل الجولة</div>
     </div>
@@ -341,7 +399,8 @@
       <div id="leaderboardList"></div>
       <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
         <button class="btn btn-gold" id="nextRoundBtn">الجولة التالية ⬅️</button>
-        <button class="btn btn-red hidden" id="backToLobbyBtn">العودة للغرفة 🔄</button>
+        <button class="btn btn-green hidden" id="hostRestartFinalBtn">🔄 إعادة اللعبة من البداية</button>
+        <button class="btn btn-red hidden" id="backToLobbyBtn">العودة لإعدادات الغرفة</button>
       </div>
     </div>
   </div>
@@ -353,7 +412,7 @@
 <script>
 (() => {
   // =========================================================================
-  // 1. ربط Firebase بمشروع خلدون (memory-game-2f2d4)
+  // 1. ربط Firebase بمشروع خلدون
   // =========================================================================
   const firebaseConfig = {
     apiKey: "AIzaSyDdVdHWz1N62VUCaMvaHhN9KFm8SpqKsqM",
@@ -379,7 +438,7 @@
     : "⚠️ تعذر الاتصال بقاعدة البيانات، يمكنك اللعب بالوضع المحلي.";
 
   // =========================================================================
-  // 2. الحروف العربية (28) والفئات (16+)
+  // 2. الحروف العربية (28) و 32 فئة مستوحاة من ألعاب لمة وفالكونز
   // =========================================================================
   const ARABIC_LETTERS = [
     'أ','ب','ت','ث','ج','ح','خ',
@@ -388,26 +447,42 @@
     'ك','ل','م','ن','هـ','و','ي'
   ];
   const AVATARS = ['🤓','😎','🤠','🥳','🧔','🦁','🦊','🐼','🤖','👾'];
+
   const CATEGORIES = [
     { id:'cities', title:'مدن ودول', desc:'أي مدينة أو دولة بالعالم' },
+    { id:'capitals', title:'عواصم ومعالم', desc:'عاصمة دولة أو معلم سياحي شهير' },
     { id:'red', title:'أشياء حمراء', desc:'أي شيء لونه أحمر' },
+    { id:'green_blue', title:'أشياء خضراء أو زرقاء', desc:'أي شيء لونه أخضر أو أزرق' },
     { id:'study', title:'مواد وتخصصات دراسية', desc:'مادة دراسية أو تخصص جامعي' },
     { id:'animals', title:'حيوانات وطيور', desc:'حيوان بري، بحري، أو طائر' },
-    { id:'food', title:'أكلات ومشروبات', desc:'طبخة، وجبة سريعة، حلى، أو مشروب' },
+    { id:'plants', title:'نباتات وأشجار وزهور', desc:'شجرة، وردة، أو نبات معروف' },
     { id:'fruits', title:'فواكه وخضروات', desc:'أي نوع فاكهة أو خضار' },
+    { id:'food', title:'أكلات ومشروبات', desc:'طبخة، وجبة سريعة، حلى، أو مشروب' },
+    { id:'market', title:'أشياء في السوبرماركت', desc:'أي منتج أو غرض تشتريه من البقالة' },
     { id:'names', title:'أسماء أولاد وبنات', desc:'اسم شخص عربي أو عالمي' },
     { id:'jobs', title:'مهن ووظائف', desc:'أي وظيفة أو مهنة يعمل بها الناس' },
     { id:'house', title:'أشياء في البيت والمطبخ', desc:'أثاث، أجهزة، أو أدوات مطبخ' },
+    { id:'school', title:'أشياء في المدرسة والجامعة', desc:'غرض، مكان، أو أداة دراسية' },
     { id:'brands', title:'ماركات وشركات مشهورة', desc:'شركة تقنية، ملابس، أو مطاعم' },
-    { id:'games', title:'ألعاب فيديو وتطبيقات', desc:'لعبة إلكترونية أو تطبيق جوال' },
+    { id:'games', title:'ألعاب فيديو وتطبيقات', desc:'لعبة إلكترونية، تطبيق، أو موقع' },
     { id:'football', title:'أندية ولاعبين كرة قدم', desc:'نادي رياضي أو لاعب مشهور' },
+    { id:'sports', title:'رياضات وألعاب', desc:'أي رياضة عالمية أو شعبية' },
     { id:'cars', title:'سيارات ووسائل نقل', desc:'شركة سيارات أو وسيلة مواصلات' },
-    { id:'movies', title:'أفلام ومسلسلات وأنمي', desc:'اسم فيلم أو مسلسل أو شخصية أنمي' },
-    { id:'clothes', title:'ملابس وإكسسوارات', desc:'أي قطعة لبس أو إكسسوار' },
-    { id:'plants', title:'نباتات وأشجار وزهور', desc:'شجرة، وردة، أو نبات معروف' }
+    { id:'movies', title:'أفلام ومسلسلات وأنمي', desc:'اسم فيلم أو مسلسل أو أنمي' },
+    { id:'cartoon', title:'شخصيات كرتونية', desc:'شخصية من أفلام الكرتون أو الأنمي' },
+    { id:'clothes', title:'ملابس وإكسسوارات', desc:'أي قطعة لبس، ساعة، أو عطر' },
+    { id:'islamic', title:'معلومات إسلامية وتاريخية', desc:'نبي، صحابي، غزوة، أو شخصية تاريخية' },
+    { id:'tech', title:'تقنية واختراعات', desc:'جهاز إلكتروني أو اختراع مشهور' },
+    { id:'medical', title:'طب وصحة وجسم الإنسان', desc:'عضو في الجسم، مرض، أو دواء' },
+    { id:'space', title:'فضاء وكون وطبيعة', desc:'كوكب، نجم، أو ظاهرة طبيعية' },
+    { id:'fly', title:'أشياء تطير', desc:'طائر، حشرة، أو مركبة تطير في السماء' },
+    { id:'electric', title:'أشياء تشتغل بالكهرباء', desc:'جهاز أو أداة تعمل بالكهرباء' },
+    { id:'hot_cold', title:'أشياء باردة أو ساخنة', desc:'شيء بارد جداً أو حار جداً' },
+    { id:'travel', title:'أشياء تأخذها في السفر', desc:'غرض مهم تحتاجه في السفر والرحلات' },
+    { id:'traits', title:'صفات وأخلاق', desc:'صفة إيجابية أو سلبية في الإنسان' },
+    { id:'street', title:'أشياء موجودة في الشارع', desc:'شيء تشوفه وأنت ماشي بالشارع' }
   ];
 
-  // مساعد آمن لقراءة المصفوفات من Firebase RTDB
   function asArr(v) {
     if (!v) return [];
     return Array.isArray(v) ? v : Object.values(v);
@@ -467,7 +542,29 @@
   }
 
   // =========================================================================
-  // 4. إدارة الحالة والمزامنة
+  // 4. نافذة التأكيد (خروج / إعادة اللعبة)
+  // =========================================================================
+  let confirmCallback = null;
+  function showConfirm(icon, title, desc, yesText, onYes) {
+    document.getElementById('confirmIcon').textContent = icon;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmDesc').textContent = desc;
+    document.getElementById('confirmYesBtn').textContent = yesText;
+    confirmCallback = onYes;
+    document.getElementById('confirmModal').classList.remove('hidden');
+  }
+  document.getElementById('confirmNoBtn').onclick = () => {
+    document.getElementById('confirmModal').classList.add('hidden');
+    confirmCallback = null;
+  };
+  document.getElementById('confirmYesBtn').onclick = () => {
+    document.getElementById('confirmModal').classList.add('hidden');
+    if (confirmCallback) confirmCallback();
+    confirmCallback = null;
+  };
+
+  // =========================================================================
+  // 5. إدارة الحالة والمزامنة
   // =========================================================================
   const myId = 'p_' + Math.random().toString(36).slice(2, 9);
   let myAvatar = AVATARS[0];
@@ -490,7 +587,7 @@
         customCats: []
       },
       players: {
-        [myId]: { id: myId, name: hostName, avatar: hostAvatar, score: 0, isBot: false, order: 1 }
+        [myId]: { id: myId, name: hostName, avatar: hostAvatar, score: 0, isBot: false, order: Date.now() }
       },
       game: {
         round: 1,
@@ -501,7 +598,7 @@
         lastLetter: '',
         turnEndsAt: 0,
         introEndsAt: 0,
-        roundWinnerId: '',
+        roundWinners: [],
         history: []
       }
     };
@@ -517,9 +614,7 @@
         settings: state.settings,
         players: state.players,
         game: state.game
-      }).catch(err => {
-        alert("حدث خطأ في الاتصال بفايربيس: " + err.message);
-      });
+      }).catch(err => alert("خطأ في الاتصال بفايربيس: " + err.message));
     } else {
       renderAll();
     }
@@ -534,7 +629,7 @@
   }
 
   // =========================================================================
-  // 5. بناء الشاشة الرئيسية واللوبي
+  // 6. الشاشة الرئيسية واللوبي
   // =========================================================================
   const avaPicker = document.getElementById('avatarPicker');
   AVATARS.forEach((av, idx) => {
@@ -602,7 +697,6 @@
     });
   };
 
-  // أزرار الدخول
   document.getElementById('startLocalBtn').onclick = () => {
     const name = document.getElementById('myNameInput').value.trim() || 'خلدون';
     mode = 'local'; roomCode = 'محلي';
@@ -631,7 +725,7 @@
       });
       startTimerLoop();
     } catch (err) {
-      alert("تعذر إنشاء الغرفة! تأكد من تفعيل صلاحيات الكتابة في Realtime Database Rules.\n" + err.message);
+      alert("تعذر إنشاء الغرفة: " + err.message);
     } finally {
       btn.disabled = false; btn.textContent = '🌐 إنشاء غرفة أونلاين';
     }
@@ -650,11 +744,14 @@
       roomRef = db.ref('horoof_rooms/' + raw);
       const snap = await roomRef.once('value');
       if (!snap.exists()) { alert("الغرفة غير موجودة! تأكد من الرمز."); btn.disabled = false; return; }
+      const cur = snap.val();
+      const playerCount = Object.keys(cur.players || {}).length;
+      if (playerCount >= 12) { alert("الغرفة ممتلئة (الحد الأقصى 12 لاعب)."); btn.disabled = false; return; }
 
       document.getElementById('localAddBox').classList.add('hidden');
-      const cur = snap.val();
-      const order = Object.keys(cur.players || {}).length + 1;
-      await roomRef.child('players/' + myId).set({ id: myId, name, avatar: myAvatar, score: 0, isBot: false, order });
+      await roomRef.child('players/' + myId).set({
+        id: myId, name, avatar: myAvatar, score: 0, isBot: false, order: Date.now()
+      });
       roomRef.on('value', s => { const v = s.val(); if (v) { state = v; renderAll(); } });
       startTimerLoop();
     } catch (err) {
@@ -668,34 +765,34 @@
   if (urlRoom) document.getElementById('joinCodeInput').value = urlRoom;
 
   document.getElementById('addLocalHumanBtn').onclick = () => {
+    if (getSortedPlayers().length >= 12) { alert("الحد الأقصى 12 لاعب."); return; }
     const inp = document.getElementById('localPlayerName');
     const n = inp.value.trim() || ('لاعب ' + (getSortedPlayers().length + 1));
     const nid = 'loc_' + Math.random().toString(36).slice(2,7);
     const av = AVATARS[getSortedPlayers().length % AVATARS.length];
     updateState(s => {
-      s.players[nid] = { id: nid, name: n, avatar: av, score: 0, isBot: false, order: getSortedPlayers().length + 1 };
+      s.players[nid] = { id: nid, name: n, avatar: av, score: 0, isBot: false, order: Date.now() };
     });
     inp.value = '';
   };
 
   document.getElementById('addLocalBotBtn').onclick = () => {
-    const bots = ['أسامة 🤖','فهد 🤖','سعد 🤖','ريم 🤖'];
+    if (getSortedPlayers().length >= 12) { alert("الحد الأقصى 12 لاعب."); return; }
+    const bots = ['أسامة 🤖','فهد 🤖','سعد 🤖','ريم 🤖','فيصل 🤖','نورة 🤖'];
     const cnt = getSortedPlayers().length;
     const nid = 'bot_' + Math.random().toString(36).slice(2,7);
     updateState(s => {
-      s.players[nid] = { id: nid, name: bots[cnt % bots.length], avatar: '🤖', score: 0, isBot: true, order: cnt + 1 };
+      s.players[nid] = { id: nid, name: bots[cnt % bots.length], avatar: '🤖', score: 0, isBot: true, order: Date.now() };
     });
   };
 
   document.getElementById('roundsPicker').onclick = e => {
     if (!isHost() || !e.target.dataset.val) return;
-    const v = Number(e.target.dataset.val);
-    updateState(s => { s.settings.rounds = v; });
+    updateState(s => { s.settings.rounds = Number(e.target.dataset.val); });
   };
   document.getElementById('timePicker').onclick = e => {
     if (!isHost() || !e.target.dataset.val) return;
-    const v = Number(e.target.dataset.val);
-    updateState(s => { s.settings.turnTime = v; });
+    updateState(s => { s.settings.turnTime = Number(e.target.dataset.val); });
   };
 
   document.getElementById('copyInviteBtn').onclick = () => {
@@ -707,18 +804,59 @@
   document.getElementById('soundToggleBtn').onclick = e => {
     soundOn = !soundOn; e.target.textContent = soundOn ? '🔊' : '🔇';
   };
-  document.getElementById('leaveLobbyBtn').onclick = () => {
-    if (roomRef) {
-      if (state && state.players && state.players[myId]) roomRef.child('players/' + myId).remove();
+
+  // الخروج الآمن من اللعبة (مع إزالة اللاعب من الغرفة الأونلاين)
+  function performExitGame() {
+    if (mode === 'online' && roomRef && state) {
+      const alive = asArr(state.game && state.game.aliveIds).filter(id => id !== myId);
+      roomRef.child('players/' + myId).remove();
+      if (state.status === 'playing' && alive.length > 0) {
+        roomRef.child('game/aliveIds').set(alive);
+        if ((state.game.turnIndex || 0) >= alive.length) {
+          roomRef.child('game/turnIndex').set(0);
+        }
+      }
       roomRef.off();
     }
     clearInterval(localLoopInterval);
     clearTimeout(botTimeout);
-    state = null; renderAll();
+    state = null;
+    renderAll();
+  }
+
+  document.getElementById('leaveLobbyBtn').onclick = () => {
+    showConfirm('🚪', 'الخروج من الغرفة؟', 'هل أنت متأكد أنك تريد مغادرة الغرفة والعودة للشاشة الرئيسية؟', 'نعم، اخرج', performExitGame);
+  };
+
+  document.querySelectorAll('.exitGameBtn').forEach(btn => {
+    btn.onclick = () => {
+      showConfirm('🚪', 'الخروج من اللعبة؟', 'هل أنت متأكد من الخروج؟ ستفقد تقدمك في هذه الجولة إذا خرجت.', 'نعم، اخرج', performExitGame);
+    };
+  });
+
+  // إعادة اللعبة من البداية (للهوست فقط)
+  function restartWholeGame() {
+    if (!isHost() || !state) return;
+    if (getSortedPlayers().length < 2) {
+      updateState(s => { s.status = 'lobby'; });
+      return;
+    }
+    updateState(s => { Object.values(s.players).forEach(p => p.score = 0); });
+    startRound(1);
+  }
+
+  document.querySelectorAll('.hostRestartBtn').forEach(btn => {
+    btn.onclick = () => {
+      if (!isHost()) return;
+      showConfirm('🔄', 'إعادة اللعبة من البداية؟', 'سيتم تصفير جميع النقاط والبدء من الجولة 1 لجميع اللاعبين.', 'نعم، أعد اللعبة', restartWholeGame);
+    };
+  });
+  document.getElementById('hostRestartFinalBtn').onclick = () => {
+    if (isHost()) restartWholeGame();
   };
 
   // =========================================================================
-  // 6. منطق الجولات والحروف
+  // 7. منطق الجولات والحروف والتعادل
   // =========================================================================
   function pickRandomCategory() {
     const all = [...CATEGORIES, ...asArr(state.settings.customCats)];
@@ -742,7 +880,7 @@
         lastLetter: '',
         introEndsAt: Date.now() + 3500,
         turnEndsAt: 0,
-        roundWinnerId: '',
+        roundWinners: [],
         history: []
       };
     });
@@ -782,10 +920,12 @@
       gm.turnIndex = (gm.turnIndex + 1) % curAlive.length;
       gm.turnEndsAt = Date.now() + s.settings.turnTime * 1000;
 
+      // لو انتهت الـ 28 حرفاً بدون إقصاء الباقين -> تعادل! جميع الباقين يحصلون على +1 نقطة
       if (curUsed.length >= 28) {
-        gm.roundWinnerId = currentId;
-        s.players[currentId].score += 1;
+        gm.roundWinners = [...curAlive];
+        curAlive.forEach(pid => { if (s.players[pid]) s.players[pid].score += 1; });
         s.status = gm.round >= s.settings.rounds ? 'gameEnd' : 'roundEnd';
+        sfx('win');
       }
     });
   }
@@ -809,8 +949,8 @@
 
       if (curAlive.length <= 1) {
         const winId = curAlive[0] || Object.keys(s.players)[0];
-        gm.roundWinnerId = winId;
-        s.players[winId].score += 1;
+        gm.roundWinners = [winId];
+        if (s.players[winId]) s.players[winId].score += 1;
         s.status = gm.round >= s.settings.rounds ? 'gameEnd' : 'roundEnd';
         sfx('win');
       } else {
@@ -850,7 +990,7 @@
   };
 
   // =========================================================================
-  // 7. المؤقت والبوت
+  // 8. المؤقت والبوت
   // =========================================================================
   function startTimerLoop() {
     clearInterval(localLoopInterval);
@@ -885,12 +1025,12 @@
       botTimeout = setTimeout(() => {
         if (!state || state.status !== 'playing') return;
         handleLetterClick(avail[Math.floor(Math.random() * avail.length)]);
-      }, 1400 + Math.random() * 2200);
+      }, 1400 + Math.random() * 2000);
     }
   }
 
   // =========================================================================
-  // 8. تحديث الشاشات
+  // 9. تحديث الشاشات
   // =========================================================================
   function showScreen(id) {
     ['homeScreen','lobbyScreen','introScreen','playScreen','resultScreen'].forEach(s => {
@@ -902,11 +1042,15 @@
   function renderAll() {
     if (!state) { showScreen('homeScreen'); return; }
 
+    document.querySelectorAll('.hostRestartBtn').forEach(b => b.classList.toggle('hidden', !isHost()));
+
     if (state.status === 'lobby') {
       showScreen('lobbyScreen');
       document.getElementById('lobbyRoomCode').textContent = roomCode;
       const list = document.getElementById('lobbyPlayersList'); list.innerHTML = '';
       const players = getSortedPlayers();
+      document.getElementById('lobbyPlayersCount').textContent = players.length;
+
       players.forEach(p => {
         const row = document.createElement('div'); row.className = 'playerRow';
         row.innerHTML = `<div class="playerInfo"><div class="avaCircle">${p.avatar}</div><span>${p.name}${p.id === state.hostId ? ' 👑' : ''}</span></div>`;
@@ -928,7 +1072,7 @@
       } else if (!isHost()) {
         startBtn.disabled = true; startBtn.textContent = 'بانتظار المضيف يبدأ اللعبة...'; startBtn.className = 'btn btn-gold';
       } else {
-        startBtn.disabled = false; startBtn.textContent = 'ابدأ اللعبة 🚀'; startBtn.className = 'btn btn-red';
+        startBtn.disabled = false; startBtn.textContent = `ابدأ اللعبة (${players.length} لاعبين) 🚀`; startBtn.className = 'btn btn-red';
       }
     } else if (state.status === 'intro') {
       showScreen('introScreen');
@@ -951,6 +1095,7 @@
       const nextId = alive[(g.turnIndex + 1) % alive.length];
       const curP = state.players[curId], nextP = state.players[nextId];
       const isMine = (mode === 'local') ? !(curP && curP.isBot) : (curId === myId);
+      const amEliminated = (mode === 'online' && !alive.includes(myId));
 
       document.getElementById('playRoundPill').textContent = `الجولة ${g.round} من ${state.settings.rounds}`;
       document.getElementById('playCatPill').textContent = g.category.title;
@@ -959,15 +1104,20 @@
       const banner = document.getElementById('turnBanner');
       banner.className = 'turnBanner ' + (isMine ? 'myTurn' : 'otherTurn');
       document.getElementById('turnAvatar').textContent = curP ? curP.avatar : '😀';
-      document.getElementById('turnTitle').textContent = (mode === 'local' && curP) ? `دور ${curP.name}` : (isMine ? 'دورك!' : (curP ? curP.name : ''));
-      document.getElementById('turnNext').textContent = nextP ? `التالي: ${nextP.name}` : '';
+      document.getElementById('turnTitle').textContent = (mode === 'local' && curP)
+        ? `دور ${curP.name}`
+        : (isMine ? 'دورك!' : (curP ? curP.name : ''));
+      document.getElementById('turnNext').textContent = amEliminated
+        ? 'تم إقصاؤك من هذه الجولة — تتابع اللعب 👀'
+        : (nextP ? `التالي: ${nextP.name}` : '');
       document.getElementById('lastPickedBox').textContent = g.lastLetter || '؟';
 
       const grid = document.getElementById('lettersGrid'); grid.innerHTML = '';
       ARABIC_LETTERS.forEach(lt => {
         const btn = document.createElement('button');
         const isUsed = used.includes(lt);
-        btn.className = 'letterBtn' + (lt === g.lastLetter ? ' lastUsed' : '');
+        const isLast = (lt === g.lastLetter);
+        btn.className = 'letterBtn' + (isLast ? ' lastUsed' : (isUsed ? ' used' : ''));
         btn.textContent = lt;
         btn.disabled = isUsed || !isMine;
         btn.onclick = () => handleLetterClick(lt);
@@ -980,27 +1130,57 @@
       showScreen('resultScreen');
       const isFinal = state.status === 'gameEnd';
       const sorted = getSortedPlayers().sort((a,b) => b.score - a.score);
-      const winP = isFinal ? sorted[0] : (state.players[state.game.roundWinnerId] || sorted[0]);
+      const topScore = sorted.length ? sorted[0].score : 0;
 
-      document.getElementById('resultHeader').textContent = isFinal ? '🏆 انتهت اللعبة!' : `نتيجة الجولة ${state.game.round} من ${state.settings.rounds}`;
-      document.getElementById('resultWinnerAva').textContent = winP ? winP.avatar : '🏆';
-      document.getElementById('resultBadge').textContent = isFinal ? 'بطل اللعبة' : 'بطل الجولة';
+      // تحديد الفائز أو المتعادلين
+      let winners = [];
+      if (isFinal) {
+        winners = sorted.filter(p => p.score === topScore);
+      } else {
+        const rwIds = asArr(state.game.roundWinners);
+        winners = rwIds.map(id => state.players[id]).filter(Boolean);
+        if (!winners.length && sorted.length) winners = [sorted[0]];
+      }
+      const isTie = winners.length > 1;
+
+      document.getElementById('resultHeader').textContent = isFinal
+        ? (isTie ? '🤝 انتهت اللعبة بالتعادل!' : '🏆 انتهت اللعبة!')
+        : `نتيجة الجولة ${state.game.round} من ${state.settings.rounds}`;
+      document.getElementById('resultTopPill').textContent = isFinal ? 'النتيجة النهائية' : `الجولة ${state.game.round}`;
+
+      document.getElementById('resultWinnerAva').textContent = winners.map(w => w.avatar).join('  ');
+      document.getElementById('resultBadge').textContent = isFinal
+        ? (isTie ? 'أبطال اللعبة (تعادل!)' : 'بطل اللعبة')
+        : (isTie ? 'تعادل في الجولة (+1 للجميع)' : 'بطل الجولة');
 
       const charsEl = document.getElementById('resultWinnerChars'); charsEl.innerHTML = '';
-      (winP ? winP.name : '').replace(/\s+/g, '').split('').slice(0, 8).forEach(ch => {
-        const d = document.createElement('div'); d.className = 'wChar'; d.textContent = ch;
-        charsEl.appendChild(d);
-      });
+      if (isTie) {
+        winners.forEach(w => {
+          const badge = document.createElement('div');
+          badge.style.cssText = 'background:#fff; padding:6px 14px; border-radius:12px; font-weight:900; font-size:18px; border-bottom:3px solid #cbd5e1;';
+          badge.textContent = w.name;
+          charsEl.appendChild(badge);
+        });
+      } else if (winners[0]) {
+        winners[0].name.replace(/\s+/g, '').split('').slice(0, 8).forEach(ch => {
+          const d = document.createElement('div'); d.className = 'wChar'; d.textContent = ch;
+          charsEl.appendChild(d);
+        });
+      }
 
       document.getElementById('rankTitle').textContent = isFinal ? 'الترتيب النهائي' : 'الترتيب الحالي';
       const lb = document.getElementById('leaderboardList'); lb.innerHTML = '';
       sorted.forEach((p, idx) => {
-        const r = document.createElement('div'); r.className = 'rankRow';
-        r.innerHTML = `<div>${idx + 1}. ${p.avatar} ${p.name}</div><div style="color:#1565d8;">${p.score} نقطة</div>`;
+        const isTop = p.score === topScore && topScore > 0;
+        const rankNum = isTop ? 1 : (idx + 1);
+        const r = document.createElement('div');
+        r.className = 'rankRow' + (isTop ? ' topTie' : '');
+        r.innerHTML = `<div>${isTop ? '🥇' : rankNum + '.'} ${p.avatar} ${p.name}</div><div style="color:#1565d8;">${p.score} نقطة</div>`;
         lb.appendChild(r);
       });
 
       document.getElementById('nextRoundBtn').classList.toggle('hidden', isFinal || !isHost());
+      document.getElementById('hostRestartFinalBtn').classList.toggle('hidden', !isFinal || !isHost());
       document.getElementById('backToLobbyBtn').classList.toggle('hidden', !isFinal || !isHost());
       if (isFinal) launchConfetti();
     }
