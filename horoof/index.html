@@ -156,7 +156,6 @@
     box-shadow: 0 6px 14px rgba(0,0,0,0.2); border: 3px solid var(--gold);
   }
 
-  /* لوحة الـ 28 حرف: فصل واضح بين الحروف المتاحة والمستعملة حتى في دور الخصم */
   .lettersWrap {
     background: var(--card-cream); border-radius: 18px; padding: 12px;
     box-shadow: 0 10px 24px rgba(0,0,0,0.28);
@@ -171,17 +170,14 @@
   .letterBtn:hover:not(:disabled) { background: #eff6ff; border-color: #3b82f6; }
   .letterBtn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
 
-  /* متاح لكن ليس دوري الآن */
   .letterBtn:disabled:not(.used):not(.lastUsed) {
     background: #ffffff; color: #334155; border-color: #cbd5e1;
     opacity: 0.94; cursor: not-allowed;
   }
-  /* تم استعماله */
   .letterBtn.used, .letterBtn.used:disabled {
     background: #1e3a8a; color: #93c5fd; border-color: #172554; border-bottom-width: 2px;
     opacity: 0.55; text-decoration: line-through; cursor: not-allowed;
   }
-  /* آخر حرف تم اختياره */
   .letterBtn.lastUsed, .letterBtn.lastUsed:disabled {
     background: #1d4ed8; color: #ffffff; border: 3px solid var(--gold);
     opacity: 1; text-decoration: none;
@@ -200,7 +196,6 @@
   }
   .rankRow.topTie { border: 2px solid var(--gold-dark); background: #fffbeb; }
 
-  /* نافذة التأكيد */
   .modalOverlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 60;
     display: flex; align-items: center; justify-content: center; padding: 16px;
@@ -218,7 +213,6 @@
 
 <canvas id="confettiCanvas"></canvas>
 
-<!-- نافذة التأكيد (خروج / إعادة اللعبة) -->
 <div id="confirmModal" class="modalOverlay hidden">
   <div class="modalBox">
     <div id="confirmIcon" style="font-size:38px; margin-bottom:8px;">⚠️</div>
@@ -580,6 +574,7 @@
     return {
       hostId: myId,
       status: 'lobby',
+      usedCatIds: [],
       settings: {
         rounds: 5,
         turnTime: 10,
@@ -611,6 +606,7 @@
     if (mode === 'online' && roomRef) {
       roomRef.update({
         status: state.status,
+        usedCatIds: state.usedCatIds || [],
         settings: state.settings,
         players: state.players,
         game: state.game
@@ -805,7 +801,6 @@
     soundOn = !soundOn; e.target.textContent = soundOn ? '🔊' : '🔇';
   };
 
-  // الخروج الآمن من اللعبة (مع إزالة اللاعب من الغرفة الأونلاين)
   function performExitGame() {
     if (mode === 'online' && roomRef && state) {
       const alive = asArr(state.game && state.game.aliveIds).filter(id => id !== myId);
@@ -834,14 +829,16 @@
     };
   });
 
-  // إعادة اللعبة من البداية (للهوست فقط)
   function restartWholeGame() {
     if (!isHost() || !state) return;
     if (getSortedPlayers().length < 2) {
-      updateState(s => { s.status = 'lobby'; });
+      updateState(s => { s.status = 'lobby'; s.usedCatIds = []; });
       return;
     }
-    updateState(s => { Object.values(s.players).forEach(p => p.score = 0); });
+    updateState(s => {
+      Object.values(s.players).forEach(p => p.score = 0);
+      s.usedCatIds = [];
+    });
     startRound(1);
   }
 
@@ -856,20 +853,34 @@
   };
 
   // =========================================================================
-  // 7. منطق الجولات والحروف والتعادل
+  // 7. منطق الجولات والحروف والتعادل + منع تكرار الفئات في نفس اللعبة
   // =========================================================================
-  function pickRandomCategory() {
-    const all = [...CATEGORIES, ...asArr(state.settings.customCats)];
-    const sel = new Set(asArr(state.settings.selectedCats));
+  function pickUniqueRandomCategory(s) {
+    const all = [...CATEGORIES, ...asArr(s.settings.customCats)];
+    const sel = new Set(asArr(s.settings.selectedCats));
     const pool = all.filter(c => sel.has(c.id));
-    const list = pool.length ? pool : CATEGORIES;
-    return list[Math.floor(Math.random() * list.length)];
+    const basePool = pool.length ? pool : CATEGORIES;
+
+    let used = asArr(s.usedCatIds);
+    let fresh = basePool.filter(c => !used.includes(c.id));
+
+    // إذا استُهلكت كل الفئات المختارة (مثلاً اختار فئتين ولعب 5 جولات) يعيد تدويرها بدون تكرار فئة الجولة السابقة مباشرة
+    if (fresh.length === 0) {
+      used = [];
+      const prevCatId = s.game && s.game.category ? s.game.category.id : '';
+      fresh = basePool.length > 1 ? basePool.filter(c => c.id !== prevCatId) : basePool;
+    }
+
+    const chosen = fresh[Math.floor(Math.random() * fresh.length)];
+    used.push(chosen.id);
+    s.usedCatIds = used;
+    return chosen;
   }
 
   function startRound(roundNum) {
     const allPlayers = getSortedPlayers();
-    const cat = pickRandomCategory();
     updateState(s => {
+      const cat = pickUniqueRandomCategory(s);
       s.status = 'intro';
       s.game = {
         round: roundNum,
@@ -888,7 +899,10 @@
 
   document.getElementById('startGameBtn').onclick = () => {
     if (!isHost() || getSortedPlayers().length < 2) return;
-    updateState(s => { Object.values(s.players).forEach(p => p.score = 0); });
+    updateState(s => {
+      Object.values(s.players).forEach(p => p.score = 0);
+      s.usedCatIds = [];
+    });
     startRound(1);
   };
 
@@ -920,7 +934,6 @@
       gm.turnIndex = (gm.turnIndex + 1) % curAlive.length;
       gm.turnEndsAt = Date.now() + s.settings.turnTime * 1000;
 
-      // لو انتهت الـ 28 حرفاً بدون إقصاء الباقين -> تعادل! جميع الباقين يحصلون على +1 نقطة
       if (curUsed.length >= 28) {
         gm.roundWinners = [...curAlive];
         curAlive.forEach(pid => { if (s.players[pid]) s.players[pid].score += 1; });
@@ -986,7 +999,7 @@
     if (isHost()) startRound(state.game.round + 1);
   };
   document.getElementById('backToLobbyBtn').onclick = () => {
-    if (isHost()) updateState(s => { s.status = 'lobby'; });
+    if (isHost()) updateState(s => { s.status = 'lobby'; s.usedCatIds = []; });
   };
 
   // =========================================================================
@@ -1132,7 +1145,6 @@
       const sorted = getSortedPlayers().sort((a,b) => b.score - a.score);
       const topScore = sorted.length ? sorted[0].score : 0;
 
-      // تحديد الفائز أو المتعادلين
       let winners = [];
       if (isFinal) {
         winners = sorted.filter(p => p.score === topScore);
