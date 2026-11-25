@@ -3,114 +3,437 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>سرعة الكتابة العربية | Speed Typing</title>
-  
+  <title>سرعة الكتابة العربية | استوديو خلدون</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --primary: #6366f1;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg: #0c0c0f;
+      --surface: #141418;
+      --surface-2: #1b1b21;
+      --line: #282832;
+      --line-bright: #3c3c4a;
+      --accent: #fb923c;
+      --volt: #d9ff00;
+      --mint: #00e599;
+      --coral: #ff5252;
+      --amber: #ffb800;
+      --text: #f4f4f6;
+      --muted: #8e8e9e;
+      --mono: 'IBM Plex Mono', monospace;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1.5rem 1rem; }
-    .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 1.2rem; }
-    .top-nav { display: flex; justify-content: space-between; align-items: center; }
-    .back-link { color: var(--text-muted); text-decoration: none; font-size: 0.95rem; font-weight: 600; }
-    
-    .dashboard {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-      background: rgba(30, 41, 59, 0.7);
-      padding: 0.85rem;
-      border-radius: 1rem;
-      border: 1px solid var(--card-border);
-      text-align: center;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .stat-label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.2rem; }
-    .stat-value { font-size: 1.3rem; font-weight: 800; color: #fff; }
-
-    .typing-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 1.25rem;
-      padding: 1.75rem;
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Tajawal', system-ui, sans-serif;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      gap: 1.2rem;
-      text-align: center;
+      align-items: center;
+      padding: 1.5rem 1rem 3rem;
+      overflow-x: hidden;
+      position: relative;
     }
 
-    .word-display {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: #38bdf8;
-      background: #0f172a;
-      padding: 1rem;
-      border-radius: 0.75rem;
-      border: 1px solid var(--card-border);
+    /* خلفية خطوط هندسية وحروف تتحرك يمين ويسار */
+    .bg-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.026) 1px, transparent 1px);
+      background-size: 52px 52px;
     }
-
-    input {
-      width: 100%;
-      padding: 0.85rem 1rem;
-      background: #0b0f19;
-      border: 2px solid var(--card-border);
+    .bg-stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, transparent 20%, var(--bg) 88%);
+    }
+    .bg-marquee-wrap {
+      position: absolute;
+      inset: -10% -5%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      transform: rotate(-4deg);
+      opacity: 0.04;
+    }
+    .bg-marquee-row {
+      display: flex;
+      width: max-content;
+      direction: ltr;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900;
+      white-space: nowrap;
       color: #fff;
-      font-size: 1.15rem;
-      border-radius: 0.75rem;
+    }
+    .bg-marquee-row.go-right { animation: slideRight 44s linear infinite; }
+    .bg-marquee-row.go-left  { animation: slideLeft 50s linear infinite; color: var(--accent); }
+    .bg-marquee-row span { padding: 0 1.4rem; }
+    @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @keyframes slideRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+
+    /* الشريط العلوي */
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      text-decoration: none;
+      padding: 0.48rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .back-link:hover { border-color: var(--accent); transform: translateX(2px); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .mode-tag {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(251, 146, 60, 0.1);
+      border: 1px solid rgba(251, 146, 60, 0.3);
+      padding: 0.38rem 0.7rem;
+      border-radius: 8px;
+    }
+    .sound-btn {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sound-btn:hover { border-color: var(--line-bright); }
+
+    /* لوحة الإحصائيات */
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.85rem 0.75rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-label {
+      display: block;
+      font-size: 0.76rem;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+    .stat-value {
+      font-family: var(--mono);
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .stat-card.accent-card .stat-value { color: var(--accent); }
+    .stat-card.mint-card .stat-value { color: var(--mint); }
+
+    /* بطاقة الكتابة الرئيسية */
+    .typing-card {
+      background: var(--surface);
+      border: 1px solid var(--line-bright);
+      border-radius: 18px;
+      padding: 1.6rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .typing-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 110px;
+      height: 3px;
+      background: var(--accent);
+    }
+
+    /* شريط الوقت */
+    .progress-track {
+      width: 100%;
+      height: 5px;
+      background: #0c0c0f;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .progress-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--volt));
+      transition: width 0.35s linear;
+    }
+
+    .arena-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .player-badge {
+      font-weight: 800;
+      color: var(--text);
+      background: #0c0c0f;
+      border: 1px solid var(--line);
+      padding: 0.22rem 0.65rem;
+      border-radius: 6px;
+    }
+
+    .word-stage {
+      background: #0c0c0f;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 1.35rem 1rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .word-display {
+      font-size: clamp(1.9rem, 5vw, 2.5rem);
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      min-height: 3.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1px;
+      color: var(--text);
+    }
+    .ch-ok { color: var(--mint); }
+    .ch-err { color: var(--coral); text-decoration: underline; }
+    .ch-rem { color: #e2e8f0; }
+
+    .next-word-line {
+      font-size: 0.85rem;
+      color: var(--muted);
+      min-height: 1.25rem;
+    }
+    .next-word-line strong { color: var(--accent); font-weight: 800; }
+
+    input#type-input {
+      width: 100%;
+      padding: 0.95rem 1rem;
+      background: #0c0c0f;
+      border: 2px solid var(--line-bright);
+      color: #fff;
+      font-family: inherit;
+      font-size: 1.25rem;
+      font-weight: 800;
+      border-radius: 12px;
       text-align: center;
       outline: none;
+      transition: border-color 0.15s, transform 0.1s;
     }
-    input:focus { border-color: var(--primary); }
+    input#type-input:focus { border-color: var(--accent); }
+    input#type-input.shake {
+      border-color: var(--coral);
+      animation: shakeX 0.18s ease;
+    }
+    @keyframes shakeX {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
 
-    .btn { background-color: var(--primary); color: #fff; border: none; padding: 0.8rem; font-size: 1rem; font-weight: 700; border-radius: 0.75rem; cursor: pointer; }
-    .leaderboard-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 1rem; padding: 1rem; }
-    .leaderboard-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; display: flex; justify-content: space-between; }
-    .leaderboard-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
-    .leaderboard-item { display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 0.6rem 0.85rem; border-radius: 0.6rem; font-size: 0.9rem; }
+    .btn-main {
+      background: var(--accent);
+      color: #0c0c0f;
+      border: none;
+      border-bottom: 3px solid #c2410c;
+      padding: 0.9rem 1.2rem;
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 900;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+    }
+    .btn-main:hover { background: #fdba74; }
+    .btn-main:active { transform: translateY(2px); }
+
+    /* لوحة الصدارة */
+    .leaderboard-section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.15rem;
+    }
+    .leaderboard-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .live-pill {
+      font-size: 0.76rem;
+      color: var(--mint);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .dot-live {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--mint); box-shadow: 0 0 8px var(--mint);
+    }
+    .leaderboard-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0e0e12;
+      border: 1px solid var(--line);
+      padding: 0.65rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.92rem;
+    }
+    .leaderboard-item.top-1 {
+      border-color: rgba(255, 184, 0, 0.45);
+      background: linear-gradient(90deg, rgba(255, 184, 0, 0.08), #0e0e12);
+    }
+    .wpm-badge {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--accent);
+      background: rgba(251, 146, 60, 0.1);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
 
+  <div class="bg-stage" aria-hidden="true">
+    <div class="bg-marquee-wrap">
+      <div class="bg-marquee-row go-right">
+        <span>أ ب ج د هـ و ز ح ط ي ك ل م ن س ع ف ص ق ر ش ت ث خ ذ ض ظ غ</span>
+        <span>أ ب ج د هـ و ز ح ط ي ك ل م ن س ع ف ص ق ر ش ت ث خ ذ ض ظ غ</span>
+      </div>
+      <div class="bg-marquee-row go-left">
+        <span>SPEED TYPING // WPM CHALLENGE // KHALDUN STUDIO // 30 SEC //</span>
+        <span>SPEED TYPING // WPM CHALLENGE // KHALDUN STUDIO // 30 SEC //</span>
+      </div>
+      <div class="bg-marquee-row go-right">
+        <span>س ر ع ة • ك ت ا ب ة • ت ح د ي • إ ب د ا ع • ن ج ا ح • ط م و ح •</span>
+        <span>س ر ع ة • ك ت ا ب ة • ت ح د ي • إ ب د ا ع • ن ج ا ح • ط م و ح •</span>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="top-nav">
-      <a href="../index.html" class="back-link">← العودة للرئيسية</a>
-      <span style="font-weight: 600; color: var(--text-muted);">سرعة الكتابة ⌨️</span>
+      <a href="../index.html" class="back-link">← العودة للمنصة</a>
+      <div class="nav-right">
+        <span class="mode-tag">WPM // 30S</span>
+        <button class="sound-btn" id="sound-toggle" title="تشغيل/كتم الصوت">🔊</button>
+      </div>
     </div>
 
     <div class="dashboard">
-      <div>
+      <div class="stat-card accent-card">
         <span class="stat-label">الوقت المتبقي</span>
         <span class="stat-value" id="timer">30s</span>
       </div>
-      <div>
+      <div class="stat-card mint-card">
         <span class="stat-label">كلمات صحيحة</span>
         <span class="stat-value" id="score">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">السرعة الحالية</span>
+        <span class="stat-value" id="live-wpm">0</span>
       </div>
     </div>
 
     <div class="typing-card">
-      <div class="word-display" id="word-target">اضغط ابدأ</div>
-      <input type="text" id="type-input" placeholder="اكتب الكلمة هنا واضغط مسافة..." disabled autocomplete="off" />
-      <button class="btn" id="start-btn">ابدأ التحدي (30 ثانية) 🚀</button>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+      <div class="arena-head">
+        <span>⌨️ تحدي سرعة الكتابة العربية</span>
+        <span class="player-badge" id="player-label">المتسابق: ...</span>
+      </div>
+
+      <div class="word-stage">
+        <div class="word-display" id="word-target">اضغط ابدأ</div>
+        <div class="next-word-line" id="next-word-line">تظهر الكلمة القادمة هنا أثناء اللعب</div>
+      </div>
+
+      <input type="text" id="type-input" placeholder="اكتب الكلمة الظاهرة هنا مباشرة..." disabled autocomplete="off" autocorrect="off" spellcheck="false" />
+      <button class="btn-main" id="start-btn">ابدأ التحدي (30 ثانية) 🚀</button>
     </div>
 
     <div class="leaderboard-section">
       <div class="leaderboard-title">
         <span>🏆 الصدارة المباشرة (أسرع كاتب)</span>
-        <span style="font-size: 0.75rem; color: #34d399;">🟢 متصل</span>
+        <span class="live-pill"><span class="dot-live"></span> متصل</span>
       </div>
       <ul class="leaderboard-list" id="leaderboard-list">
-        <li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
+        <li style="color: var(--muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
       </ul>
     </div>
   </div>
@@ -119,7 +442,7 @@
     const WORDS = [
       'سريع', 'برق', 'حاسوب', 'مدينة', 'قهوة', 'شمس', 'قمر', 'تحدي', 'طاقة', 'سماء',
       'بحر', 'جبل', 'نجاح', 'فكرة', 'إبداع', 'صقر', 'همة', 'قوة', 'ذكاء', 'نصر',
-      'عزيمة', 'طموح', 'أمل', 'فرسان', 'صقر', 'شاهين', 'مجد', 'رياض', 'طيبة'
+      'عزيمة', 'طموح', 'أمل', 'فرسان', 'شاهين', 'مجد', 'رياض', 'طيبة', 'برمجة', 'إنجاز'
     ];
 
     const firebaseConfig = {
@@ -138,37 +461,94 @@
     const scoresRef = db.ref('typing_leaderboard');
 
     const wordTarget = document.getElementById('word-target');
+    const nextWordLine = document.getElementById('next-word-line');
     const typeInput = document.getElementById('type-input');
     const startBtn = document.getElementById('start-btn');
     const timerEl = document.getElementById('timer');
     const scoreEl = document.getElementById('score');
+    const liveWpmEl = document.getElementById('live-wpm');
+    const progressFill = document.getElementById('progress-fill');
     const leaderboardList = document.getElementById('leaderboard-list');
+    const soundBtn = document.getElementById('sound-toggle');
+
+    const savedPlayer = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+    document.getElementById('player-label').textContent = `المتسابق: ${savedPlayer}`;
+
+    // مؤثرات صوتية خفيفة
+    let soundOn = true;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    soundBtn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? '🔊' : '🔇';
+    });
+    function playTick(freq = 540, dur = 0.04) {
+      if (!soundOn) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(freq, now);
+      g.gain.setValueAtTime(0.08, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+      o.start(now); o.stop(now + dur);
+    }
 
     let currentWord = '';
+    let nextWord = '';
     let score = 0;
     let timeLeft = 30;
     let timerId = null;
 
-    function newWord() {
-      currentWord = WORDS[Math.floor(Math.random() * WORDS.length)];
-      wordTarget.textContent = currentWord;
+    function pickRandomWord(exclude) {
+      let w = WORDS[Math.floor(Math.random() * WORDS.length)];
+      if (w === exclude) w = WORDS[(WORDS.indexOf(w) + 1) % WORDS.length];
+      return w;
+    }
+
+    function renderWordProgress(typed) {
+      wordTarget.innerHTML = '';
+      for (let i = 0; i < currentWord.length; i++) {
+        const span = document.createElement('span');
+        span.textContent = currentWord[i];
+        if (i < typed.length) {
+          span.className = (typed[i] === currentWord[i]) ? 'ch-ok' : 'ch-err';
+        } else {
+          span.className = 'ch-rem';
+        }
+        wordTarget.appendChild(span);
+      }
+    }
+
+    function advanceWord() {
+      currentWord = nextWord || pickRandomWord('');
+      nextWord = pickRandomWord(currentWord);
+      renderWordProgress('');
+      nextWordLine.innerHTML = `القادمة: <strong>${nextWord}</strong>`;
     }
 
     startBtn.addEventListener('click', () => {
+      clearInterval(timerId);
       score = 0;
       timeLeft = 30;
+      nextWord = '';
       scoreEl.textContent = '0';
+      liveWpmEl.textContent = '0';
       timerEl.textContent = '30s';
+      progressFill.style.width = '100%';
       startBtn.style.display = 'none';
       typeInput.disabled = false;
       typeInput.value = '';
       typeInput.focus();
 
-      newWord();
+      advanceWord();
 
       timerId = setInterval(() => {
         timeLeft--;
         timerEl.textContent = timeLeft + 's';
+        progressFill.style.width = ((timeLeft / 30) * 100) + '%';
+        const elapsed = 30 - timeLeft;
+        if (elapsed > 0) liveWpmEl.textContent = Math.round((score / elapsed) * 60);
         if (timeLeft <= 0) {
           clearInterval(timerId);
           finishGame();
@@ -178,20 +558,34 @@
 
     typeInput.addEventListener('input', () => {
       const val = typeInput.value.trim();
+      renderWordProgress(val);
+
+      if (val.length > 0 && !currentWord.startsWith(val)) {
+        typeInput.classList.remove('shake');
+        void typeInput.offsetWidth;
+        typeInput.classList.add('shake');
+        playTick(210, 0.06);
+      } else if (val.length > 0) {
+        playTick(560, 0.03);
+      }
+
       if (val === currentWord) {
         score++;
         scoreEl.textContent = score;
+        playTick(840, 0.07);
         typeInput.value = '';
-        newWord();
+        advanceWord();
       }
     });
 
     function finishGame() {
       typeInput.disabled = true;
       startBtn.style.display = 'block';
-      startBtn.textContent = 'حاول مجدداً 🔄';
+      startBtn.textContent = 'العب مرة ثانية 🔄';
       const wpm = score * 2;
-      wordTarget.textContent = `خلصت! سرعتك: ${wpm} ك/د`;
+      liveWpmEl.textContent = wpm;
+      wordTarget.innerHTML = `<span style="color: var(--volt);">خلصت! سرعتك: ${wpm} كلمة/د</span>`;
+      nextWordLine.textContent = `مجموع الكلمات الصحيحة: ${score} كلمة`;
 
       const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
       scoresRef.push({ name: playerName, wpm: wpm, words: score, timestamp: Date.now() });
@@ -201,7 +595,7 @@
       const data = snapshot.val();
       leaderboardList.innerHTML = '';
       if (!data) {
-        leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام بعد</li>';
+        leaderboardList.innerHTML = '<li style="color: var(--muted); text-align: center; padding: 0.5rem;">لا توجد أرقام بعد</li>';
         return;
       }
       const list = Object.values(data);
@@ -209,13 +603,13 @@
       const top10 = list.slice(0, 10);
       const medals = ['🥇', '🥈', '🥉'];
       top10.forEach((item, index) => {
-        const rank = medals[index] || `#${index + 1}`;
+        const rank = medals[index] || `0${index + 1}`.slice(-2);
         const li = document.createElement('li');
-        li.className = 'leaderboard-item';
+        li.className = 'leaderboard-item' + (index === 0 ? ' top-1' : '');
         li.innerHTML = `
-          <span style="font-weight: bold; width: 30px;">${rank}</span>
-          <span style="flex: 1; font-weight: 600;">${item.name}</span>
-          <span style="color: var(--text-muted); font-weight: bold;">⌨️ ${item.wpm} كلمة/د</span>
+          <span style="font-family: var(--mono); font-weight: bold; width: 32px;">${rank}</span>
+          <span style="flex: 1; font-weight: 700;">${item.name}</span>
+          <span class="wpm-badge">${item.wpm} WPM</span>
         `;
         leaderboardList.appendChild(li);
       });
