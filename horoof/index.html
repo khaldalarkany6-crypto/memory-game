@@ -3,34 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>حروف وثواني | استوديو خلدون</title>
+<title>حروف وثواني | ألعاب خلدون</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   :root {
-    --bg: #0c0c0f;
-    --surface: #141418;
-    --surface-2: #1b1b21;
-    --line: #282832;
-    --line-bright: #3c3c4a;
-    --accent: #38bdf8;
-    --volt: #d9ff00;
-    --amber: #ffb800;
-    --mint: #00e599;
-    --coral: #ff5252;
-    --text: #f4f4f6;
-    --muted: #8e8e9e;
+    --sky-deep: #0b4f8a;
+    --sky-mid: #1474bd;
+    --sky-bright: #1b88d8;
+    --cream: #fffdf6;
+    --white: #ffffff;
+    --ink: #0f2942;
+    --muted: #5b7083;
+    --border-soft: #e2e8f0;
+    --gold: #ffbe0b;
+    --gold-dark: #d99b00;
+    --mint: #10b981;
+    --mint-dark: #047857;
+    --coral: #ef4444;
+    --coral-dark: #b91c1c;
+    --azure: #0ea5e9;
+    --azure-dark: #0369a1;
     --mono: 'IBM Plex Mono', monospace;
   }
 
   body {
     font-family: 'Tajawal', system-ui, sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
+    background: linear-gradient(155deg, var(--sky-deep) 0%, var(--sky-mid) 52%, #0d4b82 100%);
+    color: var(--ink);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -41,49 +45,29 @@
     position: relative;
   }
 
-  /* خلفية خطوط هندسية وحروف عربية تتحرك يمين ويسار */
-  .bg-stage {
+  /* إضاءات ناعمة تعطي رحابة للعين */
+  body::before {
+    content: '';
     position: fixed;
     inset: 0;
-    z-index: 0;
     pointer-events: none;
-    overflow: hidden;
-    background-image:
-      linear-gradient(to right, rgba(255,255,255,0.026) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255,255,255,0.026) 1px, transparent 1px);
-    background-size: 52px 52px;
+    z-index: 0;
+    background:
+      radial-gradient(circle at 18% 18%, rgba(255, 224, 130, 0.16), transparent 42%),
+      radial-gradient(circle at 82% 80%, rgba(56, 189, 248, 0.22), transparent 45%);
   }
-  .bg-stage::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 50% 35%, transparent 20%, var(--bg) 90%);
-  }
-  .bg-marquee-wrap {
-    position: absolute;
-    inset: -10% -5%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    transform: rotate(-4deg);
-    opacity: 0.045;
-  }
-  .bg-marquee-row {
-    display: flex;
-    width: max-content;
-    direction: ltr;
-    font-size: clamp(2.2rem, 5vw, 4rem);
-    font-weight: 900;
-    white-space: nowrap;
-    color: #fff;
-  }
-  .bg-marquee-row.go-right { animation: slideRight 44s linear infinite; }
-  .bg-marquee-row.go-left  { animation: slideLeft 50s linear infinite; color: var(--accent); }
-  .bg-marquee-row span { padding: 0 1.4rem; }
-  @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-  @keyframes slideRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
 
-  .appWrap { width: 100%; max-width: 560px; position: relative; z-index: 2; }
+  /* كانفاس الحروف والأشكال المتحركة فوق وتحت */
+  #bgFloatCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .appWrap { width: 100%; max-width: 550px; position: relative; z-index: 3; }
 
   .homeTopNav {
     display: flex;
@@ -95,199 +79,197 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    color: var(--text);
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #fff;
     text-decoration: none;
-    padding: 7px 13px;
-    border-radius: 10px;
+    padding: 7px 14px;
+    border-radius: 12px;
     font-size: 13px;
-    font-weight: 700;
-    transition: border-color 0.15s;
+    font-weight: 800;
+    transition: background 0.15s, transform 0.15s;
   }
-  .backLink:hover { border-color: var(--accent); }
+  .backLink:hover { background: rgba(255, 255, 255, 0.26); transform: translateX(2px); }
 
   .topBar {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 10px; gap: 6px; flex-wrap: wrap;
   }
   .pill {
-    background: var(--surface); color: var(--text); padding: 6px 12px;
-    border-radius: 10px; font-weight: 800; font-size: 12.5px;
-    border: 1px solid var(--line-bright); display: flex; align-items: center; gap: 6px;
+    background: rgba(8, 42, 82, 0.55);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    padding: 7px 13px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 13px;
+    border: 1px solid rgba(255,255,255,0.22);
+    display: flex; align-items: center; gap: 6px;
   }
   .iconBtn {
-    width: 35px; height: 35px; border-radius: 10px; border: 1px solid var(--line-bright);
-    background: var(--surface); color: var(--text); font-size: 15px; font-weight: bold;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: border-color 0.15s, transform 0.1s;
+    width: 36px; height: 36px; border-radius: 12px; border: none;
+    background: var(--gold); color: var(--ink); font-size: 15px; font-weight: bold;
+    cursor: pointer; box-shadow: 0 3px 0 var(--gold-dark); display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s;
   }
-  .iconBtn:hover { border-color: var(--amber); }
-  .iconBtn.danger { border-color: rgba(255,82,82,0.4); color: var(--coral); }
-  .iconBtn.danger:hover { background: rgba(255,82,82,0.12); border-color: var(--coral); }
+  .iconBtn.danger { background: var(--coral); color: #fff; box-shadow: 0 3px 0 var(--coral-dark); }
   .iconBtn:active { transform: translateY(2px); }
 
   .card {
-    background: var(--surface);
-    border-radius: 18px;
-    padding: 18px;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
-    border: 1px solid var(--line-bright);
-    position: relative;
-    overflow: hidden;
-  }
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0; right: 0; width: 120px; height: 3px;
-    background: var(--accent);
+    background: var(--cream);
+    border-radius: 22px;
+    padding: 20px;
+    box-shadow: 0 18px 42px rgba(6, 30, 68, 0.32);
+    border: 2px solid rgba(255,255,255,0.85);
   }
   .hidden { display: none !important; }
 
-  .logoBox { text-align: center; margin-bottom: 14px; }
+  .logoBox { text-align: center; margin-bottom: 16px; }
   .logoTag {
     display: inline-block;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    background: rgba(56, 189, 248, 0.1);
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    padding: 3px 10px;
-    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--ink);
+    background: rgba(255, 224, 130, 0.92);
+    padding: 3px 12px;
+    border-radius: 999px;
     margin-bottom: 6px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
   }
   .logoTitle {
-    font-size: 34px; font-weight: 900; color: #fff; letter-spacing: -0.5px;
+    font-size: 38px;
+    font-weight: 900;
+    color: #ffffff;
+    text-shadow: 0 4px 0 #093560, 0 8px 20px rgba(0,0,0,0.25);
+    line-height: 1.15;
   }
-  .logoTitle span { color: var(--amber); }
-  .logoSub { color: var(--muted); font-size: 13px; margin-top: 3px; font-weight: 700; }
+  .logoTitle span { color: var(--gold); }
+  .logoSub { color: #dbeafe; font-size: 13.5px; margin-top: 4px; font-weight: 700; }
 
   .inputField {
-    width: 100%; padding: 11px 14px; border-radius: 11px; border: 1px solid var(--line-bright);
+    width: 100%; padding: 11px 14px; border-radius: 12px; border: 2px solid #cbd5e1;
     font-size: 15px; font-family: inherit; font-weight: 700; outline: none;
-    background: #0c0c0f; color: var(--text); text-align: right; transition: border-color 0.15s;
+    background: #fff; color: var(--ink); text-align: right; transition: border-color 0.15s;
   }
-  .inputField:focus { border-color: var(--accent); }
+  .inputField:focus { border-color: var(--azure); }
 
   .btn {
-    width: 100%; padding: 12px 16px; border-radius: 12px; border: none;
-    font-size: 15px; font-weight: 800; font-family: inherit; cursor: pointer;
+    width: 100%; padding: 12px 16px; border-radius: 14px; border: none;
+    font-size: 15.5px; font-weight: 800; font-family: inherit; cursor: pointer;
     transition: transform 0.1s, opacity 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .btn:active { transform: translateY(2px); }
-  .btn-gold { background: var(--amber); color: #0c0c0f; border-bottom: 3px solid #b45309; }
-  .btn-red { background: var(--coral); color: #fff; border-bottom: 3px solid #b91c1c; }
-  .btn-green { background: var(--mint); color: #0c0c0f; border-bottom: 3px solid #059669; }
-  .btn-blue { background: var(--accent); color: #0c0c0f; border-bottom: 3px solid #0284c7; }
-  .btn-gray { background: #272730; color: var(--text); border: 1px solid var(--line-bright); border-bottom: 3px solid #18181f; }
-  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-gold { background: var(--gold); color: var(--ink); box-shadow: 0 4px 0 var(--gold-dark); }
+  .btn-red { background: var(--coral); color: #fff; box-shadow: 0 4px 0 var(--coral-dark); }
+  .btn-green { background: var(--mint); color: #fff; box-shadow: 0 4px 0 var(--mint-dark); }
+  .btn-blue { background: var(--azure); color: #fff; box-shadow: 0 4px 0 var(--azure-dark); }
+  .btn-gray { background: #94a3b8; color: #fff; box-shadow: 0 4px 0 #64748b; }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
-  .avatarRow { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; margin: 10px 0 14px; }
+  .avatarRow { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 10px 0 14px; }
   .avaOpt {
-    width: 42px; height: 42px; border-radius: 12px; background: #0c0c0f; border: 2px solid var(--line);
-    font-size: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s;
+    width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 3px solid #e2e8f0;
+    font-size: 23px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s;
   }
-  .avaOpt.active { border-color: var(--volt); background: rgba(217, 255, 0, 0.12); transform: scale(1.1); }
+  .avaOpt.active { border-color: var(--azure); background: #e0f2fe; transform: scale(1.12); }
 
   .playersList { display: flex; flex-direction: column; gap: 7px; min-height: 105px; max-height: 205px; overflow-y: auto; margin-bottom: 12px; }
   .playerRow {
-    background: #0e0e12; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line);
+    background: #fff; padding: 8px 12px; border-radius: 14px; border: 2px solid #e2e8f0;
     display: flex; align-items: center; justify-content: space-between;
   }
   .playerInfo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 15px; }
   .avaCircle {
-    width: 36px; height: 36px; border-radius: 10px; background: rgba(255,184,0,0.12); border: 1px solid rgba(255,184,0,0.4);
-    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    width: 38px; height: 38px; border-radius: 50%; background: #fef3c7; border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center; font-size: 21px;
   }
   .kickBtn {
-    width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--line-bright);
-    background: var(--surface-2); color: var(--muted); font-weight: bold; cursor: pointer;
+    width: 28px; height: 28px; border-radius: 8px; border: 1px solid #cbd5e1;
+    background: #f8fafc; color: #64748b; font-weight: bold; cursor: pointer;
   }
-  .kickBtn:hover { background: rgba(255,82,82,0.15); color: var(--coral); border-color: var(--coral); }
+  .kickBtn:hover { background: #fee2e2; color: var(--coral); border-color: var(--coral); }
 
   .settingRow {
-    background: #0e0e12; border: 1px solid var(--line); border-radius: 12px;
+    background: #fff; border: 2px solid #e2e8f0; border-radius: 14px;
     padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
   }
   .segBtns { display: flex; gap: 6px; }
   .segBtn {
-    width: 36px; height: 32px; border-radius: 8px; border: 1px solid var(--line-bright);
-    background: var(--surface); color: var(--text); font-family: var(--mono); font-weight: 700; cursor: pointer;
+    width: 36px; height: 32px; border-radius: 9px; border: 2px solid #e2e8f0;
+    background: #fff; color: var(--ink); font-family: var(--mono); font-weight: 700; cursor: pointer;
   }
-  .segBtn.active { background: var(--amber); color: #0c0c0f; border-color: var(--amber); }
+  .segBtn.active { background: var(--gold); border-color: var(--gold-dark); }
 
   .catChips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 140px; overflow-y: auto; padding: 4px 0; margin: 8px 0; }
   .catChip {
-    padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
-    background: var(--surface-2); color: var(--muted); cursor: pointer; border: 1px solid var(--line);
+    padding: 5px 11px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    background: #f1f5f9; color: #475569; cursor: pointer; border: 2px solid transparent;
   }
-  .catChip.active { background: rgba(56, 189, 248, 0.14); color: var(--accent); border-color: var(--accent); }
+  .catChip.active { background: #e0f2fe; color: #0369a1; border-color: var(--azure); }
 
   .introCard {
-    background: var(--surface); border: 1px solid var(--line-bright); border-radius: 18px;
-    padding: 26px 18px; text-align: center; box-shadow: 0 14px 32px rgba(0,0,0,0.5);
+    background: var(--cream); border-radius: 22px; padding: 28px 18px; text-align: center;
+    box-shadow: 0 18px 40px rgba(6, 30, 68, 0.3); border: 2px solid rgba(255,255,255,0.85);
     position: relative; margin-top: 12px;
   }
   .catBadge {
-    position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
-    background: var(--coral); color: #fff; padding: 3px 16px; border-radius: 8px;
-    font-size: 12px; font-weight: 800;
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: var(--coral); color: #fff; padding: 3px 18px; border-radius: 12px;
+    font-size: 12.5px; font-weight: 800; box-shadow: 0 3px 8px rgba(185,28,28,0.3);
   }
   .timerBubble {
-    width: 54px; height: 54px; border-radius: 14px; background: #0c0c0f; border: 2px solid var(--accent);
+    width: 54px; height: 54px; border-radius: 50%; background: #fff; border: 4px solid var(--azure);
     display: inline-flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--volt); margin-top: 10px;
+    font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--ink); margin-top: 10px;
   }
 
   .turnBanner {
-    border-radius: 16px; padding: 12px 16px; display: flex; align-items: center;
-    justify-content: space-between; margin-bottom: 10px; border: 1px solid var(--line-bright);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.35); transition: all 0.2s;
+    border-radius: 18px; padding: 12px 16px; display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 10px; border: 2px solid rgba(255,255,255,0.9);
+    box-shadow: 0 10px 24px rgba(6, 30, 68, 0.22); transition: all 0.2s;
   }
-  .turnBanner.myTurn {
-    background: linear-gradient(120deg, var(--amber), #f59e0b);
-    color: #0c0c0f; border-color: var(--volt);
-  }
-  .turnBanner.myTurn .avaCircle { background: rgba(12,12,15,0.14); border-color: rgba(12,12,15,0.3); }
-  .turnBanner.myTurn .timerBubble { background: #0c0c0f; color: var(--volt); border-color: #0c0c0f; }
-  .turnBanner.otherTurn { background: var(--surface); color: var(--text); }
+  .turnBanner.myTurn { background: linear-gradient(135deg, #ffd166, var(--gold)); color: var(--ink); }
+  .turnBanner.otherTurn { background: #ffffff; color: var(--ink); }
 
   .pickedLetterBox {
-    background: #0c0c0f; width: 64px; height: 64px; border-radius: 14px;
+    background: #fff; width: 64px; height: 64px; border-radius: 16px;
     margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
-    font-size: 32px; font-weight: 900; color: var(--accent);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.45); border: 2px solid var(--amber);
+    font-size: 34px; font-weight: 900; color: var(--sky-deep);
+    box-shadow: 0 8px 18px rgba(6, 30, 68, 0.24); border: 3px solid var(--gold);
   }
 
-  /* لوحة الـ 28 حرف بأسلوب Keycaps */
+  /* لوحة الحروف الـ 28 الناعمة والمشرقة */
   .lettersWrap {
-    background: var(--surface); border: 1px solid var(--line-bright);
-    border-radius: 18px; padding: 12px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    background: var(--cream);
+    border: 2px solid rgba(255,255,255,0.85);
+    border-radius: 20px;
+    padding: 12px;
+    box-shadow: 0 14px 32px rgba(6, 30, 68, 0.26);
   }
   .lettersGrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .letterBtn {
-    aspect-ratio: 1.05; border-radius: 10px; border: 1px solid var(--line-bright);
-    border-bottom: 4px solid #09090b; background: var(--surface-2); color: #ffffff;
+    aspect-ratio: 1.05; border-radius: 11px; border: 2px solid #cbd5e1;
+    border-bottom: 4px solid #94a3b8; background: #ffffff; color: var(--ink);
     font-size: 19px; font-weight: 900; font-family: inherit; cursor: pointer;
     display: flex; align-items: center; justify-content: center; transition: 0.1s;
   }
-  .letterBtn:hover:not(:disabled) { background: #262632; border-color: var(--accent); color: var(--volt); }
+  .letterBtn:hover:not(:disabled) { background: #e0f2fe; border-color: var(--azure); }
   .letterBtn:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
 
-  /* متاح لكن ليس دوري الآن: يبقى ساطعاً وواضحاً */
+  /* متاح في دور الخصم: يظل أبيض وواضح تماماً */
   .letterBtn:disabled:not(.used):not(.lastUsed) {
-    background: var(--surface-2); color: #e2e8f0; border-color: var(--line-bright);
-    opacity: 0.92; cursor: not-allowed;
+    background: #ffffff; color: #1e293b; border-color: #cbd5e1;
+    opacity: 0.95; cursor: not-allowed;
   }
-  /* تم استعماله */
+  /* حرف مستعمل */
   .letterBtn.used, .letterBtn.used:disabled {
-    background: #0a0a0d; color: #3f3f4e; border-color: #1c1c24; border-bottom-width: 2px;
-    opacity: 0.6; text-decoration: line-through; cursor: not-allowed;
+    background: #1e40af; color: #93c5fd; border-color: #1e3a8a; border-bottom-width: 2px;
+    opacity: 0.52; text-decoration: line-through; cursor: not-allowed;
   }
   /* آخر حرف تم اختياره */
   .letterBtn.lastUsed, .letterBtn.lastUsed:disabled {
-    background: var(--accent); color: #0c0c0f; border: 2px solid var(--volt);
+    background: var(--sky-mid); color: #ffffff; border: 3px solid var(--gold);
     opacity: 1; text-decoration: none;
   }
 
@@ -295,24 +277,23 @@
 
   .winnerLetters { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
   .wChar {
-    width: 38px; height: 42px; background: #0c0c0f; color: #fff; border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.2); border-bottom: 3px solid #000;
-    display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900;
+    width: 38px; height: 42px; background: #fff; color: var(--ink); border-radius: 10px;
+    border-bottom: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 900;
   }
   .rankRow {
-    background: #0e0e12; border: 1px solid var(--line); padding: 10px 14px; border-radius: 12px;
+    background: #fff; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 12px;
     display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-weight: 800;
   }
-  .rankRow.topTie { border-color: var(--amber); background: rgba(255, 184, 0, 0.08); }
+  .rankRow.topTie { border: 2px solid var(--gold-dark); background: #fffbeb; }
 
   .modalOverlay {
-    position: fixed; inset: 0; background: rgba(12,12,15,0.82); backdrop-filter: blur(5px); z-index: 60;
+    position: fixed; inset: 0; background: rgba(8, 30, 62, 0.65); backdrop-filter: blur(5px); z-index: 60;
     display: flex; align-items: center; justify-content: center; padding: 16px;
   }
   .modalBox {
-    background: var(--surface); border: 1px solid var(--line-bright); border-radius: 18px;
-    padding: 22px; max-width: 360px; width: 100%; text-align: center;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    background: var(--cream); border-radius: 22px; padding: 22px; max-width: 360px; width: 100%;
+    text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,0.35); border: 2px solid #fff;
   }
   .modalBtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
 
@@ -321,29 +302,13 @@
 </head>
 <body>
 
-<div class="bg-stage" aria-hidden="true">
-  <div class="bg-marquee-wrap">
-    <div class="bg-marquee-row go-right">
-      <span>أ ب ج د هـ و ز ح ط ي ك ل م ن س ع ف ص ق ر ش ت ث خ ذ ض ظ غ</span>
-      <span>أ ب ج د هـ و ز ح ط ي ك ل م ن س ع ف ص ق ر ش ت ث خ ذ ض ظ غ</span>
-    </div>
-    <div class="bg-marquee-row go-left">
-      <span>HOROOF &amp; SECONDS // 32 CATEGORIES // KHALDUN STUDIO // MULTIPLAYER //</span>
-      <span>HOROOF &amp; SECONDS // 32 CATEGORIES // KHALDUN STUDIO // MULTIPLAYER //</span>
-    </div>
-    <div class="bg-marquee-row go-right">
-      <span>ح ر و ف • ث و ا ن ي • ت ح د ي • ف ئ ا ت • أ و ن ل ا ي ن • خ ل د و ن •</span>
-      <span>ح ر و ف • ث و ا ن ي • ت ح د ي • ف ئ ا ت • أ و ن ل ا ي ن • خ ل د و ن •</span>
-    </div>
-  </div>
-</div>
-
+<canvas id="bgFloatCanvas" aria-hidden="true"></canvas>
 <canvas id="confettiCanvas"></canvas>
 
 <div id="confirmModal" class="modalOverlay hidden">
   <div class="modalBox">
     <div id="confirmIcon" style="font-size:38px; margin-bottom:8px;">⚠️</div>
-    <h3 id="confirmTitle" style="font-size:19px; margin-bottom:6px; color:#fff;">تأكيد</h3>
+    <h3 id="confirmTitle" style="font-size:19px; margin-bottom:6px;">تأكيد</h3>
     <p id="confirmDesc" style="color:var(--muted); font-size:14px; line-height:1.5;"></p>
     <div class="modalBtns">
       <button class="btn btn-red" id="confirmYesBtn">نعم، متأكد</button>
@@ -355,23 +320,23 @@
 <div class="appWrap">
   <div class="homeTopNav" id="homeTopNav">
     <a href="../index.html" class="backLink">← العودة للمنصة</a>
-    <span style="font-family:var(--mono); font-size:12px; color:var(--accent); font-weight:700;">LIVE // 32+ CATS</span>
+    <span style="font-family:var(--mono); font-size:12px; color:#e0f2fe; font-weight:700; background:rgba(8,42,82,0.45); padding:5px 10px; border-radius:8px;">32+ فئة مجانية</span>
   </div>
 
   <div class="logoBox" id="mainLogo">
-    <div class="logoTag">// KHALDUN MULTIPLAYER</div>
+    <div class="logoTag">✨ ألعاب اللمة والجمعات</div>
     <div class="logoTitle">حروف <span>وثواني</span></div>
-    <div class="logoSub">32+ فئة مجانية • من 2 إلى 12 لاعب أونلاين أو نفس الجهاز</div>
+    <div class="logoSub">من 2 إلى 12 لاعب • أونلاين مع ربعك أو على نفس الجهاز</div>
   </div>
 
   <!-- 1. الشاشة الرئيسية -->
   <div id="homeScreen" class="card">
     <div style="margin-bottom:12px;">
-      <label style="font-weight:700; font-size:13px; color:var(--muted); display:block; margin-bottom:5px;">اسمك في اللعبة:</label>
+      <label style="font-weight:800; font-size:13px; color:var(--muted); display:block; margin-bottom:5px;">اسمك في اللعبة:</label>
       <input type="text" id="myNameInput" class="inputField" placeholder="اكتب اسمك (مثلاً: خلدون)" maxlength="14" value="خلدون">
     </div>
 
-    <div style="text-align:center; font-size:13px; color:var(--muted); font-weight:700;">اختر شخصيتك:</div>
+    <div style="text-align:center; font-size:13px; color:var(--muted); font-weight:800;">اختر شخصيتك:</div>
     <div class="avatarRow" id="avatarPicker"></div>
 
     <div style="display:flex; flex-direction:column; gap:10px;">
@@ -382,17 +347,17 @@
         <button class="btn btn-blue" id="joinOnlineBtn" style="width:130px;">انضمام</button>
       </div>
 
-      <hr style="border:none; border-top:1px dashed var(--line-bright); margin:4px 0;">
+      <hr style="border:none; border-top:1px dashed #cbd5e1; margin:4px 0;">
 
       <button class="btn btn-green" id="startLocalBtn">📱 لعب سريع بدون إنترنت (نفس الجهاز / ضد بوت)</button>
     </div>
-    <p id="fbNotice" style="margin-top:10px; font-size:12px; color:var(--mint); font-weight:700; text-align:center;"></p>
+    <p id="fbNotice" style="margin-top:10px; font-size:12px; color:var(--mint-dark); font-weight:800; text-align:center;"></p>
   </div>
 
   <!-- 2. شاشة اللوبي -->
   <div id="lobbyScreen" class="hidden">
     <div class="topBar">
-      <div class="pill">رمز الغرفة: <span id="lobbyRoomCode" style="font-family:var(--mono); color:var(--volt); letter-spacing:1px;">---</span></div>
+      <div class="pill">رمز الغرفة: <span id="lobbyRoomCode" style="font-family:var(--mono); color:var(--gold); letter-spacing:1px;">---</span></div>
       <div style="display:flex; gap:6px;">
         <button class="iconBtn" id="copyInviteBtn" title="نسخ رابط الدعوة">🔗</button>
         <button class="iconBtn" id="soundToggleBtn" title="الصوت">🔊</button>
@@ -401,9 +366,9 @@
     </div>
 
     <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:13px; font-weight:700; color:var(--muted);">
-        <span>اللاعبون (<span id="lobbyPlayersCount" style="color:#fff;">1</span> / 12)</span>
-        <span style="color:var(--accent);">شارك الرمز لدخول أكثر من لاعبين!</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:13px; font-weight:800; color:var(--muted);">
+        <span>اللاعبون (<span id="lobbyPlayersCount" style="color:var(--ink);">1</span> / 12)</span>
+        <span style="color:var(--azure-dark);">شارك الرمز لدخول أكثر من لاعبين!</span>
       </div>
       <div class="playersList" id="lobbyPlayersList"></div>
 
@@ -414,7 +379,7 @@
       </div>
 
       <div class="settingRow">
-        <span style="font-weight:700; font-size:14px;">عدد الجولات</span>
+        <span style="font-weight:800; font-size:14px;">عدد الجولات</span>
         <div class="segBtns" id="roundsPicker">
           <button class="segBtn" data-val="3">3</button>
           <button class="segBtn active" data-val="5">5</button>
@@ -424,7 +389,7 @@
       </div>
 
       <div class="settingRow">
-        <span style="font-weight:700; font-size:14px;">وقت الدور (ثواني)</span>
+        <span style="font-weight:800; font-size:14px;">وقت الدور (ثواني)</span>
         <div class="segBtns" id="timePicker">
           <button class="segBtn active" data-val="10">10</button>
           <button class="segBtn" data-val="15">15</button>
@@ -432,10 +397,10 @@
         </div>
       </div>
 
-      <div style="background:#0e0e12; border:1px solid var(--line); border-radius:12px; padding:10px; margin-bottom:12px;">
+      <div style="background:#fff; border:2px solid #e2e8f0; border-radius:14px; padding:10px; margin-bottom:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-weight:700; font-size:13px;">الفئات المختارة (<span id="catSelectedCount" style="color:var(--volt);">32</span> فئة):</span>
-          <button id="toggleAllCatsBtn" style="border:1px solid rgba(56,189,248,0.3); background:rgba(56,189,248,0.1); color:var(--accent); padding:3px 9px; border-radius:7px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">تحديد الكل</button>
+          <span style="font-weight:800; font-size:13px;">الفئات المختارة (<span id="catSelectedCount" style="color:var(--azure-dark);">32</span> فئة):</span>
+          <button id="toggleAllCatsBtn" style="border:none; background:#e0f2fe; color:#0369a1; padding:3px 10px; border-radius:8px; font-size:11px; font-weight:800; cursor:pointer; font-family:inherit;">تحديد الكل</button>
         </div>
         <div class="catChips" id="catChips"></div>
         <div id="customCatRow" style="display:flex; gap:6px; margin-top:6px;">
@@ -460,11 +425,11 @@
     </div>
     <div class="introCard">
       <div class="catBadge">الفئة</div>
-      <h2 id="introCatTitle" style="font-size:28px; margin:8px 0 4px; font-weight:900; color:#fff;">مدن ودول</h2>
-      <p id="introCatDesc" style="color:var(--muted); font-size:14px; margin-bottom:18px;">أي مدينة أو دولة بالعالم</p>
-      <div style="font-size:13px; color:var(--muted); margin-bottom:6px;">البداية مع</div>
+      <h2 id="introCatTitle" style="font-size:28px; margin:8px 0 4px; font-weight:900; color:var(--ink);">مدن ودول</h2>
+      <p id="introCatDesc" style="color:var(--muted); font-size:14.5px; margin-bottom:18px;">أي مدينة أو دولة بالعالم</p>
+      <div style="font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:700;">البداية مع</div>
       <div id="introFirstAva" style="font-size:44px;">🤓</div>
-      <div id="introFirstName" style="font-size:20px; font-weight:900; margin-top:4px; color:var(--volt);">خلدون</div>
+      <div id="introFirstName" style="font-size:21px; font-weight:900; margin-top:4px; color:var(--sky-deep);">خلدون</div>
       <div class="timerBubble" id="introCountdown">4</div>
     </div>
   </div>
@@ -473,7 +438,7 @@
   <div id="playScreen" class="hidden">
     <div class="topBar">
       <div class="pill" id="playRoundPill">الجولة 1 من 5</div>
-      <div class="pill" style="border-color:var(--accent); color:var(--accent);" id="playCatPill">مدن ودول</div>
+      <div class="pill" style="background:#fff; color:var(--ink);" id="playCatPill">مدن ودول</div>
       <div style="display:flex; gap:6px; align-items:center;">
         <div class="pill" id="playAlivePill">باقي 2</div>
         <button class="iconBtn hostRestartBtn hidden" title="إعادة اللعبة من البداية">🔄</button>
@@ -485,8 +450,8 @@
       <div style="display:flex; align-items:center; gap:10px;">
         <div class="avaCircle" id="turnAvatar">🤓</div>
         <div>
-          <div id="turnTitle" style="font-size:20px; font-weight:900;">دورك!</div>
-          <div id="turnNext" style="font-size:12px; opacity:0.85; font-weight:700;">التالي: أسامة</div>
+          <div id="turnTitle" style="font-size:21px; font-weight:900;">دورك!</div>
+          <div id="turnNext" style="font-size:12.5px; opacity:0.85; font-weight:700;">التالي: أسامة</div>
         </div>
       </div>
       <div class="timerBubble" id="turnTimerBubble" style="margin:0; width:48px; height:48px; font-size:20px;">10</div>
@@ -514,11 +479,11 @@
       </div>
     </div>
 
-    <div class="introCard" style="background:linear-gradient(135deg, #271f09, var(--surface)); border-color:var(--amber); margin-bottom:12px;">
-      <div id="resultHeader" style="font-size:15px; font-weight:800; color:var(--amber);">نتيجة الجولة 1 من 5</div>
-      <div id="resultWinnerAva" style="font-size:44px; margin:8px 0;">🤓</div>
+    <div class="introCard" style="background:linear-gradient(135deg, #ffe082, var(--gold)); margin-bottom:12px;">
+      <div id="resultHeader" style="font-size:15px; font-weight:800; color:#78350f;">نتيجة الجولة 1 من 5</div>
+      <div id="resultWinnerAva" style="font-size:46px; margin:8px 0;">🤓</div>
       <div class="winnerLetters" id="resultWinnerChars"></div>
-      <div id="resultBadge" style="display:inline-block; background:var(--amber); color:#0c0c0f; padding:4px 16px; border-radius:8px; font-weight:900; font-size:13px;">بطل الجولة</div>
+      <div id="resultBadge" style="display:inline-block; background:var(--sky-deep); color:#fff; padding:4px 16px; border-radius:12px; font-weight:800; font-size:13px;">بطل الجولة</div>
     </div>
 
     <div class="card">
@@ -527,7 +492,7 @@
       <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
         <button class="btn btn-gold" id="nextRoundBtn">الجولة التالية ⬅️</button>
         <button class="btn btn-green hidden" id="hostRestartFinalBtn">🔄 إعادة اللعبة من البداية</button>
-        <button class="btn btn-gray hidden" id="backToLobbyBtn">العودة لإعدادات الغرفة</button>
+        <button class="btn btn-red hidden" id="backToLobbyBtn">العودة لإعدادات الغرفة</button>
       </div>
     </div>
   </div>
@@ -538,6 +503,80 @@
 
 <script>
 (() => {
+  // =========================================================================
+  // 0. خلفية الحروف العشوائية والأشكال المتحركة فوق وتحت بانسيابية
+  // =========================================================================
+  const bgCanvas = document.getElementById('bgFloatCanvas');
+  const bgCtx = bgCanvas.getContext('2d');
+  const FLOAT_CHARS = ['أ','ب','ت','ث','ج','ح','خ','د','ر','ز','س','ش','ص','ض','ط','ع','غ','ف','ق','ك','ل','م','ن','هـ','و','ي','★','✦','◆'];
+  let floaters = [];
+
+  function initBgFloaters() {
+    bgCanvas.width = window.innerWidth;
+    bgCanvas.height = window.innerHeight;
+    const count = Math.min(44, Math.max(22, Math.floor((bgCanvas.width * bgCanvas.height) / 28000)));
+    floaters = Array.from({ length: count }, (_, i) => ({
+      x: Math.random() * bgCanvas.width,
+      y: Math.random() * bgCanvas.height,
+      char: FLOAT_CHARS[Math.floor(Math.random() * FLOAT_CHARS.length)],
+      size: 20 + Math.random() * 34,
+      vy: (i % 2 === 0 ? -1 : 1) * (0.25 + Math.random() * 0.55), // بعضها يصعد فوق وبعضها ينزل تحت
+      swayAmp: 10 + Math.random() * 20,
+      swayFreq: 0.0007 + Math.random() * 0.001,
+      phase: Math.random() * Math.PI * 2,
+      rot: (Math.random() - 0.5) * 0.5,
+      rotSpeed: (Math.random() - 0.5) * 0.004,
+      isTile: Math.random() < 0.35,
+      gold: Math.random() < 0.28,
+      alpha: 0.07 + Math.random() * 0.1
+    }));
+  }
+
+  function animateBgFloaters(t) {
+    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+    for (const f of floaters) {
+      f.y += f.vy;
+      f.rot += f.rotSpeed;
+      const drawX = f.x + Math.sin(t * f.swayFreq + f.phase) * f.swayAmp;
+
+      if (f.vy < 0 && f.y < -70) {
+        f.y = bgCanvas.height + 70;
+        f.x = Math.random() * bgCanvas.width;
+        f.char = FLOAT_CHARS[Math.floor(Math.random() * FLOAT_CHARS.length)];
+      } else if (f.vy > 0 && f.y > bgCanvas.height + 70) {
+        f.y = -70;
+        f.x = Math.random() * bgCanvas.width;
+        f.char = FLOAT_CHARS[Math.floor(Math.random() * FLOAT_CHARS.length)];
+      }
+
+      bgCtx.save();
+      bgCtx.translate(drawX, f.y);
+      bgCtx.rotate(f.rot);
+      bgCtx.globalAlpha = f.alpha;
+
+      if (f.isTile) {
+        const s = f.size * 1.45;
+        bgCtx.strokeStyle = f.gold ? '#ffbe0b' : '#ffffff';
+        bgCtx.lineWidth = 2;
+        bgCtx.beginPath();
+        if (bgCtx.roundRect) bgCtx.roundRect(-s / 2, -s / 2, s, s, 10);
+        else bgCtx.rect(-s / 2, -s / 2, s, s);
+        bgCtx.stroke();
+      }
+
+      bgCtx.fillStyle = f.gold ? '#ffd166' : '#ffffff';
+      bgCtx.font = `900 ${Math.round(f.size)}px Tajawal, Tahoma, sans-serif`;
+      bgCtx.textAlign = 'center';
+      bgCtx.textBaseline = 'middle';
+      bgCtx.fillText(f.char, 0, 2);
+      bgCtx.restore();
+    }
+    requestAnimationFrame(animateBgFloaters);
+  }
+  initBgFloaters();
+  window.addEventListener('resize', initBgFloaters);
+  requestAnimationFrame(animateBgFloaters);
+
   // =========================================================================
   // 1. ربط Firebase بمشروع خلدون
   // =========================================================================
@@ -564,12 +603,11 @@
     ? "✅ السيرفر السحابي متصل! أنشئ غرفة أونلاين وشارك الرابط مع أصدقائك مجاناً."
     : "⚠️ تعذر الاتصال بقاعدة البيانات، يمكنك اللعب بالوضع المحلي.";
 
-  // سحب الاسم المحفوظ من المنصة الرئيسية إن وجد
   const savedNick = localStorage.getItem('player_nickname');
   if (savedNick) document.getElementById('myNameInput').value = savedNick;
 
   // =========================================================================
-  // 2. الحروف العربية (28) و 32 فئة مستوحاة من ألعاب لمة وفالكونز
+  // 2. الحروف العربية (28) و 32 فئة
   // =========================================================================
   const ARABIC_LETTERS = [
     'أ','ب','ت','ث','ج','ح','خ',
@@ -660,7 +698,7 @@
     const pieces = Array.from({length: 95}, () => ({
       x: Math.random()*c.width, y: -20 - Math.random()*200,
       vx: (Math.random()-0.5)*5, vy: 3 + Math.random()*5,
-      col: ['#d9ff00','#ff5252','#00e599','#38bdf8','#ffb800'][Math.floor(Math.random()*5)],
+      col: ['#ffbe0b','#ef4444','#10b981','#38bdf8','#f472b6'][Math.floor(Math.random()*5)],
       sz: 6 + Math.random()*7
     }));
     let frames = 0;
@@ -1379,7 +1417,7 @@
       if (isTie) {
         winners.forEach(w => {
           const badge = document.createElement('div');
-          badge.style.cssText = 'background:#0c0c0f; color:#fff; border:1px solid var(--amber); padding:6px 14px; border-radius:10px; font-weight:900; font-size:18px;';
+          badge.style.cssText = 'background:#fff; color:var(--ink); border:2px solid var(--gold-dark); padding:6px 14px; border-radius:12px; font-weight:900; font-size:18px;';
           badge.textContent = w.name;
           charsEl.appendChild(badge);
         });
@@ -1397,7 +1435,7 @@
         const rankNum = isTop ? 1 : (idx + 1);
         const r = document.createElement('div');
         r.className = 'rankRow' + (isTop ? ' topTie' : '');
-        r.innerHTML = `<div>${isTop ? '🥇' : rankNum + '.'} ${p.avatar} ${p.name}</div><div style="font-family:var(--mono); color:var(--accent);">${p.score} PTS</div>`;
+        r.innerHTML = `<div>${isTop ? '🥇' : rankNum + '.'} ${p.avatar} ${p.name}</div><div style="font-family:var(--mono); color:var(--sky-deep);">${p.score} نقطة</div>`;
         lb.appendChild(r);
       });
 
