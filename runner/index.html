@@ -2,63 +2,348 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>التفادي الفضائي | Space Dodger</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>التفادي الفضائي | استوديو خلدون</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --primary: #6366f1;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg: #0c0c0f;
+      --surface: #141418;
+      --line: #282832;
+      --line-bright: #3c3c4a;
+      --accent: #ff5252;
+      --volt: #d9ff00;
+      --sky: #38bdf8;
+      --mint: #00e599;
+      --amber: #ffb800;
+      --text: #f4f4f6;
+      --muted: #8e8e9e;
+      --mono: 'IBM Plex Mono', monospace;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; user-select: none; }
-    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1.5rem 1rem; }
-    .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 1rem; }
-    .top-nav { display: flex; justify-content: space-between; align-items: center; }
-    .back-link { color: var(--text-muted); text-decoration: none; font-size: 0.95rem; font-weight: 600; }
-    
-    canvas {
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Tajawal', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem 3rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .bg-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.026) 1px, transparent 1px);
+      background-size: 52px 52px;
+    }
+    .bg-stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, transparent 20%, var(--bg) 88%);
+    }
+    .bg-marquee-wrap {
+      position: absolute;
+      inset: -10% -5%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      transform: rotate(-4deg);
+      opacity: 0.04;
+    }
+    .bg-marquee-row {
+      display: flex;
+      width: max-content;
+      direction: ltr;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900;
+      white-space: nowrap;
+      color: #fff;
+    }
+    .bg-marquee-row.go-right { animation: slideRight 44s linear infinite; }
+    .bg-marquee-row.go-left  { animation: slideLeft 50s linear infinite; color: var(--accent); }
+    .bg-marquee-row span { padding: 0 1.4rem; }
+    @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @keyframes slideRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+    .container {
+      position: relative;
+      z-index: 2;
       width: 100%;
-      height: 380px;
-      background: #020617;
-      border: 2px solid var(--card-border);
-      border-radius: 1rem;
+      max-width: 540px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      text-decoration: none;
+      padding: 0.48rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .back-link:hover { border-color: var(--accent); transform: translateX(2px); }
+
+    .nav-right { display: flex; align-items: center; gap: 0.5rem; }
+    .mode-tag {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(255, 82, 82, 0.1);
+      border: 1px solid rgba(255, 82, 82, 0.3);
+      padding: 0.38rem 0.7rem;
+      border-radius: 8px;
+    }
+    .sound-btn {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* لوحة الإحصائيات */
+    .hud-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    .stat-label { display: block; font-size: 0.74rem; color: var(--muted); font-weight: 700; margin-bottom: 0.15rem; }
+    .stat-value { font-family: var(--mono); font-size: 1.35rem; font-weight: 700; color: #fff; }
+
+    /* إطار اللعبة */
+    .arena-wrap {
+      background: var(--surface);
+      border: 1px solid var(--line-bright);
+      border-radius: 18px;
+      padding: 0.85rem;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .arena-wrap::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; width: 110px; height: 3px;
+      background: var(--accent);
+    }
+
+    .canvas-box {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #08080c;
+    }
+    canvas#gameCanvas {
+      width: 100%;
+      height: 390px;
       display: block;
       touch-action: none;
+      cursor: crosshair;
     }
 
-    .btn { background-color: var(--primary); color: #fff; border: none; padding: 0.8rem; font-size: 1rem; font-weight: 700; border-radius: 0.75rem; cursor: pointer; }
-    .leaderboard-section { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 1rem; padding: 1rem; }
-    .leaderboard-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; display: flex; justify-content: space-between; }
+    .overlay-msg {
+      position: absolute;
+      inset: 0;
+      background: rgba(12, 12, 15, 0.78);
+      backdrop-filter: blur(3px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      text-align: center;
+      padding: 1.5rem;
+    }
+    .overlay-msg.hidden { display: none; }
+    .overlay-msg h2 { font-size: 1.75rem; font-weight: 900; }
+    .overlay-msg p { color: var(--muted); font-size: 0.92rem; max-width: 30ch; }
+
+    .btn-main {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-bottom: 3px solid #b91c1c;
+      padding: 0.85rem 1.6rem;
+      font-family: inherit;
+      font-size: 1.02rem;
+      font-weight: 900;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+      width: 100%;
+    }
+    .btn-main:hover { background: #ff6b6b; }
+    .btn-main:active { transform: translateY(2px); }
+
+    .controls-note {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+      padding: 0 0.25rem;
+    }
+
+    /* لوحة الصدارة */
+    .leaderboard-section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.15rem;
+    }
+    .leaderboard-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .live-pill { font-size: 0.76rem; color: var(--mint); display: inline-flex; align-items: center; gap: 0.35rem; }
+    .dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 8px var(--mint); }
     .leaderboard-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
-    .leaderboard-item { display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.6); padding: 0.6rem 0.85rem; border-radius: 0.6rem; font-size: 0.9rem; }
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0e0e12;
+      border: 1px solid var(--line);
+      padding: 0.65rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.92rem;
+    }
+    .leaderboard-item.top-1 {
+      border-color: rgba(255, 184, 0, 0.45);
+      background: linear-gradient(90deg, rgba(255, 184, 0, 0.08), #0e0e12);
+    }
+    .score-badge {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--accent);
+      background: rgba(255, 82, 82, 0.12);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
 
+  <div class="bg-stage" aria-hidden="true">
+    <div class="bg-marquee-wrap">
+      <div class="bg-marquee-row go-right">
+        <span>ت ف ا د ي • ف ض ا ء • ن ي ا ز ك • س ر ع ة • م ر ك ب ة • ت ح د ي •</span>
+        <span>ت ف ا د ي • ف ض ا ء • ن ي ا ز ك • س ر ع ة • م ر ك ب ة • ت ح د ي •</span>
+      </div>
+      <div class="bg-marquee-row go-left">
+        <span>SPACE DODGER // ARCADE // KHALDUN STUDIO // AVOID METEORS //</span>
+        <span>SPACE DODGER // ARCADE // KHALDUN STUDIO // AVOID METEORS //</span>
+      </div>
+      <div class="bg-marquee-row go-right">
+        <span>خ ل د و ن • أ ر ك ي د • ت ح ط ي م • أ ر ق ا م • ق ي ا س ي ة •</span>
+        <span>خ ل د و ن • أ ر ك ي د • ت ح ط ي م • أ ر ق ا م • ق ي ا س ي ة •</span>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="top-nav">
-      <a href="../index.html" class="back-link">← العودة للرئيسية</a>
-      <span style="font-weight: 600; color: var(--text-muted);">التفادي الفضائي 🚀</span>
+      <a href="../index.html" class="back-link">← العودة للمنصة</a>
+      <div class="nav-right">
+        <span class="mode-tag">ARCADE // DODGE</span>
+        <button class="sound-btn" id="sound-toggle" title="تشغيل/كتم الصوت">🔊</button>
+      </div>
     </div>
 
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <button class="btn" id="start-btn">ابدأ اللعبة 🎮 (اسحب أو استخدم الأسهم)</button>
+    <div class="hud-grid">
+      <div class="stat-card">
+        <span class="stat-label">المسافة الحالية</span>
+        <span class="stat-value" id="hud-score" style="color: var(--volt);">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">أفضل رقم لك</span>
+        <span class="stat-value" id="hud-best" style="color: var(--mint);">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">مستوى الخطر</span>
+        <span class="stat-value" id="hud-level" style="color: var(--accent);">1x</span>
+      </div>
+    </div>
+
+    <div class="arena-wrap">
+      <div class="canvas-box">
+        <canvas id="gameCanvas" width="440" height="390"></canvas>
+        <div class="overlay-msg" id="game-overlay">
+          <h2 id="ov-title" style="color: var(--volt);">🚀 التفادي الفضائي</h2>
+          <p id="ov-desc">تجاوز عاصفة النيازك لأطول مسافة ممكنة! تحرك بالأسهم أو الماوس أو اسحب بإصبعك.</p>
+          <button class="btn-main" id="start-btn" style="max-width: 240px;">انطلق الآن 🔥</button>
+        </div>
+      </div>
+
+      <div class="controls-note">
+        <span>🎮 التحكم: الأسهم / A-D / سحب الماوس أو اللمس</span>
+        <span id="player-tag" style="color: var(--text); font-weight: 700;"></span>
+      </div>
+    </div>
 
     <div class="leaderboard-section">
       <div class="leaderboard-title">
-        <span>🏆 الصدارة المباشرة (أعلى مسافة ونقاط)</span>
-        <span style="font-size: 0.75rem; color: #34d399;">🟢 متصل</span>
+        <span>🏆 الصدارة المباشرة (أعلى مسافة)</span>
+        <span class="live-pill"><span class="dot-live"></span> متصل</span>
       </div>
       <ul class="leaderboard-list" id="leaderboard-list">
-        <li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
+        <li style="color: var(--muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
       </ul>
     </div>
   </div>
@@ -81,115 +366,307 @@
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('game-overlay');
+    const ovTitle = document.getElementById('ov-title');
+    const ovDesc = document.getElementById('ov-desc');
     const startBtn = document.getElementById('start-btn');
+    const hudScore = document.getElementById('hud-score');
+    const hudBest = document.getElementById('hud-best');
+    const hudLevel = document.getElementById('hud-level');
     const leaderboardList = document.getElementById('leaderboard-list');
+    const soundBtn = document.getElementById('sound-toggle');
 
-    let player = { x: 185, y: 340, size: 30, speed: 7 };
+    const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+    document.getElementById('player-tag').textContent = `👤 ${playerName}`;
+    let personalBest = Number(localStorage.getItem('runner_personal_best') || 0);
+    hudBest.textContent = personalBest;
+
+    // مؤثرات صوتية
+    let soundOn = true;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    soundBtn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? '🔊' : '🔇';
+    });
+    function playSfx(type) {
+      if (!soundOn) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      if (type === 'start') {
+        o.type = 'triangle'; o.frequency.setValueAtTime(280, now); o.frequency.exponentialRampToValueAtTime(620, now + 0.14);
+        g.gain.setValueAtTime(0.12, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        o.start(now); o.stop(now + 0.14);
+      } else if (type === 'boom') {
+        o.type = 'sawtooth'; o.frequency.setValueAtTime(160, now); o.frequency.exponentialRampToValueAtTime(38, now + 0.35);
+        g.gain.setValueAtTime(0.18, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        o.start(now); o.stop(now + 0.35);
+      }
+    }
+
+    // نجوم الخلفية
+    const stars = Array.from({ length: 55 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.6 + 0.5,
+      sp: Math.random() * 1.8 + 0.6
+    }));
+
+    let player = { x: canvas.width / 2, y: canvas.height - 46, r: 13, vx: 0, tilt: 0 };
     let obstacles = [];
+    let particles = [];
     let score = 0;
-    let gameInterval = null;
     let isPlaying = false;
+    let shakeTime = 0;
+    let lastTime = 0;
+    let spawnAcc = 0;
+    const keys = { left: false, right: false };
+
+    function makeMeteor(speedMult) {
+      const r = 12 + Math.random() * 15;
+      const verts = [];
+      const sides = 7 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < sides; i++) {
+        const ang = (i / sides) * Math.PI * 2;
+        const rad = r * (0.76 + Math.random() * 0.34);
+        verts.push({ x: Math.cos(ang) * rad, y: Math.sin(ang) * rad });
+      }
+      return {
+        x: r + Math.random() * (canvas.width - r * 2),
+        y: -r - 10,
+        r,
+        speed: (2.8 + Math.random() * 2.5) * speedMult,
+        rot: Math.random() * Math.PI * 2,
+        rotSp: (Math.random() - 0.5) * 0.08,
+        verts,
+        hot: Math.random() < 0.35
+      };
+    }
+
+    function spawnExplosion(x, y) {
+      for (let i = 0; i < 26; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = 1.5 + Math.random() * 5;
+        particles.push({
+          x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+          life: 1, col: ['#ff5252', '#ffb800', '#d9ff00', '#ffffff'][i % 4],
+          sz: 2 + Math.random() * 3.5
+        });
+      }
+    }
+
+    function drawShip(x, y, tilt) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(tilt);
+
+      // شعلة المحرك
+      const flameH = 11 + Math.random() * 7;
+      ctx.fillStyle = '#ff5252';
+      ctx.beginPath();
+      ctx.moveTo(-6, 13); ctx.lineTo(0, 13 + flameH); ctx.lineTo(6, 13);
+      ctx.closePath(); ctx.fill();
+
+      ctx.fillStyle = '#d9ff00';
+      ctx.beginPath();
+      ctx.moveTo(-3, 13); ctx.lineTo(0, 13 + flameH * 0.6); ctx.lineTo(3, 13);
+      ctx.closePath(); ctx.fill();
+
+      // جسم المركبة
+      ctx.fillStyle = '#f4f4f6';
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -18);
+      ctx.lineTo(14, 12);
+      ctx.lineTo(5, 9);
+      ctx.lineTo(0, 14);
+      ctx.lineTo(-5, 9);
+      ctx.lineTo(-14, 12);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // قمرة القيادة
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.ellipse(0, -2, 3.5, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawMeteor(m) {
+      ctx.save();
+      ctx.translate(m.x, m.y);
+      ctx.rotate(m.rot);
+      ctx.fillStyle = m.hot ? '#2b1818' : '#1b1b24';
+      ctx.strokeStyle = m.hot ? '#ff5252' : '#71717a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      m.verts.forEach((v, idx) => idx === 0 ? ctx.moveTo(v.x, v.y) : ctx.lineTo(v.x, v.y));
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
 
     function resetGame() {
-      player.x = 185;
+      player = { x: canvas.width / 2, y: canvas.height - 46, r: 13, vx: 0, tilt: 0 };
       obstacles = [];
+      particles = [];
       score = 0;
-    }
-
-    function spawnObstacle() {
-      const size = Math.random() * 25 + 20;
-      obstacles.push({
-        x: Math.random() * (canvas.width - size),
-        y: -size,
-        size: size,
-        speed: Math.random() * 3 + 3 + (score / 150)
-      });
-    }
-
-    function update() {
-      score++;
-      if (Math.random() < 0.05) spawnObstacle();
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // رسم اللاعب (مركبة)
-      ctx.font = '28px system-ui';
-      ctx.fillText('🚀', player.x, player.y);
-
-      // رسم وتحريك العقبات
-      for (let i = 0; i < obstacles.length; i++) {
-        let obs = obstacles[i];
-        obs.y += obs.speed;
-        ctx.fillText('☄️', obs.x, obs.y);
-
-        // اصطدام
-        if (
-          player.x < obs.x + obs.size &&
-          player.x + 25 > obs.x &&
-          player.y - 25 < obs.y &&
-          player.y > obs.y - obs.size
-        ) {
-          gameOver();
-          return;
-        }
-      }
-
-      // تصفية العقبات اللي طلعت
-      obstacles = obstacles.filter(o => o.y < canvas.height + 50);
-
-      // عرض النقاط
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 16px system-ui';
-      ctx.fillText(`النقاط: ${score}`, 15, 30);
-
-      if (isPlaying) requestAnimationFrame(update);
+      spawnAcc = 0;
+      shakeTime = 0;
+      hudScore.textContent = '0';
+      hudLevel.textContent = '1.0x';
     }
 
     function gameOver() {
       isPlaying = false;
-      startBtn.style.display = 'block';
-      startBtn.textContent = 'إعادة اللعب 🔄';
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#ef4444';
-      ctx.font = 'bold 30px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('تحطمت المركبة! 💥', canvas.width / 2, canvas.height / 2);
-      ctx.fillStyle = '#fff';
-      ctx.font = '18px system-ui';
-      ctx.fillText(`مجموع نقاطك: ${score}`, canvas.width / 2, canvas.height / 2 + 40);
-      ctx.textAlign = 'start';
+      shakeTime = 18;
+      playSfx('boom');
+      spawnExplosion(player.x, player.y);
 
-      const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
-      scoresRef.push({ name: playerName, score: score, timestamp: Date.now() });
+      const finalScore = Math.floor(score);
+      if (finalScore > personalBest) {
+        personalBest = finalScore;
+        localStorage.setItem('runner_personal_best', personalBest);
+        hudBest.textContent = personalBest;
+      }
+
+      const currentName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+      scoresRef.push({ name: currentName, score: finalScore, timestamp: Date.now() });
+
+      setTimeout(() => {
+        ovTitle.style.color = 'var(--accent)';
+        ovTitle.textContent = '💥 تحطمت المركبة!';
+        ovDesc.textContent = `حققت مسافة ${finalScore} متر. هل تقدر تكسر رقمك؟`;
+        startBtn.textContent = 'إعادة الانطلاق 🔄';
+        overlay.classList.remove('hidden');
+      }, 360);
+    }
+
+    function loop(now) {
+      const dt = lastTime ? Math.min(2.2, (now - lastTime) / 16.667) : 1;
+      lastTime = now;
+
+      ctx.save();
+      if (shakeTime > 0) {
+        shakeTime -= dt;
+        ctx.translate((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 8);
+      }
+
+      ctx.fillStyle = '#08080c';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // نجوم الخلفية
+      stars.forEach(s => {
+        s.y += s.sp * (isPlaying ? 1.6 : 0.4) * dt;
+        if (s.y > canvas.height) { s.y = -2; s.x = Math.random() * canvas.width; }
+        ctx.fillStyle = `rgba(255,255,255,${0.25 + s.r * 0.25})`;
+        ctx.fillRect(s.x, s.y, s.r, s.r);
+      });
+
+      if (isPlaying) {
+        score += 0.65 * dt;
+        const speedMult = 1 + Math.min(1.8, score / 450);
+        hudScore.textContent = Math.floor(score);
+        hudLevel.textContent = speedMult.toFixed(1) + 'x';
+
+        // حركة اللاعب
+        const moveSp = 5.8;
+        if (keys.left) player.vx = -moveSp;
+        else if (keys.right) player.vx = moveSp;
+        else player.vx *= 0.78;
+
+        player.x = Math.max(18, Math.min(canvas.width - 18, player.x + player.vx * dt));
+        player.tilt = Math.max(-0.35, Math.min(0.35, player.vx * 0.055));
+
+        spawnAcc += dt * (0.045 + Math.min(0.055, score / 3500));
+        if (spawnAcc >= 1) {
+          spawnAcc = 0;
+          obstacles.push(makeMeteor(speedMult));
+        }
+
+        drawShip(player.x, player.y, player.tilt);
+
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+          const m = obstacles[i];
+          m.y += m.speed * dt;
+          m.rot += m.rotSp * dt;
+          drawMeteor(m);
+
+          const dist = Math.hypot(player.x - m.x, player.y - m.y);
+          if (dist < player.r + m.r * 0.78) {
+            gameOver();
+            break;
+          }
+          if (m.y > canvas.height + 50) obstacles.splice(i, 1);
+        }
+      }
+
+      // جزيئات الانفجار
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt; p.y += p.vy * dt; p.life -= 0.03 * dt;
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.col;
+        ctx.fillRect(p.x, p.y, p.sz, p.sz);
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+
+      if (isPlaying || particles.length > 0) requestAnimationFrame(loop);
     }
 
     startBtn.addEventListener('click', () => {
       resetGame();
       isPlaying = true;
-      startBtn.style.display = 'none';
-      update();
+      lastTime = performance.now();
+      overlay.classList.add('hidden');
+      playSfx('start');
+      requestAnimationFrame(loop);
     });
 
-    // تحكم الكيبورد واللمس
+    // رسم أولي للخلفية
+    requestAnimationFrame(loop);
+
+    // تحكم الكيبورد (مع دعم العربية/الإنجليزية)
     window.addEventListener('keydown', e => {
-      if (!isPlaying) return;
-      if (e.key === 'ArrowRight' || e.key === 'd') player.x = Math.min(canvas.width - 30, player.x + 25);
-      if (e.key === 'ArrowLeft' || e.key === 'a') player.x = Math.max(0, player.x - 25);
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'ش') keys.left = true;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'ي') keys.right = true;
+    });
+    window.addEventListener('keyup', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'ش') keys.left = false;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'ي') keys.right = false;
     });
 
-    canvas.addEventListener('touchmove', e => {
+    // تحكم اللمس وسحب الماوس
+    function moveToClientX(clientX) {
       if (!isPlaying) return;
       const rect = canvas.getBoundingClientRect();
-      const touchX = e.touches[0].clientX - rect.left;
-      player.x = Math.max(0, Math.min(canvas.width - 30, (touchX / rect.width) * canvas.width - 15));
+      const nx = ((clientX - rect.left) / rect.width) * canvas.width;
+      const prev = player.x;
+      player.x = Math.max(18, Math.min(canvas.width - 18, nx));
+      player.vx = (player.x - prev) * 0.7;
+    }
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      moveToClientX(e.touches[0].clientX);
+    }, { passive: false });
+    canvas.addEventListener('mousemove', e => {
+      if (e.buttons === 1 || isPlaying) moveToClientX(e.clientX);
     });
 
+    // الصدارة
     scoresRef.on('value', snapshot => {
       const data = snapshot.val();
       leaderboardList.innerHTML = '';
       if (!data) {
-        leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام بعد</li>';
+        leaderboardList.innerHTML = '<li style="color: var(--muted); text-align: center; padding: 0.5rem;">لا توجد أرقام بعد</li>';
         return;
       }
       const list = Object.values(data);
@@ -197,13 +674,13 @@
       const top10 = list.slice(0, 10);
       const medals = ['🥇', '🥈', '🥉'];
       top10.forEach((item, index) => {
-        const rank = medals[index] || `#${index + 1}`;
+        const rank = medals[index] || `0${index + 1}`.slice(-2);
         const li = document.createElement('li');
-        li.className = 'leaderboard-item';
+        li.className = 'leaderboard-item' + (index === 0 ? ' top-1' : '');
         li.innerHTML = `
-          <span style="font-weight: bold; width: 30px;">${rank}</span>
-          <span style="flex: 1; font-weight: 600;">${item.name}</span>
-          <span style="color: var(--text-muted); font-weight: bold;">🚀 ${item.score} م</span>
+          <span style="font-family: var(--mono); font-weight: bold; width: 32px;">${rank}</span>
+          <span style="flex: 1; font-weight: 700;">${item.name}</span>
+          <span class="score-badge">${item.score} M</span>
         `;
         leaderboardList.appendChild(li);
       });
