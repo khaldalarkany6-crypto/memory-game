@@ -2,29 +2,35 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تحدي سرعة النقر | 10s Click Test</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تحدي سرعة النقر | استوديو خلدون</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
-      --accent: #f59e0b;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg: #0c0c0f;
+      --surface: #141418;
+      --line: #282832;
+      --line-bright: #3c3c4a;
+      --accent: #f472b6;
+      --volt: #d9ff00;
+      --mint: #00e599;
+      --amber: #ffb800;
+      --text: #f4f4f6;
+      --muted: #8e8e9e;
+      --mono: 'IBM Plex Mono', monospace;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
@@ -33,179 +39,367 @@
     body {
       background-color: var(--bg);
       color: var(--text);
+      font-family: 'Tajawal', system-ui, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 1.5rem 1rem;
+      padding: 1.5rem 1rem 3rem;
+      overflow-x: hidden;
+      position: relative;
     }
 
-    .container {
-      width: 100%;
-      max-width: 500px;
+    .bg-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.026) 1px, transparent 1px);
+      background-size: 52px 52px;
+    }
+    .bg-stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, transparent 20%, var(--bg) 88%);
+    }
+    .bg-marquee-wrap {
+      position: absolute;
+      inset: -10% -5%;
       display: flex;
       flex-direction: column;
-      gap: 1.2rem;
+      justify-content: space-around;
+      transform: rotate(-4deg);
+      opacity: 0.04;
+    }
+    .bg-marquee-row {
+      display: flex;
+      width: max-content;
+      direction: ltr;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900;
+      white-space: nowrap;
+      color: #fff;
+    }
+    .bg-marquee-row.go-right { animation: slideRight 44s linear infinite; }
+    .bg-marquee-row.go-left  { animation: slideLeft 50s linear infinite; color: var(--accent); }
+    .bg-marquee-row span { padding: 0 1.4rem; }
+    @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @keyframes slideRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.05rem;
     }
 
     .top-nav {
-      width: 100%;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 0.75rem;
     }
-
     .back-link {
-      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
       text-decoration: none;
-      font-size: 0.95rem;
-      font-weight: 600;
+      padding: 0.48rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .back-link:hover { border-color: var(--accent); transform: translateX(2px); }
+
+    .nav-right { display: flex; align-items: center; gap: 0.5rem; }
+    .mode-tag {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(244, 114, 182, 0.12);
+      border: 1px solid rgba(244, 114, 182, 0.32);
+      padding: 0.38rem 0.7rem;
+      border-radius: 8px;
+    }
+    .sound-btn {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
+    /* لوحة الإحصائيات */
     .dashboard {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-      background: rgba(30, 41, 59, 0.7);
-      padding: 0.85rem;
-      border-radius: 1rem;
-      border: 1px solid var(--card-border);
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.75rem 0.6rem;
       text-align: center;
     }
+    .stat-label { display: block; font-size: 0.74rem; color: var(--muted); font-weight: 700; margin-bottom: 0.15rem; }
+    .stat-value { font-family: var(--mono); font-size: 1.35rem; font-weight: 700; color: #fff; }
 
-    .stat-label {
-      display: block;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-bottom: 0.2rem;
+    /* إطار ساحة النقر */
+    .arena-frame {
+      background: var(--surface);
+      border: 1px solid var(--line-bright);
+      border-radius: 18px;
+      padding: 0.9rem;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+    .arena-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; width: 110px; height: 3px;
+      background: var(--accent);
     }
 
-    .stat-value {
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: #fff;
+    .progress-track {
+      width: 100%;
+      height: 5px;
+      background: #0c0c0f;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .progress-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--volt));
+      transition: width 0.1s linear;
     }
 
-    /* زر النقر الكبير */
     .click-target {
       width: 100%;
-      height: 250px;
-      border-radius: 1.25rem;
-      background: linear-gradient(135deg, #1e293b, #0f172a);
-      border: 2px solid var(--primary);
+      height: 265px;
+      border-radius: 14px;
+      background: #0e0e12;
+      background-image: radial-gradient(rgba(244, 114, 182, 0.08) 1px, transparent 1px);
+      background-size: 16px 16px;
+      border: 2px solid var(--line-bright);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      text-align: center;
+      padding: 1.25rem;
       cursor: pointer;
-      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
-      transition: transform 0.05s ease, background 0.1s ease;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.04s ease, border-color 0.12s ease, background-color 0.1s ease;
     }
-
-    .click-target:active {
-      transform: scale(0.97);
-      background: linear-gradient(135deg, #312e81, #1e1b4b);
+    .click-target:hover { border-color: var(--accent); }
+    .click-target:active, .click-target.pressed {
+      transform: scale(0.985);
+      border-color: var(--volt);
+      background-color: #17121b;
     }
-
     .click-target h2 {
-      font-size: 2.2rem;
-      font-weight: 800;
-      margin-bottom: 0.25rem;
+      font-size: clamp(1.75rem, 5vw, 2.35rem);
+      font-weight: 900;
+      margin-bottom: 0.3rem;
+      pointer-events: none;
+      z-index: 2;
     }
-
     .click-target p {
-      color: var(--text-muted);
+      color: var(--muted);
       font-size: 0.95rem;
+      pointer-events: none;
+      z-index: 2;
     }
 
-    .btn {
+    /* موجة و +1 عند النقر */
+    .tap-ripple {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      transform: translate(-50%, -50%) scale(0.4);
+      opacity: 0.9;
+      pointer-events: none;
+      animation: rippleOut 0.45s ease-out forwards;
+    }
+    @keyframes rippleOut {
+      to { transform: translate(-50%, -50%) scale(4.2); opacity: 0; }
+    }
+    .tap-plus {
+      position: absolute;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--volt);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      animation: floatUp 0.5s ease-out forwards;
+    }
+    @keyframes floatUp {
+      to { transform: translate(-50%, -220%); opacity: 0; }
+    }
+
+    .btn-main {
       width: 100%;
-      background-color: var(--primary);
-      color: #fff;
+      background: var(--accent);
+      color: #0c0c0f;
       border: none;
-      padding: 0.8rem 1rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      border-radius: 0.75rem;
+      border-bottom: 3px solid #be185d;
+      padding: 0.85rem 1rem;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 900;
+      border-radius: 12px;
       cursor: pointer;
     }
+    .btn-main:hover { background: #f9a8d4; }
+    .btn-main:active { transform: translateY(2px); }
 
-    .leaderboard-section {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 1rem;
-      padding: 1rem;
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+      padding: 0 0.2rem;
     }
 
+    /* الصدارة */
+    .leaderboard-section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.15rem;
+    }
     .leaderboard-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--line);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
-    .live-badge {
-      font-size: 0.75rem;
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      padding: 0.2rem 0.6rem;
-      border-radius: 9999px;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-    }
-
-    .leaderboard-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
+    .live-pill { font-size: 0.76rem; color: var(--mint); display: inline-flex; align-items: center; gap: 0.35rem; }
+    .dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 8px var(--mint); }
+    .leaderboard-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
     .leaderboard-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 0.6rem 0.85rem;
-      border-radius: 0.6rem;
-      font-size: 0.9rem;
+      background: #0e0e12;
+      border: 1px solid var(--line);
+      padding: 0.65rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.92rem;
+    }
+    .leaderboard-item.top-1 {
+      border-color: rgba(255, 184, 0, 0.45);
+      background: linear-gradient(90deg, rgba(255, 184, 0, 0.08), #0e0e12);
+    }
+    .cps-badge {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: var(--accent);
+      background: rgba(244, 114, 182, 0.12);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
     }
   </style>
 </head>
 <body>
 
+  <div class="bg-stage" aria-hidden="true">
+    <div class="bg-marquee-wrap">
+      <div class="bg-marquee-row go-right">
+        <span>ن ق ر • س ر ع ة • ت ح د ي • ع ش ر • ث و ا ن ي • ط ا ق ة •</span>
+        <span>ن ق ر • س ر ع ة • ت ح د ي • ع ش ر • ث و ا ن ي • ط ا ق ة •</span>
+      </div>
+      <div class="bg-marquee-row go-left">
+        <span>CPS TEST // 10 SECONDS // KHALDUN STUDIO // TAP FASTER //</span>
+        <span>CPS TEST // 10 SECONDS // KHALDUN STUDIO // TAP FASTER //</span>
+      </div>
+      <div class="bg-marquee-row go-right">
+        <span>خ ل د و ن • أ ر ق ا م • أ س ر ع • أ ص ب ع • أ ب ط ا ل •</span>
+        <span>خ ل د و ن • أ ر ق ا م • أ س ر ع • أ ص ب ع • أ ب ط ا ل •</span>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="top-nav">
-      <a href="../index.html" class="back-link">← العودة للرئيسية</a>
-      <span style="font-weight: 600; color: var(--text-muted);">سرعة النقر ⚡</span>
+      <a href="../index.html" class="back-link">← العودة للمنصة</a>
+      <div class="nav-right">
+        <span class="mode-tag">CPS // 10.0S</span>
+        <button class="sound-btn" id="sound-toggle" title="تشغيل/كتم الصوت">🔊</button>
+      </div>
     </div>
 
     <div class="dashboard">
-      <div>
+      <div class="stat-card">
         <span class="stat-label">الوقت المتبقي</span>
-        <span class="stat-value" id="timer">10.0s</span>
+        <span class="stat-value" id="timer" style="color: var(--accent);">10.0s</span>
       </div>
-      <div>
+      <div class="stat-card">
         <span class="stat-label">مجموع النقرات</span>
-        <span class="stat-value" id="score">0</span>
+        <span class="stat-value" id="score" style="color: var(--volt);">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">السرعة (CPS)</span>
+        <span class="stat-value" id="cps-live" style="color: var(--mint);">0.0</span>
       </div>
     </div>
 
-    <div class="click-target" id="tap-btn">
-      <h2 id="btn-text">انقر للبدء 🔥</h2>
-      <p id="btn-subtext">معك 10 ثوانٍ لجلب أعلى رقم!</p>
-    </div>
+    <div class="arena-frame">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
 
-    <button class="btn" id="reset-btn" style="display: none;">إعادة المحاولة 🔄</button>
+      <div class="click-target" id="tap-btn">
+        <h2 id="btn-text">انقر للبدء 🔥</h2>
+        <p id="btn-subtext">معك 10 ثوانٍ لتسجيل أكبر عدد من النقرات!</p>
+      </div>
+
+      <button class="btn-main" id="reset-btn" style="display: none;">إعادة المحاولة 🔄</button>
+
+      <div class="meta-bar">
+        <span>👆 يبدأ العد التنازلي مع أول نقرة</span>
+        <span id="player-tag" style="color: var(--text); font-weight: 700;"></span>
+      </div>
+    </div>
 
     <div class="leaderboard-section">
       <div class="leaderboard-title">
         <span>🏆 الصدارة المباشرة (الأعلى نقرات)</span>
-        <span class="live-badge">🟢 متصل ومباشر</span>
+        <span class="live-pill"><span class="dot-live"></span> متصل ومباشر</span>
       </div>
       <ul class="leaderboard-list" id="leaderboard-list">
-        <li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
+        <li style="color: var(--muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
       </ul>
     </div>
   </div>
@@ -231,8 +425,33 @@
     const btnSubtext = document.getElementById('btn-subtext');
     const timerEl = document.getElementById('timer');
     const scoreEl = document.getElementById('score');
+    const cpsLiveEl = document.getElementById('cps-live');
+    const progressFill = document.getElementById('progress-fill');
     const resetBtn = document.getElementById('reset-btn');
     const leaderboardList = document.getElementById('leaderboard-list');
+    const soundBtn = document.getElementById('sound-toggle');
+
+    const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+    document.getElementById('player-tag').textContent = `👤 ${playerName}`;
+
+    let soundOn = true;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    soundBtn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? '🔊' : '🔇';
+    });
+    function playClickSfx(count) {
+      if (!soundOn) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(Math.min(1100, 380 + count * 6), now);
+      g.gain.setValueAtTime(0.07, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+      o.start(now); o.stop(now + 0.035);
+    }
 
     let clicks = 0;
     let timeLeft = 10.0;
@@ -240,16 +459,40 @@
     let isRunning = false;
     let isFinished = false;
 
+    function spawnTapFx(e) {
+      const rect = tapBtn.getBoundingClientRect();
+      const x = (e.clientX || rect.left + rect.width / 2) - rect.left;
+      const y = (e.clientY || rect.top + rect.height / 2) - rect.top;
+
+      const rip = document.createElement('span');
+      rip.className = 'tap-ripple';
+      rip.style.left = x + 'px';
+      rip.style.top = y + 'px';
+      tapBtn.appendChild(rip);
+      setTimeout(() => rip.remove(), 460);
+
+      const plus = document.createElement('span');
+      plus.className = 'tap-plus';
+      plus.textContent = '+1';
+      plus.style.left = (x + (Math.random() - 0.5) * 16) + 'px';
+      plus.style.top = y + 'px';
+      tapBtn.appendChild(plus);
+      setTimeout(() => plus.remove(), 500);
+    }
+
     tapBtn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       if (isFinished) return;
+
+      spawnTapFx(e);
 
       if (!isRunning) {
         isRunning = true;
         clicks = 1;
         scoreEl.textContent = clicks;
         btnText.textContent = 'أسرررع! 🚀';
-        btnSubtext.textContent = 'اضغط بأقصى سرعة!';
+        btnSubtext.textContent = 'لا توقف الضغط!';
+        playClickSfx(clicks);
 
         timerId = setInterval(() => {
           timeLeft = +(timeLeft - 0.1).toFixed(1);
@@ -258,10 +501,14 @@
             finishGame();
           }
           timerEl.textContent = timeLeft.toFixed(1) + 's';
+          progressFill.style.width = ((timeLeft / 10.0) * 100) + '%';
+          const elapsed = 10.0 - timeLeft;
+          if (elapsed > 0) cpsLiveEl.textContent = (clicks / elapsed).toFixed(1);
         }, 100);
       } else {
         clicks++;
         scoreEl.textContent = clicks;
+        playClickSfx(clicks);
       }
     });
 
@@ -270,13 +517,15 @@
       isRunning = false;
       isFinished = true;
       const cps = (clicks / 10).toFixed(1);
+      cpsLiveEl.textContent = cps;
+      progressFill.style.width = '0%';
       btnText.textContent = `${clicks} نقرة! 🎉`;
-      btnSubtext.textContent = `معدل السرعة: ${cps} نقرة بالثانية`;
+      btnSubtext.textContent = `معدل السرعة النهائي: ${cps} نقرة في الثانية`;
       resetBtn.style.display = 'block';
 
-      const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+      const currentName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
       scoresRef.push({
-        name: playerName,
+        name: currentName,
         clicks: clicks,
         cps: parseFloat(cps),
         timestamp: Date.now()
@@ -289,18 +538,19 @@
       isRunning = false;
       isFinished = false;
       scoreEl.textContent = '0';
+      cpsLiveEl.textContent = '0.0';
       timerEl.textContent = '10.0s';
+      progressFill.style.width = '100%';
       btnText.textContent = 'انقر للبدء 🔥';
-      btnSubtext.textContent = 'معك 10 ثوانٍ لجلب أعلى رقم!';
+      btnSubtext.textContent = 'معك 10 ثوانٍ لتسجيل أكبر عدد من النقرات!';
       resetBtn.style.display = 'none';
     });
 
-    // استماع مباشر للنتائج (الأعلى نقرات هو الأول)
     scoresRef.on('value', (snapshot) => {
       const data = snapshot.val();
       leaderboardList.innerHTML = '';
       if (!data) {
-        leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام مسجلة بعد</li>';
+        leaderboardList.innerHTML = '<li style="color: var(--muted); text-align: center; padding: 0.5rem;">لا توجد أرقام مسجلة بعد</li>';
         return;
       }
 
@@ -310,13 +560,13 @@
 
       const medals = ['🥇', '🥈', '🥉'];
       top10.forEach((item, index) => {
-        const rank = medals[index] || `#${index + 1}`;
+        const rank = medals[index] || `0${index + 1}`.slice(-2);
         const li = document.createElement('li');
-        li.className = 'leaderboard-item';
+        li.className = 'leaderboard-item' + (index === 0 ? ' top-1' : '');
         li.innerHTML = `
-          <span style="font-weight: bold; width: 30px;">${rank}</span>
-          <span style="flex: 1; font-weight: 600;">${item.name}</span>
-          <span style="color: var(--text-muted); font-weight: bold;">⚡ ${item.clicks} نقرة (${item.cps} CPS)</span>
+          <span style="font-family: var(--mono); font-weight: bold; width: 32px;">${rank}</span>
+          <span style="flex: 1; font-weight: 700;">${item.name}</span>
+          <span class="cps-badge">${item.clicks} TAP (${item.cps} CPS)</span>
         `;
         leaderboardList.appendChild(li);
       });
