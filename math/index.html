@@ -2,224 +2,396 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>الرياضيات السريعة | Speed Math</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>الرياضيات السريعة | استوديو خلدون</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --primary: #6366f1;
-      --green: #10b981;
-      --red: #ef4444;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg: #0c0c0f;
+      --surface: #141418;
+      --line: #282832;
+      --line-bright: #3c3c4a;
+      --accent: #a78bfa;
+      --volt: #d9ff00;
+      --mint: #00e599;
+      --coral: #ff5252;
+      --amber: #ffb800;
+      --text: #f4f4f6;
+      --muted: #8e8e9e;
+      --mono: 'IBM Plex Mono', monospace;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      user-select: none;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
     body {
       background-color: var(--bg);
       color: var(--text);
+      font-family: 'Tajawal', system-ui, sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 1.5rem 1rem;
+      padding: 1.5rem 1rem 3rem;
+      overflow-x: hidden;
+      position: relative;
     }
 
-    .container {
-      width: 100%;
-      max-width: 500px;
+    .bg-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.026) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.026) 1px, transparent 1px);
+      background-size: 52px 52px;
+    }
+    .bg-stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, transparent 20%, var(--bg) 88%);
+    }
+    .bg-marquee-wrap {
+      position: absolute;
+      inset: -10% -5%;
       display: flex;
       flex-direction: column;
-      gap: 1.2rem;
+      justify-content: space-around;
+      transform: rotate(-4deg);
+      opacity: 0.04;
+    }
+    .bg-marquee-row {
+      display: flex;
+      width: max-content;
+      direction: ltr;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900;
+      white-space: nowrap;
+      color: #fff;
+    }
+    .bg-marquee-row.go-right { animation: slideRight 44s linear infinite; }
+    .bg-marquee-row.go-left  { animation: slideLeft 50s linear infinite; color: var(--accent); }
+    .bg-marquee-row span { padding: 0 1.4rem; }
+    @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @keyframes slideRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.05rem;
     }
 
     .top-nav {
-      width: 100%;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 0.75rem;
     }
-
     .back-link {
-      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
       text-decoration: none;
-      font-size: 0.95rem;
-      font-weight: 600;
+      padding: 0.48rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .back-link:hover { border-color: var(--accent); transform: translateX(2px); }
+
+    .nav-right { display: flex; align-items: center; gap: 0.5rem; }
+    .mode-tag {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(167, 139, 250, 0.12);
+      border: 1px solid rgba(167, 139, 250, 0.32);
+      padding: 0.38rem 0.7rem;
+      border-radius: 8px;
+    }
+    .sound-btn {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
+    /* لوحة الإحصائيات */
     .dashboard {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-      background: rgba(30, 41, 59, 0.7);
-      padding: 0.85rem;
-      border-radius: 1rem;
-      border: 1px solid var(--card-border);
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.75rem 0.6rem;
       text-align: center;
     }
+    .stat-label { display: block; font-size: 0.74rem; color: var(--muted); font-weight: 700; margin-bottom: 0.15rem; }
+    .stat-value { font-family: var(--mono); font-size: 1.35rem; font-weight: 700; color: #fff; }
 
-    .stat-label {
-      display: block;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-bottom: 0.2rem;
-    }
-
-    .stat-value {
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: #fff;
-    }
-
+    /* بطاقة المعادلة */
     .math-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 1.25rem;
-      padding: 2.5rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--line-bright);
+      border-radius: 18px;
+      padding: 1.45rem;
       text-align: center;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 1.5rem;
+      gap: 1.15rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .math-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; width: 110px; height: 3px;
+      background: var(--accent);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 5px;
+      background: #0c0c0f;
+      border-radius: 99px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .progress-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--volt));
+      transition: width 0.35s linear;
+    }
+
+    .eq-stage {
+      background: #0c0c0f;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      padding: 2rem 1rem;
+      transition: border-color 0.12s, background-color 0.12s, transform 0.1s;
+    }
+    .eq-stage.flash-ok { border-color: var(--mint); background: rgba(0, 229, 153, 0.08); }
+    .eq-stage.flash-err { border-color: var(--coral); background: rgba(255, 82, 82, 0.09); animation: shakeX 0.18s ease; }
+    @keyframes shakeX {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
     }
 
     .equation {
-      font-size: 2.8rem;
-      font-weight: 800;
+      font-family: var(--mono);
+      font-size: clamp(2.1rem, 6vw, 3rem);
+      font-weight: 700;
       letter-spacing: 2px;
       direction: ltr;
+      color: #fff;
+    }
+    .eq-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.45rem;
+      min-height: 1.2rem;
     }
 
     .answer-buttons {
-      display: flex;
-      gap: 1rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
       width: 100%;
     }
-
     .ans-btn {
-      flex: 1;
       padding: 1rem;
-      font-size: 1.2rem;
-      font-weight: bold;
+      font-family: inherit;
+      font-size: 1.15rem;
+      font-weight: 900;
       border: none;
-      border-radius: 0.75rem;
+      border-radius: 12px;
       cursor: pointer;
+      transition: transform 0.08s ease;
+      touch-action: manipulation;
+    }
+    .ans-btn:active { transform: translateY(2px) scale(0.98); }
+    .btn-correct {
+      background: var(--mint);
+      color: #0c0c0f;
+      border-bottom: 4px solid #059669;
+    }
+    .btn-wrong {
+      background: var(--coral);
       color: #fff;
-      transition: transform 0.1s ease;
+      border-bottom: 4px solid #b91c1c;
     }
-
-    .ans-btn:active {
-      transform: scale(0.96);
-    }
-
-    .btn-correct { background-color: var(--green); }
-    .btn-wrong { background-color: var(--red); }
 
     .btn-start {
       width: 100%;
-      background-color: var(--primary);
-      color: #fff;
+      background: var(--accent);
+      color: #0c0c0f;
       border: none;
+      border-bottom: 3px solid #7c3aed;
       padding: 0.9rem;
-      font-size: 1rem;
-      font-weight: 700;
-      border-radius: 0.75rem;
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 900;
+      border-radius: 12px;
       cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+    }
+    .btn-start:hover { background: #c4b5fd; }
+    .btn-start:active { transform: translateY(2px); }
+
+    .kbd-hint {
+      font-size: 0.76rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      padding: 0 0.2rem;
     }
 
+    /* الصدارة */
     .leaderboard-section {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 1rem;
-      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 1.15rem;
     }
-
     .leaderboard-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 0.85rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--line);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
-    .live-badge {
-      font-size: 0.75rem;
-      background: rgba(16, 185, 129, 0.2);
-      color: #34d399;
-      padding: 0.2rem 0.6rem;
-      border-radius: 9999px;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-    }
-
-    .leaderboard-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
+    .live-pill { font-size: 0.76rem; color: var(--mint); display: inline-flex; align-items: center; gap: 0.35rem; }
+    .dot-live { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 8px var(--mint); }
+    .leaderboard-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
     .leaderboard-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 0.6rem 0.85rem;
-      border-radius: 0.6rem;
-      font-size: 0.9rem;
+      background: #0e0e12;
+      border: 1px solid var(--line);
+      padding: 0.65rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.92rem;
+    }
+    .leaderboard-item.top-1 {
+      border-color: rgba(255, 184, 0, 0.45);
+      background: linear-gradient(90deg, rgba(255, 184, 0, 0.08), #0e0e12);
+    }
+    .pts-badge {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--accent);
+      background: rgba(167, 139, 250, 0.12);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
     }
   </style>
 </head>
 <body>
 
+  <div class="bg-stage" aria-hidden="true">
+    <div class="bg-marquee-wrap">
+      <div class="bg-marquee-row go-right">
+        <span>+ − × = 12 48 96 • ر ي ا ض ي ا ت • س ر ع ة • ح س ا ب • ذ ك ا ء •</span>
+        <span>+ − × = 12 48 96 • ر ي ا ض ي ا ت • س ر ع ة • ح س ا ب • ذ ك ا ء •</span>
+      </div>
+      <div class="bg-marquee-row go-left">
+        <span>SPEED MATH // TRUE OR FALSE // KHALDUN STUDIO // 30 SEC //</span>
+        <span>SPEED MATH // TRUE OR FALSE // KHALDUN STUDIO // 30 SEC //</span>
+      </div>
+      <div class="bg-marquee-row go-right">
+        <span>خ ل د و ن • أ ر ق ا م • م ع ا د ل ا ت • ت ح د ي • أ ب ط ا ل •</span>
+        <span>خ ل د و ن • أ ر ق ا م • م ع ا د ل ا ت • ت ح د ي • أ ب ط ا ل •</span>
+      </div>
+    </div>
+  </div>
+
   <div class="container">
     <div class="top-nav">
-      <a href="../index.html" class="back-link">← العودة للرئيسية</a>
-      <span style="font-weight: 600; color: var(--text-muted);">الرياضيات السريعة 🧠</span>
+      <a href="../index.html" class="back-link">← العودة للمنصة</a>
+      <div class="nav-right">
+        <span class="mode-tag">MATH // 30S</span>
+        <button class="sound-btn" id="sound-toggle" title="تشغيل/كتم الصوت">🔊</button>
+      </div>
     </div>
 
     <div class="dashboard">
-      <div>
+      <div class="stat-card">
         <span class="stat-label">الوقت المتبقي</span>
-        <span class="stat-value" id="timer">30s</span>
+        <span class="stat-value" id="timer" style="color: var(--accent);">30s</span>
       </div>
-      <div>
+      <div class="stat-card">
         <span class="stat-label">النقاط</span>
-        <span class="stat-value" id="score">0</span>
+        <span class="stat-value" id="score" style="color: var(--mint);">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">السلسلة</span>
+        <span class="stat-value" id="streak" style="color: var(--amber);">0🔥</span>
       </div>
     </div>
 
     <div class="math-card">
-      <div class="equation" id="eq-text">جاهز؟</div>
-      
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+      <div class="eq-stage" id="eq-stage">
+        <div class="equation" id="eq-text">جاهز؟</div>
+        <div class="eq-sub" id="eq-sub">قرّر بسرعة إذا كانت المعادلة صحيحة أو خاطئة</div>
+      </div>
+
       <div class="answer-buttons" id="actions-group" style="display: none;">
         <button class="ans-btn btn-correct" id="correct-btn">صح ✔️</button>
         <button class="ans-btn btn-wrong" id="wrong-btn">خطأ ✖️</button>
       </div>
 
       <button class="btn-start" id="start-btn">ابدأ التحدي (30 ثانية) 🚀</button>
+
+      <div class="kbd-hint">
+        <span>⌨️ اختصار: سهم يمين (صح) / سهم يسار (خطأ)</span>
+        <span id="player-tag" style="color: var(--text); font-weight: 700;"></span>
+      </div>
     </div>
 
     <div class="leaderboard-section">
       <div class="leaderboard-title">
         <span>🏆 الصدارة المباشرة (أعلى النقاط)</span>
-        <span class="live-badge">🟢 متصل ومباشر</span>
+        <span class="live-pill"><span class="dot-live"></span> متصل ومباشر</span>
       </div>
       <ul class="leaderboard-list" id="leaderboard-list">
-        <li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
+        <li style="color: var(--muted); text-align: center; padding: 0.5rem;">جاري جلب النتائج...</li>
       </ul>
     </div>
   </div>
@@ -240,18 +412,55 @@
     const db = firebase.database();
     const scoresRef = db.ref('math_leaderboard');
 
+    const eqStage = document.getElementById('eq-stage');
     const eqText = document.getElementById('eq-text');
+    const eqSub = document.getElementById('eq-sub');
     const actionsGroup = document.getElementById('actions-group');
     const startBtn = document.getElementById('start-btn');
     const timerEl = document.getElementById('timer');
     const scoreEl = document.getElementById('score');
+    const streakEl = document.getElementById('streak');
+    const progressFill = document.getElementById('progress-fill');
     const correctBtn = document.getElementById('correct-btn');
     const wrongBtn = document.getElementById('wrong-btn');
     const leaderboardList = document.getElementById('leaderboard-list');
+    const soundBtn = document.getElementById('sound-toggle');
+
+    const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+    document.getElementById('player-tag').textContent = `👤 ${playerName}`;
+
+    let soundOn = true;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    soundBtn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      soundBtn.textContent = soundOn ? '🔊' : '🔇';
+    });
+    function playSfx(type) {
+      if (!soundOn) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      if (type === 'ok') {
+        o.type = 'triangle'; o.frequency.setValueAtTime(640, now); o.frequency.exponentialRampToValueAtTime(920, now + 0.07);
+        g.gain.setValueAtTime(0.11, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+        o.start(now); o.stop(now + 0.07);
+      } else if (type === 'err') {
+        o.type = 'sawtooth'; o.frequency.setValueAtTime(170, now); o.frequency.exponentialRampToValueAtTime(95, now + 0.12);
+        g.gain.setValueAtTime(0.11, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        o.start(now); o.stop(now + 0.12);
+      } else if (type === 'end') {
+        o.type = 'sine'; o.frequency.setValueAtTime(520, now); o.frequency.exponentialRampToValueAtTime(780, now + 0.18);
+        g.gain.setValueAtTime(0.12, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        o.start(now); o.stop(now + 0.18);
+      }
+    }
 
     let score = 0;
+    let streak = 0;
     let timeLeft = 30;
     let timerId = null;
+    let isPlaying = false;
     let currentActualIsCorrect = true;
 
     function generateEquation() {
@@ -284,18 +493,25 @@
     }
 
     startBtn.addEventListener('click', () => {
+      clearInterval(timerId);
       score = 0;
+      streak = 0;
       timeLeft = 30;
+      isPlaying = true;
       scoreEl.textContent = '0';
+      streakEl.textContent = '0🔥';
       timerEl.textContent = '30s';
+      progressFill.style.width = '100%';
+      eqSub.textContent = 'أجب بأسرع وقت ممكن!';
       startBtn.style.display = 'none';
-      actionsGroup.style.display = 'flex';
+      actionsGroup.style.display = 'grid';
 
       generateEquation();
 
       timerId = setInterval(() => {
         timeLeft--;
         timerEl.textContent = timeLeft + 's';
+        progressFill.style.width = ((timeLeft / 30) * 100) + '%';
         if (timeLeft <= 0) {
           clearInterval(timerId);
           finishGame();
@@ -303,39 +519,64 @@
       }, 1000);
     });
 
+    function flashStage(cls) {
+      eqStage.classList.remove('flash-ok', 'flash-err');
+      void eqStage.offsetWidth;
+      eqStage.classList.add(cls);
+      setTimeout(() => eqStage.classList.remove(cls), 200);
+    }
+
     function handleAnswer(userChoice) {
+      if (!isPlaying) return;
       if (userChoice === currentActualIsCorrect) {
         score++;
+        streak++;
+        playSfx('ok');
+        flashStage('flash-ok');
       } else {
         score = Math.max(0, score - 1);
+        streak = 0;
+        playSfx('err');
+        flashStage('flash-err');
       }
       scoreEl.textContent = score;
+      streakEl.textContent = streak + '🔥';
       generateEquation();
     }
 
     correctBtn.addEventListener('click', () => handleAnswer(true));
     wrongBtn.addEventListener('click', () => handleAnswer(false));
 
+    window.addEventListener('keydown', e => {
+      if (!isPlaying) return;
+      if (e.key === 'ArrowRight' || e.key === '1') handleAnswer(true);
+      if (e.key === 'ArrowLeft' || e.key === '2') handleAnswer(false);
+    });
+
     function finishGame() {
+      isPlaying = false;
+      playSfx('end');
       actionsGroup.style.display = 'none';
       startBtn.style.display = 'block';
       startBtn.textContent = 'العب مرة ثانية 🔄';
+      eqText.style.direction = 'rtl';
       eqText.textContent = `انتهى! مجموعك: ${score}`;
+      eqSub.textContent = 'تم حفظ نتيجتك في قائمة الصدارة';
+      setTimeout(() => { if (!isPlaying) eqText.style.direction = 'ltr'; }, 100);
 
-      const playerName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
+      const currentName = localStorage.getItem('player_nickname') || 'لاعب مجهول';
       scoresRef.push({
-        name: playerName,
+        name: currentName,
         score: score,
         timestamp: Date.now()
       });
     }
 
-    // استماع مباشر لنتائج الحساب
     scoresRef.on('value', (snapshot) => {
       const data = snapshot.val();
       leaderboardList.innerHTML = '';
       if (!data) {
-        leaderboardList.innerHTML = '<li style="color: var(--text-muted); text-align: center; padding: 0.5rem;">لا توجد أرقام مسجلة بعد</li>';
+        leaderboardList.innerHTML = '<li style="color: var(--muted); text-align: center; padding: 0.5rem;">لا توجد أرقام مسجلة بعد</li>';
         return;
       }
 
@@ -345,13 +586,13 @@
 
       const medals = ['🥇', '🥈', '🥉'];
       top10.forEach((item, index) => {
-        const rank = medals[index] || `#${index + 1}`;
+        const rank = medals[index] || `0${index + 1}`.slice(-2);
         const li = document.createElement('li');
-        li.className = 'leaderboard-item';
+        li.className = 'leaderboard-item' + (index === 0 ? ' top-1' : '');
         li.innerHTML = `
-          <span style="font-weight: bold; width: 30px;">${rank}</span>
-          <span style="flex: 1; font-weight: 600;">${item.name}</span>
-          <span style="color: var(--text-muted); font-weight: bold;">🎯 ${item.score} نقطة</span>
+          <span style="font-family: var(--mono); font-weight: bold; width: 32px;">${rank}</span>
+          <span style="flex: 1; font-weight: 700;">${item.name}</span>
+          <span class="pts-badge">${item.score} PTS</span>
         `;
         leaderboardList.appendChild(li);
       });
